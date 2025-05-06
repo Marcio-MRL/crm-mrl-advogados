@@ -50,8 +50,21 @@ export function Sidebar({ className }: SidebarProps) {
       )}
     >
       <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
-        {!collapsed && (
-          <div className="text-white font-semibold text-lg">Juris Flow</div>
+        {!collapsed ? (
+          <div className="flex items-center">
+            <img 
+              src="/lovable-uploads/27ce3e50-3cad-44f4-a295-b4890ec2ce52.png" 
+              alt="MRL Advogados" 
+              className="h-8 mr-2"
+            />
+            <div className="text-white font-semibold text-lg">MRL Advogados</div>
+          </div>
+        ) : (
+          <img 
+            src="/lovable-uploads/27ce3e50-3cad-44f4-a295-b4890ec2ce52.png" 
+            alt="MRL Advogados" 
+            className="h-8 mx-auto" 
+          />
         )}
         <Button
           variant="ghost"
@@ -87,11 +100,11 @@ export function Sidebar({ className }: SidebarProps) {
       <div className="p-4 border-t border-sidebar-border">
         {!collapsed ? (
           <div className="text-xs text-sidebar-foreground/60">
-            Juris Flow Elegance © 2025
+            MRL Advogados © 2025
           </div>
         ) : (
           <div className="flex justify-center">
-            <span className="text-sidebar-foreground/60">JF</span>
+            <span className="text-sidebar-foreground/60">MRL</span>
           </div>
         )}
       </div>
