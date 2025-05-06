@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, Filter } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import { 
   Card, 
   CardContent, 
@@ -24,13 +23,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Dados simulados para demonstração
-const mockClients = [
+// Define the proper type aliases with literal values
+type ClientType = 'pessoa_fisica' | 'pessoa_juridica';
+type ClientStatus = 'ativo' | 'inativo';
+
+interface Client {
+  id: string;
+  name: string;
+  document: string;
+  type: ClientType;  // This is the properly typed field
+  phone: string;
+  email: string;
+  sector: string;
+  status: ClientStatus;
+  processCount: number;
+  contractCount: number;
+}
+
+// Dados simulados para demonstração - now with proper typing
+const mockClients: Client[] = [
   {
     id: '1',
     name: 'João Silva',
     document: 'CPF: 123.456.789-00',
-    type: 'pessoa_fisica',
+    type: 'pessoa_fisica', // Now using the literal type
     phone: '(11) 98765-4321',
     email: 'joao.silva@email.com',
     sector: 'Varejo',
@@ -42,7 +58,7 @@ const mockClients = [
     id: '2',
     name: 'Empresa ABC Ltda',
     document: 'CNPJ: 12.345.678/0001-90',
-    type: 'pessoa_juridica',
+    type: 'pessoa_juridica', // Now using the literal type
     phone: '(11) 3456-7890',
     email: 'contato@abc.com',
     sector: 'Tecnologia',
@@ -54,7 +70,7 @@ const mockClients = [
     id: '3',
     name: 'Maria Oliveira',
     document: 'CPF: 987.654.321-00',
-    type: 'pessoa_fisica',
+    type: 'pessoa_fisica', // Now using the literal type
     phone: '(21) 97654-3210',
     email: 'maria.oliveira@email.com',
     sector: 'Educação',
@@ -66,7 +82,7 @@ const mockClients = [
     id: '4',
     name: 'Comércio XYZ Eireli',
     document: 'CNPJ: 98.765.432/0001-10',
-    type: 'pessoa_juridica',
+    type: 'pessoa_juridica', // Now using the literal type
     phone: '(11) 2345-6789',
     email: 'contato@xyz.com',
     sector: 'Comércio',
@@ -75,22 +91,6 @@ const mockClients = [
     contractCount: 2,
   },
 ];
-
-type ClientType = 'pessoa_fisica' | 'pessoa_juridica';
-type ClientStatus = 'ativo' | 'inativo';
-
-interface Client {
-  id: string;
-  name: string;
-  document: string;
-  type: ClientType;
-  phone: string;
-  email: string;
-  sector: string;
-  status: ClientStatus;
-  processCount: number;
-  contractCount: number;
-}
 
 const ClientCard: React.FC<{ client: Client }> = ({ client }) => {
   return (
