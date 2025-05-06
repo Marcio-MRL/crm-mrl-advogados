@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/select";
 import { Plus } from 'lucide-react';
 
+type LeadStage = 'new' | 'qualified' | 'meeting' | 'proposal' | 'hired';
+
 // Dados simulados para demonstração
 const mockLeads = [
   {
@@ -28,7 +30,7 @@ const mockLeads = [
     phone: '(11) 98765-4321',
     document: 'CPF: 123.456.789-00',
     source: 'Site',
-    stage: 'new',
+    stage: 'new' as LeadStage,
     lastContact: '12/04/2025',
     responsibleLawyer: 'Dr. Marcos',
     daysSinceLastContact: 3,
@@ -40,7 +42,7 @@ const mockLeads = [
     phone: '(11) 3456-7890',
     document: 'CNPJ: 12.345.678/0001-90',
     source: 'Indicação',
-    stage: 'qualified',
+    stage: 'qualified' as LeadStage,
     lastContact: '05/04/2025',
     responsibleLawyer: 'Dra. Ana',
     daysSinceLastContact: 10,
@@ -52,7 +54,7 @@ const mockLeads = [
     phone: '(21) 97654-3210',
     document: 'CPF: 987.654.321-00',
     source: 'LinkedIn',
-    stage: 'meeting',
+    stage: 'meeting' as LeadStage,
     lastContact: '10/04/2025',
     responsibleLawyer: 'Dr. Paulo',
     daysSinceLastContact: 5,
@@ -64,7 +66,7 @@ const mockLeads = [
     phone: '(11) 2345-6789',
     document: 'CNPJ: 98.765.432/0001-10',
     source: 'Google Ads',
-    stage: 'proposal',
+    stage: 'proposal' as LeadStage,
     lastContact: '02/04/2025',
     responsibleLawyer: 'Dra. Carla',
     daysSinceLastContact: 13,
@@ -76,14 +78,12 @@ const mockLeads = [
     phone: '(31) 98765-1234',
     document: 'CPF: 456.789.123-00',
     source: 'Instagram',
-    stage: 'hired',
+    stage: 'hired' as LeadStage,
     lastContact: '15/04/2025',
     responsibleLawyer: 'Dr. Marcos',
     daysSinceLastContact: 0,
   },
 ];
-
-type LeadStage = 'new' | 'qualified' | 'meeting' | 'proposal' | 'hired';
 
 export default function Leads() {
   const [activeTab, setActiveTab] = useState<LeadStage | 'all'>('all');
