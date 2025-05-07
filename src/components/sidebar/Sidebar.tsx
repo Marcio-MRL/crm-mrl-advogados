@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
+import { LogoutButton } from './LogoutButton';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   Activity, 
   Users, 
@@ -17,7 +19,8 @@ import {
   Gavel, 
   ArrowRight,
   ArrowLeft,
-  Plus
+  Plus,
+  User
 } from 'lucide-react';
 
 const menuItems = [
@@ -41,6 +44,11 @@ interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const { user } = useAuth();
+  
+  // Extract first name if user exists
+  const firstName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || '';
+  const email = user?.email || '';
   
   return (
     <div 
@@ -77,7 +85,7 @@ export function Sidebar({ className }: SidebarProps) {
         </Button>
       </div>
       
-      <nav className="flex-1 overflow-y-auto py-4 h-[calc(100vh-80px)]">
+      <nav className="flex-1 overflow-y-auto py-4 h-[calc(100vh-180px)]">
         <ul className="space-y-1 px-2">
           {menuItems.map((item) => (
             <li key={item.name}>
@@ -101,14 +109,30 @@ export function Sidebar({ className }: SidebarProps) {
         </ul>
       </nav>
       
-      <div className="p-4 border-t border-sidebar-border">
+      {/* User Profile Section */}
+      <div className="p-4 border-t border-sidebar-border mt-auto">
         {!collapsed ? (
-          <div className="text-xs text-sidebar-foreground/60">
-            MRL Advogados © 2025
+          <div className="flex flex-col space-y-2">
+            <div className="flex items-center space-x-2 mb-2">
+              <div className="bg-lawblue-300 rounded-full w-8 h-8 flex items-center justify-center">
+                <User size={16} className="text-white" />
+              </div>
+              <div className="overflow-hidden">
+                <p className="text-sm font-medium text-white truncate">{firstName}</p>
+                <p className="text-xs text-sidebar-foreground/70 truncate">{email}</p>
+              </div>
+            </div>
+            <LogoutButton />
           </div>
         ) : (
-          <div className="flex justify-center">
-            <span className="text-sidebar-foreground/60">MRL</span>
+          <div className="flex flex-col items-center space-y-2">
+            <div className="bg-lawblue-300 rounded-full w-8 h-8 flex items-center justify-center group relative">
+              <User size={16} className="text-white" />
+              <div className="absolute left-full ml-2 px-2 py-1 bg-lawblue-700 text-white text-sm rounded-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity whitespace-nowrap z-50">
+                {firstName}<br />{email}
+              </div>
+            </div>
+            <LogoutButton />
           </div>
         )}
       </div>

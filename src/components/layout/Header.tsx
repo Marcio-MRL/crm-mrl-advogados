@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   Bell, 
   Calendar,
@@ -15,12 +16,24 @@ interface HeaderProps {
 }
 
 export function Header({ title, subtitle }: HeaderProps) {
+  const { user } = useAuth();
+  
+  // Get first name if available or use email username
+  const firstName = user?.user_metadata?.first_name || 
+                    (user?.email ? user.email.split('@')[0] : '');
+  
+  // Create personalized welcome message if title is "Visão Geral"
+  const personalizedSubtitle = 
+    title === "Visão Geral" 
+      ? `${firstName}, bem-vindo ao CRM do MRL Advogados.`
+      : subtitle;
+  
   return (
     <header className="w-full glass-card mb-6 rounded-lg">
       <div className="flex flex-col md:flex-row md:items-center justify-between p-4">
         <div className="mb-4 md:mb-0">
           <h1 className="text-2xl font-semibold text-lawblue-800">{title}</h1>
-          {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+          {personalizedSubtitle && <p className="text-sm text-gray-500">{personalizedSubtitle}</p>}
         </div>
         
         <div className="flex flex-wrap items-center gap-2">
