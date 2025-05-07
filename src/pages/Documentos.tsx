@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,7 +17,7 @@ import {
   FileSpreadsheet,
   FileText,
   FileImage,
-  FilePdf
+  File
 } from 'lucide-react';
 
 export default function Documentos() {
@@ -91,7 +90,7 @@ export default function Documentos() {
                 </li>
                 <li>
                   <Button variant="ghost" className="w-full justify-start">
-                    <FilePdf className="h-4 w-4 mr-2 text-red-500" />
+                    <File className="h-4 w-4 mr-2 text-red-500" />
                     Petições
                   </Button>
                 </li>

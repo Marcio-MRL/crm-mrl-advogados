@@ -3,7 +3,7 @@ import React from 'react';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { 
-  FilePdf, 
+  File, 
   FileText, 
   FileSpreadsheet, 
   FileImage, 
@@ -47,7 +47,7 @@ const mockDocuments: Document[] = [
 const getDocumentIcon = (type: string) => {
   switch(type) {
     case 'pdf':
-      return <FilePdf className="h-4 w-4 text-red-500" />;
+      return <File className="h-4 w-4 text-red-500" />;
     case 'doc':
       return <FileText className="h-4 w-4 text-blue-500" />;
     case 'xls':

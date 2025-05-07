@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
-  FilePdf, 
   FileText, 
+  File, 
   FileSpreadsheet, 
   FileImage, 
   MoreVertical, 
@@ -48,7 +47,7 @@ const mockDocuments: Document[] = [
 const getDocumentIcon = (type: string) => {
   switch(type) {
     case 'pdf':
-      return <FilePdf className="h-10 w-10 text-red-500" />;
+      return <File className="h-10 w-10 text-red-500" />;
     case 'doc':
       return <FileText className="h-10 w-10 text-blue-500" />;
     case 'xls':
