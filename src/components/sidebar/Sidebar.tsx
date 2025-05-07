@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { 
   Activity, 
@@ -40,11 +40,12 @@ interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const location = useLocation();
   
   return (
     <div 
       className={cn(
-        'flex flex-col h-screen bg-sidebar transition-all duration-300 shadow-lg border-r border-lawblue-700/20',
+        'fixed left-0 top-0 h-full bg-sidebar transition-all duration-300 shadow-lg border-r border-lawblue-700/20 z-40',
         collapsed ? 'w-16' : 'w-64',
         className
       )}
@@ -76,13 +77,16 @@ export function Sidebar({ className }: SidebarProps) {
         </Button>
       </div>
       
-      <nav className="flex-1 overflow-y-auto py-4">
+      <nav className="flex-1 overflow-y-auto py-4 h-[calc(100vh-80px)]">
         <ul className="space-y-1 px-2">
           {menuItems.map((item) => (
             <li key={item.name}>
               <Link 
                 to={item.path} 
-                className="flex items-center px-3 py-2 rounded-md text-sidebar-foreground hover:bg-sidebar-accent group transition-colors"
+                className={cn(
+                  "flex items-center px-3 py-2 rounded-md text-sidebar-foreground hover:bg-sidebar-accent group transition-colors",
+                  location.pathname === item.path && "bg-sidebar-accent/50"
+                )}
               >
                 <item.icon className="w-5 h-5 mr-3 text-lawblue-300" />
                 {!collapsed && <span>{item.name}</span>}
