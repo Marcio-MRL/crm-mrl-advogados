@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { ChartCard } from '@/components/dashboard/ChartCard';
@@ -18,6 +18,10 @@ import {
   Legend, 
   ResponsiveContainer 
 } from 'recharts';
+import { FormModal } from '@/components/common/FormModal';
+import { ClientForm } from '@/components/clients/ClientForm';
+import { ContratoForm } from '@/components/contratos/ContratoForm';
+import { toast } from 'sonner';
 
 const revenueData = [
   { name: 'Jan', atual: 4000, anterior: 2400 },
@@ -68,6 +72,34 @@ const urgentTasks = [
 ];
 
 export default function Dashboard() {
+  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+  const [isProcessModalOpen, setIsProcessModalOpen] = useState(false);
+  const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
+
+  const openClientModal = () => setIsClientModalOpen(true);
+  const closeClientModal = () => setIsClientModalOpen(false);
+  
+  const openProcessModal = () => setIsProcessModalOpen(true);
+  const closeProcessModal = () => setIsProcessModalOpen(false);
+  
+  const openLeadModal = () => setIsLeadModalOpen(true);
+  const closeLeadModal = () => setIsLeadModalOpen(false);
+
+  const handleClientAdded = () => {
+    closeClientModal();
+    toast.success("Cliente adicionado com sucesso!");
+  };
+
+  const handleProcessAdded = () => {
+    closeProcessModal();
+    toast.success("Processo adicionado com sucesso!");
+  };
+
+  const handleLeadAdded = () => {
+    closeLeadModal();
+    toast.success("Lead adicionado com sucesso!");
+  };
+
   return (
     <div>
       <Header 
@@ -75,14 +107,23 @@ export default function Dashboard() {
         subtitle="Bem-vindo ao Juris Flow Elegance - Gestão Jurídica" 
       />
       
-      <div className="flex justify-end mb-4 space-x-2">
-        <Button className="bg-lawblue-500 hover:bg-lawblue-600">
+      <div className="flex flex-wrap justify-end mb-4 gap-2">
+        <Button 
+          className="bg-lawblue-500 hover:bg-lawblue-600"
+          onClick={openClientModal}
+        >
           <Plus size={16} className="mr-1" /> Novo Cliente
         </Button>
-        <Button className="bg-lawblue-500 hover:bg-lawblue-600">
+        <Button 
+          className="bg-lawblue-500 hover:bg-lawblue-600"
+          onClick={openProcessModal}
+        >
           <Plus size={16} className="mr-1" /> Novo Processo
         </Button>
-        <Button className="bg-lawblue-500 hover:bg-lawblue-600">
+        <Button 
+          className="bg-lawblue-500 hover:bg-lawblue-600"
+          onClick={openLeadModal}
+        >
           <Plus size={16} className="mr-1" /> Novo Lead
         </Button>
       </div>
@@ -177,6 +218,43 @@ export default function Dashboard() {
           </div>
         </ChartCard>
       </div>
+
+      {/* Client Form Modal */}
+      <FormModal
+        isOpen={isClientModalOpen}
+        onClose={closeClientModal}
+        title="Adicionar Novo Cliente"
+      >
+        <ClientForm onSuccess={handleClientAdded} onCancel={closeClientModal} />
+      </FormModal>
+
+      {/* Process Form Modal */}
+      <FormModal
+        isOpen={isProcessModalOpen}
+        onClose={closeProcessModal}
+        title="Adicionar Novo Processo"
+      >
+        <div className="p-4">
+          <p>Formulário de processo será implementado em breve.</p>
+          <div className="flex justify-end mt-4">
+            <Button onClick={closeProcessModal}>Fechar</Button>
+          </div>
+        </div>
+      </FormModal>
+
+      {/* Lead Form Modal */}
+      <FormModal
+        isOpen={isLeadModalOpen}
+        onClose={closeLeadModal}
+        title="Adicionar Novo Lead"
+      >
+        <div className="p-4">
+          <p>Formulário de lead será implementado em breve.</p>
+          <div className="flex justify-end mt-4">
+            <Button onClick={closeLeadModal}>Fechar</Button>
+          </div>
+        </div>
+      </FormModal>
     </div>
   );
 }

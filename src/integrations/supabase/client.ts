@@ -16,3 +16,16 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
   }
 });
+
+// Helper function to get the current user ID
+export const getCurrentUserId = async () => {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.user.id;
+};
+
+// Helper function to format date for display
+export const formatDate = (dateStr: string | null | undefined) => {
+  if (!dateStr) return '';
+  return new Date(dateStr).toLocaleDateString('pt-BR');
+};
+
