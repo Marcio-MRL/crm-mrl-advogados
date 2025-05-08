@@ -101,6 +101,12 @@ export function ContratoForm({ onSuccess, onCancel, initialData }: ContratoFormP
         return;
       }
 
+      // Ensure required fields are provided
+      if (!data.number || !data.type) {
+        toast.error('Número e tipo do contrato são obrigatórios');
+        return;
+      }
+
       let valueAsNumber = null;
       if (data.value && data.value.trim() !== '') {
         // Convert currency format to number
@@ -108,9 +114,15 @@ export function ContratoForm({ onSuccess, onCancel, initialData }: ContratoFormP
       }
 
       const { error } = await supabase.from('contracts').insert({
-        ...data,
+        number: data.number,
+        type: data.type,
+        client_id: data.client_id || null,
+        status: data.status,
+        start_date: data.start_date,
+        end_date: data.end_date || null,
         value: valueAsNumber,
-        user_id: userId,
+        description: data.description || null,
+        user_id: userId
       });
 
       if (error) {

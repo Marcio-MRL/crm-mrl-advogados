@@ -34,7 +34,15 @@ export default function Clients() {
         throw error;
       }
 
-      setClients(data as Client[]);
+      // Map the data to include the UI display properties
+      const mappedClients = (data || []).map(client => ({
+        ...client,
+        sector: '',  // Default value
+        processCount: 0, // Default value
+        contractCount: 0 // Default value
+      })) as Client[];
+
+      setClients(mappedClients);
     } catch (error) {
       console.error('Error fetching clients:', error);
       toast.error('Erro ao carregar clientes');

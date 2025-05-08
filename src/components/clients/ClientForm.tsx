@@ -72,8 +72,23 @@ export function ClientForm({ onSuccess, onCancel, initialData }: ClientFormProps
         return;
       }
 
+      // Ensure name and type are provided
+      if (!data.name || !data.type) {
+        toast.error('Nome e tipo são obrigatórios');
+        return;
+      }
+
       const { error } = await supabase.from('clients').insert({
-        ...data,
+        name: data.name,
+        type: data.type,
+        document: data.document || null,
+        email: data.email || null,
+        phone: data.phone || null,
+        address: data.address || null,
+        city: data.city || null,
+        state: data.state || null,
+        postal_code: data.postal_code || null,
+        notes: data.notes || null,
         user_id: userId,
         status: 'ativo',
       });

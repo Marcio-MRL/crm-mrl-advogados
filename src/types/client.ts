@@ -6,12 +6,22 @@ export type ClientStatus = 'ativo' | 'inativo';
 export interface Client {
   id: string;
   name: string;
-  document: string;
+  document?: string | null;
   type: ClientType;
-  phone: string;
-  email: string;
-  sector: string;
+  phone?: string | null;
+  email?: string | null;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  postal_code?: string | null;
   status: ClientStatus;
-  processCount: number;
-  contractCount: number;
+  notes?: string | null;
+  user_id?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  
+  // UI display properties that can be computed
+  sector?: string;
+  processCount?: number;
+  contractCount?: number;
 }
