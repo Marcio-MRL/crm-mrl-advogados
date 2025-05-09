@@ -20,7 +20,8 @@ import {
 } from 'recharts';
 import { FormModal } from '@/components/common/FormModal';
 import { ClientForm } from '@/components/clients/ClientForm';
-import { ContratoForm } from '@/components/contratos/ContratoForm';
+import { ProcessoForm } from '@/components/processos/ProcessoForm';
+import { LeadForm } from '@/components/leads/LeadForm';
 import { toast } from 'sonner';
 
 const revenueData = [
@@ -47,6 +48,7 @@ const urgentTasks = [
     dueDate: 'Hoje, 16:00',
     priority: 'high' as const,
     completed: false,
+    description: 'Prazo final para protocolar o recurso de apelação no processo 1234-5 do cliente ABC Ltda.',
   },
   {
     id: '2',
@@ -54,6 +56,7 @@ const urgentTasks = [
     dueDate: 'Hoje, 14:30',
     priority: 'medium' as const,
     completed: false,
+    description: 'Reunião para discutir estratégia processual e próximos passos no caso tributário.',
   },
   {
     id: '3',
@@ -61,6 +64,7 @@ const urgentTasks = [
     dueDate: 'Amanhã, 12:00',
     priority: 'medium' as const,
     completed: false,
+    description: 'Enviar proposta comercial para o lead XYZ conforme discutido na reunião inicial.',
   },
   {
     id: '4',
@@ -68,6 +72,7 @@ const urgentTasks = [
     dueDate: 'Ontem, 18:00',
     priority: 'high' as const,
     completed: true,
+    description: 'Revisar cláusulas contratuais e enviar para assinatura do cliente DEF.',
   },
 ];
 
@@ -234,12 +239,7 @@ export default function Dashboard() {
         onClose={closeProcessModal}
         title="Adicionar Novo Processo"
       >
-        <div className="p-4">
-          <p>Formulário de processo será implementado em breve.</p>
-          <div className="flex justify-end mt-4">
-            <Button onClick={closeProcessModal}>Fechar</Button>
-          </div>
-        </div>
+        <ProcessoForm onSuccess={handleProcessAdded} onCancel={closeProcessModal} />
       </FormModal>
 
       {/* Lead Form Modal */}
@@ -248,12 +248,7 @@ export default function Dashboard() {
         onClose={closeLeadModal}
         title="Adicionar Novo Lead"
       >
-        <div className="p-4">
-          <p>Formulário de lead será implementado em breve.</p>
-          <div className="flex justify-end mt-4">
-            <Button onClick={closeLeadModal}>Fechar</Button>
-          </div>
-        </div>
+        <LeadForm onSuccess={handleLeadAdded} onCancel={closeLeadModal} />
       </FormModal>
     </div>
   );

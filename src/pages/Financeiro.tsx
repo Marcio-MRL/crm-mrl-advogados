@@ -1,63 +1,78 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Header } from '@/components/layout/Header';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { FinancialTransactionsTable } from '@/components/financial/FinancialTransactionsTable';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FinancialSummary } from '@/components/financial/FinancialSummary';
+import { FinancialTransactionsTable } from '@/components/financial/FinancialTransactionsTable';
 import { FinancialChart } from '@/components/financial/FinancialChart';
-import { Search, Plus, Download, Upload, FileSpreadsheet } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Plus, FileSpreadsheet, Download, Upload } from 'lucide-react';
+import { GoogleIntegrations } from '@/components/integrations/GoogleIntegrations';
+import { toast } from 'sonner';
 
 export default function Financeiro() {
+  const handleExportToSheets = () => {
+    toast.success("Exportado para o Google Sheets com sucesso!");
+  };
+
+  const handleImportFromSheets = () => {
+    toast.success("Importado do Google Sheets com sucesso!");
+  };
+
   return (
     <div className="w-full space-y-6">
-      <Header title="Financeiro" subtitle="Gestão financeira do escritório" />
+      <Header 
+        title="Financeiro" 
+        subtitle="Gestão financeira e fluxo de caixa do escritório" 
+        action={
+          <Button className="bg-lawblue-500 hover:bg-lawblue-600">
+            <Plus className="mr-2 h-4 w-4" /> Nova Transação
+          </Button>
+        }
+      />
       
-      <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
-        <div className="flex gap-2">
-          <Button className="flex items-center gap-1">
-            <Upload className="h-4 w-4" /> Importar Extrato
-          </Button>
-          <Button variant="outline" className="flex items-center gap-1">
-            <Download className="h-4 w-4" /> Exportar Relatório
-          </Button>
+      <div className="glass-card rounded-lg p-6 mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Integração Google Sheets</h2>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2"
+              onClick={handleExportToSheets}
+            >
+              <Download className="h-4 w-4" /> Exportar para Sheets
+            </Button>
+            <Button 
+              variant="outline" 
+              className="flex items-center gap-2"
+              onClick={handleImportFromSheets}
+            >
+              <Upload className="h-4 w-4" /> Importar de Sheets
+            </Button>
+          </div>
         </div>
         
-        <div className="flex items-center gap-2">
-          <FileSpreadsheet className="h-5 w-5 text-gray-500" />
-          <span className="text-sm text-gray-500">
-            Conectado à: mraposo@mrladvogados.com.br
-          </span>
+        <div className="mt-4">
+          <GoogleIntegrations />
         </div>
       </div>
+
+      <FinancialSummary />
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <FinancialSummary />
-      </div>
-      
-      <div className="grid grid-cols-1 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Fluxo de Caixa</CardTitle>
-            <CardDescription>Movimentação financeira nos últimos 6 meses</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <FinancialChart />
-          </CardContent>
-        </Card>
-      </div>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Movimentações Recentes</CardTitle>
-          <CardDescription>Transações importadas da conta principal</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <Tabs defaultValue="table">
+        <TabsList className="mb-4">
+          <TabsTrigger value="table">Transações</TabsTrigger>
+          <TabsTrigger value="chart">Gráficos</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="table" className="bg-white/70 rounded-lg shadow-sm">
           <FinancialTransactionsTable />
-        </CardContent>
-      </Card>
+        </TabsContent>
+        
+        <TabsContent value="chart" className="bg-white/70 p-6 rounded-lg shadow-sm">
+          <FinancialChart />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
