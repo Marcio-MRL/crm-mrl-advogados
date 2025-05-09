@@ -5,7 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Upload } from 'lucide-react';
 
-export function DocumentUploadForm() {
+interface DocumentUploadFormProps {
+  onSuccess?: () => void;
+}
+
+export function DocumentUploadForm({ onSuccess }: DocumentUploadFormProps) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -26,7 +30,9 @@ export function DocumentUploadForm() {
       setIsUploading(false);
       setSelectedFile(null);
       // Here you would typically handle the upload to Google Drive
-      alert('Documento enviado com sucesso!');
+      if (onSuccess) {
+        onSuccess();
+      }
     }, 2000);
   };
 
