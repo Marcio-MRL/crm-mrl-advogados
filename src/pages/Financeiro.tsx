@@ -24,12 +24,13 @@ export default function Financeiro() {
       <Header 
         title="Financeiro" 
         subtitle="Gestão financeira e fluxo de caixa do escritório" 
-        action={
-          <Button className="bg-lawblue-500 hover:bg-lawblue-600">
-            <Plus className="mr-2 h-4 w-4" /> Nova Transação
-          </Button>
-        }
       />
+      
+      <div className="flex justify-end mb-4">
+        <Button className="bg-lawblue-500 hover:bg-lawblue-600">
+          <Plus className="mr-2 h-4 w-4" /> Nova Transação
+        </Button>
+      </div>
       
       <div className="glass-card rounded-lg p-6 mb-6">
         <div className="flex justify-between items-center mb-4">

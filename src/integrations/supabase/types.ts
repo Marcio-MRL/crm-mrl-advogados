@@ -208,6 +208,48 @@ export type Database = {
           },
         ]
       }
+      integrations: {
+        Row: {
+          auth_token: string | null
+          created_at: string | null
+          id: string
+          is_connected: boolean | null
+          last_synced: string | null
+          refresh_token: string | null
+          service_name: string
+          settings: Json | null
+          token_expires_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          auth_token?: string | null
+          created_at?: string | null
+          id?: string
+          is_connected?: boolean | null
+          last_synced?: string | null
+          refresh_token?: string | null
+          service_name: string
+          settings?: Json | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          auth_token?: string | null
+          created_at?: string | null
+          id?: string
+          is_connected?: boolean | null
+          last_synced?: string | null
+          refresh_token?: string | null
+          service_name?: string
+          settings?: Json | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           created_at: string

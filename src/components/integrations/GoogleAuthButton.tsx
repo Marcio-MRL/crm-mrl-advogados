@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Google, Loader2 } from 'lucide-react';
+import { Globe, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -74,7 +74,7 @@ export function GoogleAuthButton({ service, onSuccess }: GoogleAuthButtonProps) 
       {isLoading ? (
         <Loader2 className="h-4 w-4 animate-spin" />
       ) : (
-        <Google className="h-4 w-4" />
+        <Globe className="h-4 w-4" />
       )}
       Conectar {serviceName}
     </Button>

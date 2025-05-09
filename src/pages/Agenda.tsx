@@ -14,12 +14,13 @@ export default function Agenda() {
       <Header 
         title="Agenda" 
         subtitle="Gerencie seus compromissos e integre com Google Calendar" 
-        action={
-          <Button className="bg-lawblue-500 hover:bg-lawblue-600">
-            <Plus className="mr-2 h-4 w-4" /> Novo Evento
-          </Button>
-        }
       />
+      
+      <div className="flex justify-end mb-4">
+        <Button className="bg-lawblue-500 hover:bg-lawblue-600">
+          <Plus className="mr-2 h-4 w-4" /> Novo Evento
+        </Button>
+      </div>
       
       <div className="glass-card rounded-lg p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Integrações Google</h2>
@@ -33,7 +34,7 @@ export default function Agenda() {
         </TabsList>
         
         <TabsContent value="calendar" className="bg-white/70 p-4 rounded-lg shadow-sm">
-          <CalendarDaysView />
+          <CalendarDaysView view="week" />
         </TabsContent>
         
         <TabsContent value="list">

@@ -1,4 +1,5 @@
 
+
 -- Este arquivo é apenas para referência e teria que ser executado no Supabase SQL Editor
 
 -- Criar tabela de integrações
@@ -33,3 +34,4 @@ CREATE POLICY "Usuários podem atualizar suas próprias integrações" ON public
   
 CREATE POLICY "Usuários podem excluir suas próprias integrações" ON public.integrations
   FOR DELETE USING (auth.uid() = user_id);
+
