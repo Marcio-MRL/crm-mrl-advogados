@@ -12,11 +12,15 @@ import { toast } from 'sonner';
 
 export default function Financeiro() {
   const handleExportToSheets = () => {
-    toast.success("Exportado para o Google Sheets com sucesso!");
+    toast.info("Funcionalidade de exportação para Google Sheets será implementada em breve.");
   };
 
   const handleImportFromSheets = () => {
-    toast.success("Importado do Google Sheets com sucesso!");
+    toast.info("Funcionalidade de importação do Google Sheets será implementada em breve.");
+  };
+
+  const handleNovaTransacao = () => {
+    toast.info("Funcionalidade para adicionar nova transação será implementada em breve.");
   };
 
   return (
@@ -27,7 +31,10 @@ export default function Financeiro() {
       />
       
       <div className="flex justify-end mb-4">
-        <Button className="bg-lawblue-500 hover:bg-lawblue-600">
+        <Button 
+          className="bg-lawblue-500 hover:bg-lawblue-600"
+          onClick={handleNovaTransacao}
+        >
           <Plus className="mr-2 h-4 w-4" /> Nova Transação
         </Button>
       </div>

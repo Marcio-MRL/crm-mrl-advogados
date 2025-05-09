@@ -11,6 +11,11 @@ interface ChecklistTemplate {
   category: string;
 }
 
+interface ChecklistTemplateListProps {
+  onApplyTemplate?: (templateId: string) => void;
+  onManageTemplates?: () => void;
+}
+
 const mockTemplates: ChecklistTemplate[] = [
   { id: '1', title: 'Contrato de Prestação de Serviços', itemCount: 8, category: 'Contratos' },
   { id: '2', title: 'Audiência Trabalhista', itemCount: 5, category: 'Processual' },
@@ -19,7 +24,19 @@ const mockTemplates: ChecklistTemplate[] = [
   { id: '5', title: 'Processo Tributário', itemCount: 7, category: 'Tributário' },
 ];
 
-export function ChecklistTemplateList() {
+export function ChecklistTemplateList({ onApplyTemplate, onManageTemplates }: ChecklistTemplateListProps) {
+  const handleApplyTemplate = (templateId: string) => {
+    if (onApplyTemplate) {
+      onApplyTemplate(templateId);
+    }
+  };
+
+  const handleManageTemplates = () => {
+    if (onManageTemplates) {
+      onManageTemplates();
+    }
+  };
+  
   return (
     <Card>
       <CardHeader>
@@ -38,7 +55,12 @@ export function ChecklistTemplateList() {
                     <span>{template.category}</span>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" className="h-6 w-6">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-6 w-6"
+                  onClick={() => handleApplyTemplate(template.id)}
+                >
                   <PlusCircle className="h-4 w-4" />
                 </Button>
               </div>
@@ -47,7 +69,11 @@ export function ChecklistTemplateList() {
         </div>
         
         <div className="mt-4">
-          <Button variant="outline" className="w-full flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            className="w-full flex items-center gap-2"
+            onClick={handleManageTemplates}
+          >
             <Clipboard className="h-4 w-4" />
             <span>Gerenciar Modelos</span>
           </Button>

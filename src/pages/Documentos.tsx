@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +9,8 @@ import { DocumentGrid } from '@/components/documents/DocumentGrid';
 import { DocumentTable } from '@/components/documents/DocumentTable';
 import { DocumentUploadForm } from '@/components/documents/DocumentUploadForm';
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { toast } from 'sonner';
 import { 
   Search, 
   Plus, 
@@ -23,9 +26,24 @@ import {
 export default function Documentos() {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isNewDocModalOpen, setIsNewDocModalOpen] = useState(false);
   
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
+  };
+
+  const handleUpload = () => {
+    setIsUploadModalOpen(true);
+  };
+
+  const handleNewDocument = () => {
+    setIsNewDocModalOpen(true);
+  };
+
+  const handleUploadSuccess = () => {
+    setIsUploadModalOpen(false);
+    toast.success("Documento enviado com sucesso!");
   };
 
   return (
@@ -64,11 +82,18 @@ export default function Documentos() {
             </Button>
           </div>
           
-          <Button variant="outline" className="flex items-center gap-1">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-1"
+            onClick={handleUpload}
+          >
             <Upload className="h-4 w-4" /> Fazer Upload
           </Button>
           
-          <Button className="flex items-center gap-1 bg-lawblue-500 hover:bg-lawblue-600">
+          <Button 
+            className="flex items-center gap-1 bg-lawblue-500 hover:bg-lawblue-600"
+            onClick={handleNewDocument}
+          >
             <Plus className="h-4 w-4" /> Novo Documento
           </Button>
         </div>
@@ -140,6 +165,38 @@ export default function Documentos() {
           )}
         </div>
       </div>
+
+      {/* Modal de Upload */}
+      <Dialog open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Fazer Upload de Documento</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-500">
+              Selecione o arquivo que deseja fazer upload para o Google Drive do escritório.
+            </p>
+            <DocumentUploadForm onSuccess={handleUploadSuccess} />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Novo Documento */}
+      <Dialog open={isNewDocModalOpen} onOpenChange={setIsNewDocModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Criar Novo Documento</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-500">
+              Funcionalidade para criação de novos documentos será implementada em breve.
+            </p>
+            <div className="flex justify-end">
+              <Button onClick={() => setIsNewDocModalOpen(false)}>Fechar</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

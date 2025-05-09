@@ -7,6 +7,8 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Plus, Filter } from 'lucide-react';
+import { ProcessoViewModal } from '@/components/modals/ProcessoViewModal';
+import { toast } from 'sonner';
 
 const mockProcessos = [
   { id: '1', numero: 'PROC-001/2025', cliente: 'Empresa ABC Ltda.', tipo: 'Administrativo', status: 'Em andamento', dataInicio: '2025-01-15', responsavel: 'Dra. Ana Silva' },
@@ -19,6 +21,8 @@ const mockProcessos = [
 export default function Processos() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredProcessos, setFilteredProcessos] = useState(mockProcessos);
+  const [currentProcesso, setCurrentProcesso] = useState<any>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value.toLowerCase();
@@ -34,6 +38,19 @@ export default function Processos() {
     );
     
     setFilteredProcessos(filtered);
+  };
+
+  const handleViewProcesso = (processo: any) => {
+    setCurrentProcesso(processo);
+    setIsViewModalOpen(true);
+  };
+
+  const handleNovoProcesso = () => {
+    toast.info("Funcionalidade de novo processo será implementada em breve!");
+  };
+
+  const handleFiltros = () => {
+    toast.info("Funcionalidade de filtros avançados será implementada em breve!");
   };
 
   return (
@@ -53,10 +70,17 @@ export default function Processos() {
         </div>
         
         <div className="flex flex-col sm:flex-row gap-2">
-          <Button variant="outline" className="flex items-center gap-1">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-1"
+            onClick={handleFiltros}
+          >
             <Filter className="h-4 w-4" /> Filtros
           </Button>
-          <Button className="flex items-center gap-1 bg-lawblue-500 hover:bg-lawblue-600">
+          <Button 
+            className="flex items-center gap-1 bg-lawblue-500 hover:bg-lawblue-600"
+            onClick={handleNovoProcesso}
+          >
             <Plus className="h-4 w-4" /> Novo Processo
           </Button>
         </div>
@@ -105,7 +129,13 @@ export default function Processos() {
                   <TableCell className="hidden md:table-cell">{new Date(processo.dataInicio).toLocaleDateString('pt-BR')}</TableCell>
                   <TableCell className="hidden md:table-cell">{processo.responsavel}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="sm">Visualizar</Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleViewProcesso(processo)}
+                    >
+                      Visualizar
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -113,6 +143,12 @@ export default function Processos() {
           </Table>
         </Tabs>
       </div>
+
+      <ProcessoViewModal 
+        isOpen={isViewModalOpen} 
+        onClose={() => setIsViewModalOpen(false)} 
+        processo={currentProcesso} 
+      />
     </div>
   );
 }

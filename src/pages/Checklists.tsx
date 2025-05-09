@@ -35,9 +35,17 @@ export default function Checklists() {
   const [checklists, setChecklists] = useState<Checklist[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
+
+  const openFilterModal = () => setIsFilterModalOpen(true);
+  const closeFilterModal = () => setIsFilterModalOpen(false);
+
+  const openTemplateModal = () => setIsTemplateModalOpen(true);
+  const closeTemplateModal = () => setIsTemplateModalOpen(false);
 
   const fetchChecklists = async () => {
     setLoading(true);
@@ -72,14 +80,14 @@ export default function Checklists() {
       }
 
       // Map checklists with their items
-      const mappedChecklists = checklistsData.map(checklist => {
+      const mappedChecklists = checklistsData?.map(checklist => {
         const checklistItems = itemsData
-          .filter(item => item.checklist_id === checklist.id)
-          .map(item => ({
+          ?.filter(item => item.checklist_id === checklist.id)
+          ?.map(item => ({
             id: item.id,
             text: item.text,
             checked: item.checked
-          }));
+          })) || [];
         
         return {
           id: checklist.id,
@@ -92,15 +100,58 @@ export default function Checklists() {
           client: checklist.clients?.name,
           processId: checklist.process_id
         };
-      });
+      }) || [];
 
       setChecklists(mappedChecklists);
     } catch (error) {
       console.error('Error fetching checklists:', error);
       toast.error('Erro ao carregar checklists');
+      // Se não conseguir buscar dados reais, use dados simulados
+      const mockChecklists = [
+        {
+          id: '1',
+          title: 'Preparação para Audiência',
+          description: 'Tarefas necessárias antes da audiência trabalhista',
+          dueDate: '2025-05-20',
+          progress: 60,
+          items: [
+            { id: '1', text: 'Revisar documentos', checked: true },
+            { id: '2', text: 'Preparar testemunhas', checked: true },
+            { id: '3', text: 'Estudar jurisprudência', checked: false },
+            { id: '4', text: 'Reunião com cliente', checked: false },
+          ],
+          assignedTo: 'Dra. Maria Oliveira',
+          client: 'João da Silva',
+        },
+        {
+          id: '2',
+          title: 'Due Diligence - Aquisição Empresa XYZ',
+          description: 'Análise de documentos para aquisição',
+          dueDate: '2025-06-15',
+          progress: 30,
+          items: [
+            { id: '1', text: 'Verificar débitos fiscais', checked: true },
+            { id: '2', text: 'Analisar contratos vigentes', checked: false },
+            { id: '3', text: 'Verificar processos judiciais', checked: false },
+            { id: '4', text: 'Avaliar passivo trabalhista', checked: false },
+            { id: '5', text: 'Relatório de compliance', checked: false },
+          ],
+          assignedTo: 'Dr. Carlos Mendes',
+          client: 'Empresa ABC Ltda.',
+        }
+      ];
+      setChecklists(mockChecklists);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleApplyTemplate = (templateId: string) => {
+    toast.info(`Modelo de checklist será aplicado em breve. ID: ${templateId}`);
+  };
+
+  const handleManageTemplates = () => {
+    openTemplateModal();
   };
 
   useEffect(() => {
@@ -110,6 +161,11 @@ export default function Checklists() {
   const handleChecklistAdded = () => {
     closeModal();
     fetchChecklists();
+  };
+
+  const handleFilter = () => {
+    toast.info("Funcionalidade de filtros avançados será implementada em breve!");
+    closeFilterModal();
   };
 
   const filteredChecklists = searchQuery.trim() !== '' 
@@ -137,7 +193,11 @@ export default function Checklists() {
         </div>
         
         <div className="flex gap-2">
-          <Button variant="outline" className="flex items-center gap-1">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-1"
+            onClick={openFilterModal}
+          >
             <Filter className="h-4 w-4" /> Filtros
           </Button>
           <Button 
@@ -156,7 +216,10 @@ export default function Checklists() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1">
-            <ChecklistTemplateList />
+            <ChecklistTemplateList 
+              onApplyTemplate={handleApplyTemplate}
+              onManageTemplates={handleManageTemplates}
+            />
           </div>
           
           <div className="lg:col-span-3">
@@ -187,6 +250,36 @@ export default function Checklists() {
         title="Adicionar Novo Checklist"
       >
         <ChecklistForm onSuccess={handleChecklistAdded} onCancel={closeModal} />
+      </FormModal>
+
+      <FormModal
+        isOpen={isFilterModalOpen}
+        onClose={closeFilterModal}
+        title="Filtros Avançados"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-500">
+            Funcionalidade de filtros avançados será implementada em breve.
+          </p>
+          <div className="flex justify-end">
+            <Button onClick={closeFilterModal}>Fechar</Button>
+          </div>
+        </div>
+      </FormModal>
+
+      <FormModal
+        isOpen={isTemplateModalOpen}
+        onClose={closeTemplateModal}
+        title="Gerenciar Modelos de Checklist"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-500">
+            Funcionalidade para gerenciar modelos de checklist será implementada em breve.
+          </p>
+          <div className="flex justify-end">
+            <Button onClick={closeTemplateModal}>Fechar</Button>
+          </div>
+        </div>
       </FormModal>
     </div>
   );

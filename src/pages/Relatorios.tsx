@@ -23,9 +23,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { toast } from 'sonner';
 
 export default function Relatorios() {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+
+  const handleExport = () => {
+    toast.info("Funcionalidade de exportação será implementada em breve.");
+  };
+
+  const handleDownloadPDF = () => {
+    toast.info("Funcionalidade de download de PDF será implementada em breve.");
+  };
 
   return (
     <div className="w-full space-y-6">
@@ -52,13 +68,25 @@ export default function Relatorios() {
         </div>
         
         <div className="flex gap-2">
-          <Button variant="outline" className="flex items-center gap-1">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-1"
+            onClick={() => setIsFilterModalOpen(true)}
+          >
             <Filter className="h-4 w-4" /> Filtros
           </Button>
-          <Button variant="outline" className="flex items-center gap-1">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-1"
+            onClick={handleExport}
+          >
             <FileSpreadsheet className="h-4 w-4" /> Exportar
           </Button>
-          <Button variant="outline" className="flex items-center gap-1">
+          <Button 
+            variant="outline" 
+            className="flex items-center gap-1"
+            onClick={handleDownloadPDF}
+          >
             <Download className="h-4 w-4" /> Baixar PDF
           </Button>
         </div>
@@ -117,6 +145,23 @@ export default function Relatorios() {
           <ReportsList />
         </CardContent>
       </Card>
+
+      {/* Modal de Filtros */}
+      <Dialog open={isFilterModalOpen} onOpenChange={setIsFilterModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Filtros Avançados</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-500">
+              Funcionalidade de filtros avançados será implementada em breve.
+            </p>
+            <div className="flex justify-end">
+              <Button onClick={() => setIsFilterModalOpen(false)}>Fechar</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
