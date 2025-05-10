@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Clipboard } from 'lucide-react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getCurrentUserId } from '@/integrations/supabase/client';
 
 interface ChecklistTemplate {
   id: string;
@@ -120,6 +120,14 @@ export function ChecklistTemplateList({ onApplyTemplate, onManageTemplates }: Ch
         onApplyTemplate(templateId);
       } else {
         // Caso contrário, aplicar o template diretamente
+        // Obter o ID do usuário atual
+        const userId = await getCurrentUserId();
+        
+        if (!userId) {
+          toast.error("Você precisa estar logado para criar um checklist.");
+          return;
+        }
+        
         // Criar novo checklist baseado no template
         const { data: checklistData, error: checklistError } = await supabase
           .from('checklists')
@@ -128,6 +136,7 @@ export function ChecklistTemplateList({ onApplyTemplate, onManageTemplates }: Ch
             description: `Baseado no modelo "${selectedTemplate.title}"`,
             progress: 0,
             due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Data padrão: 2 semanas
+            user_id: userId // Adicionar o ID do usuário
           })
           .select('id')
           .single();
