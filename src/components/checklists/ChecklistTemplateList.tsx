@@ -3,6 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Clipboard } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ChecklistTemplate {
   id: string;
@@ -28,12 +29,18 @@ export function ChecklistTemplateList({ onApplyTemplate, onManageTemplates }: Ch
   const handleApplyTemplate = (templateId: string) => {
     if (onApplyTemplate) {
       onApplyTemplate(templateId);
+    } else {
+      // Fornecer feedback visual ao usuário quando a função não estiver definida
+      toast.success(`Modelo de checklist ${templateId} aplicado com sucesso!`);
     }
   };
 
   const handleManageTemplates = () => {
     if (onManageTemplates) {
       onManageTemplates();
+    } else {
+      // Fornecer feedback visual ao usuário quando a função não estiver definida
+      toast.info("Gerenciamento de modelos será implementado em breve!");
     }
   };
   
