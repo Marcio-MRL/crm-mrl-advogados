@@ -5,28 +5,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from 'lucide-react';
-
-type LeadStage = 'new' | 'qualified' | 'meeting' | 'proposal' | 'hired';
-
-interface Lead {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  document: string;
-  source: string;
-  stage: LeadStage;
-  lastContact: string;
-  responsibleLawyer: string;
-  daysSinceLastContact: number;
-}
+import { Lead } from '@/types/lead';
 
 interface LeadCardProps {
   lead: Lead;
   className?: string;
+  onAction?: (action: string) => void;
 }
 
-const stageColors: Record<LeadStage, string> = {
+const stageColors: Record<Lead['stage'], string> = {
   new: 'bg-blue-100 text-blue-800',
   qualified: 'bg-purple-100 text-purple-800',
   meeting: 'bg-orange-100 text-orange-800',
@@ -34,7 +21,7 @@ const stageColors: Record<LeadStage, string> = {
   hired: 'bg-green-100 text-green-800',
 };
 
-const stageName: Record<LeadStage, string> = {
+const stageName: Record<Lead['stage'], string> = {
   new: 'Novo',
   qualified: 'Qualificado',
   meeting: 'Reunião',
@@ -42,7 +29,7 @@ const stageName: Record<LeadStage, string> = {
   hired: 'Contratado',
 };
 
-export function LeadCard({ lead, className }: LeadCardProps) {
+export function LeadCard({ lead, className, onAction }: LeadCardProps) {
   return (
     <Card className={cn("glass-card border-none hover:shadow-md transition-shadow", className)}>
       <CardContent className="p-4">
@@ -76,14 +63,28 @@ export function LeadCard({ lead, className }: LeadCardProps) {
         </div>
         
         <div className="mt-4 flex justify-between">
-          <Button variant="outline" size="sm" className="text-xs">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-xs"
+            onClick={() => onAction?.('agendar')}
+          >
             Agendar
           </Button>
-          <Button variant="outline" size="sm" className="text-xs">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-xs"
+            onClick={() => onAction?.('contatar')}
+          >
             Contatar
           </Button>
           {lead.stage === 'proposal' && (
-            <Button size="sm" className="text-xs bg-lawblue-500 hover:bg-lawblue-600">
+            <Button 
+              size="sm" 
+              className="text-xs bg-lawblue-500 hover:bg-lawblue-600"
+              onClick={() => onAction?.('converter')}
+            >
               Converter <ArrowRight size={14} className="ml-1" />
             </Button>
           )}
