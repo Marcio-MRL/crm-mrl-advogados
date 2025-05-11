@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -49,8 +50,13 @@ export function ContratoForm({
 
   useEffect(() => {
     if (initialData && isEditing) {
-      // Format value as string for the form
-      const valueString = initialData.value ? initialData.value.toString() : '';
+      // Format value as string with Brazilian currency format
+      const valueString = initialData.value 
+        ? initialData.value.toLocaleString('pt-BR', { 
+            minimumFractionDigits: 2, 
+            maximumFractionDigits: 2 
+          })
+        : '';
       
       form.reset({
         number: initialData.number || '',
@@ -75,7 +81,10 @@ export function ContratoForm({
       }
       
       // Format value as numeric for database
-      const valueNumeric = data.value ? parseFloat(data.value.replace(/\./g, '').replace(',', '.')) : null;
+      // Replace all dots (thousand separators) and then replace comma with dot
+      const valueNumeric = data.value 
+        ? parseFloat(data.value.replace(/\./g, '').replace(',', '.')) 
+        : null;
       
       if (isEditing && initialData?.id) {
         // Update existing contract

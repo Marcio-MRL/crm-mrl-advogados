@@ -74,6 +74,16 @@ export function ContratoViewModal({ isOpen, onClose, contratoId, onEdit, onDelet
     }
   };
 
+  const formatCurrencyBRL = (value: number | null | undefined) => {
+    if (value === null || value === undefined) return 'Não especificado';
+    return value.toLocaleString('pt-BR', { 
+      style: 'currency', 
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
@@ -124,10 +134,7 @@ export function ContratoViewModal({ isOpen, onClose, contratoId, onEdit, onDelet
             <div className="flex flex-col">
               <span className="text-sm font-medium text-gray-500">Valor</span>
               <span className="text-lg font-semibold">
-                {typeof contrato.value === 'number' 
-                  ? contrato.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-                  : 'Não especificado'
-                }
+                {formatCurrencyBRL(contrato.value)}
               </span>
             </div>
             

@@ -27,10 +27,10 @@ export function ValueAndStatusFields({ form }: ValueAndStatusFieldsProps) {
     // Handle the input formatting
     if (value) {
       // First, standardize the input by replacing commas with dots for calculation
-      const numericValue = value.replace(/\./g, '').replace(',', '.');
+      const standardizedInput = value.replace(/\./g, '').replace(',', '.');
       
       // Parse value to get a number
-      let number = parseFloat(numericValue);
+      let number = parseFloat(standardizedInput);
       if (isNaN(number)) number = 0;
       
       // Format back to Brazilian format with comma as decimal separator
