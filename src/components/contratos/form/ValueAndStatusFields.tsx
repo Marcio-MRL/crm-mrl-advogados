@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useFormContext } from 'react-hook-form';
+import { UseFormReturn } from 'react-hook-form';
 import { 
   FormControl, 
   FormField, 
@@ -10,10 +10,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ContratoFormValues } from '@/utils/contract-form-utils';
 
-export function ValueAndStatusFields() {
-  const form = useFormContext();
+interface ValueAndStatusFieldsProps {
+  form: UseFormReturn<ContratoFormValues>;
+}
 
+export function ValueAndStatusFields({ form }: ValueAndStatusFieldsProps) {
   // Handle currency formatting
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
