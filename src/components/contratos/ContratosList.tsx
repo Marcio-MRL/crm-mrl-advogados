@@ -20,7 +20,6 @@ export function ContratosList() {
   const [viewContrato, setViewContrato] = useState<string | null>(null);
   const [editContrato, setEditContrato] = useState<string | null>(null);
   const [deleteContrato, setDeleteContrato] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchContratos = async () => {
     setLoading(true);
@@ -62,16 +61,15 @@ export function ContratosList() {
   };
 
   const handleSearch = (query: string) => {
-    setSearchQuery(query);
     if (!query.trim()) {
       setFilteredContratos(contratos);
       return;
     }
     
     const filtered = contratos.filter(contrato => 
-      contrato.number.toLowerCase().includes(query.toLowerCase()) ||
-      contrato.type.toLowerCase().includes(query.toLowerCase()) ||
-      contrato.status.toLowerCase().includes(query.toLowerCase()) ||
+      contrato.number?.toLowerCase().includes(query.toLowerCase()) ||
+      contrato.type?.toLowerCase().includes(query.toLowerCase()) ||
+      contrato.status?.toLowerCase().includes(query.toLowerCase()) ||
       (contrato.description && contrato.description.toLowerCase().includes(query.toLowerCase()))
     );
     

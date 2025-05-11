@@ -123,15 +123,15 @@ export function ContratoForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <BasicInfoFields />
+        <BasicInfoFields form={form} />
         
-        <ClientField />
+        <ClientField form={form} />
         
-        <DateFields />
+        <DateFields form={form} />
         
         <ValueAndStatusFields />
         
-        <DescriptionField />
+        <DescriptionField form={form} />
         
         <div className="flex justify-end space-x-2 pt-4">
           <Button type="button" variant="outline" onClick={onCancel}>
