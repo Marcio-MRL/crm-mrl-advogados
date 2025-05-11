@@ -24,17 +24,17 @@ export function ValueAndStatusFields({ form }: ValueAndStatusFieldsProps) {
     // Remove non-numeric characters except for comma and dot
     value = value.replace(/[^\d.,]/g, '');
     
-    // Convert to Brazilian currency format
+    // Handle the input formatting
     if (value) {
-      // Remove all dots (thousand separators)
-      value = value.replace(/\./g, '');
-      // Replace comma with dot for calculation
-      const numericValue = value.replace(',', '.');
+      // First, standardize the input by replacing commas with dots for calculation
+      const numericValue = value.replace(/\./g, '').replace(',', '.');
+      
       // Parse value to get a number
       let number = parseFloat(numericValue);
       if (isNaN(number)) number = 0;
       
       // Format back to Brazilian format with comma as decimal separator
+      // and dots as thousands separator
       value = number.toLocaleString('pt-BR', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
