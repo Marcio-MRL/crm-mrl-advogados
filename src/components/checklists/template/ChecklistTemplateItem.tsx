@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from 'lucide-react';
 import type { ChecklistTemplate } from '@/types/checklist';
+import { toast } from 'sonner';
 
 interface ChecklistTemplateItemProps {
   template: ChecklistTemplate;
@@ -10,6 +11,12 @@ interface ChecklistTemplateItemProps {
 }
 
 export function ChecklistTemplateItem({ template, onApplyTemplate }: ChecklistTemplateItemProps) {
+  const handleApplyTemplate = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent any parent click events
+    onApplyTemplate(template.id);
+    toast.success(`Modelo "${template.title}" aplicado com sucesso!`);
+  };
+
   return (
     <div className="p-3 bg-gray-50 rounded-md hover:bg-gray-100 cursor-pointer transition-colors">
       <div className="flex items-center justify-between">
@@ -25,7 +32,7 @@ export function ChecklistTemplateItem({ template, onApplyTemplate }: ChecklistTe
           variant="ghost" 
           size="icon" 
           className="h-6 w-6"
-          onClick={() => onApplyTemplate(template.id)}
+          onClick={handleApplyTemplate}
         >
           <PlusCircle className="h-4 w-4" />
         </Button>
