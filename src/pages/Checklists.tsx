@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
-import { ChecklistTemplateList } from '@/components/checklists/ChecklistTemplateList';
+import { ChecklistTemplateList } from '@/components/checklists/template/ChecklistTemplateList';
 import { ChecklistGrid } from '@/components/checklists/ChecklistGrid';
 import { ChecklistSearchFilters } from '@/components/checklists/ChecklistSearchFilters';
 import { ChecklistModals } from '@/components/checklists/ChecklistModals';
