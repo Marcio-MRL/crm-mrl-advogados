@@ -6,7 +6,7 @@ import { FinancialSummary } from '@/components/financial/FinancialSummary';
 import { FinancialTransactionsTable } from '@/components/financial/FinancialTransactionsTable';
 import { FinancialChart } from '@/components/financial/FinancialChart';
 import { Button } from '@/components/ui/button';
-import { Plus, FileSpreadsheet, Download, Upload } from 'lucide-react';
+import { FileSpreadsheet, Download, Upload } from 'lucide-react';
 import { GoogleIntegrations } from '@/components/integrations/GoogleIntegrations';
 import { toast } from 'sonner';
 
@@ -19,25 +19,12 @@ export default function Financeiro() {
     toast.info("Funcionalidade de importação do Google Sheets será implementada em breve.");
   };
 
-  const handleNovaTransacao = () => {
-    toast.info("Funcionalidade para adicionar nova transação será implementada em breve.");
-  };
-
   return (
     <div className="w-full space-y-6">
       <Header 
         title="Financeiro" 
         subtitle="Gestão financeira e fluxo de caixa do escritório" 
       />
-      
-      <div className="flex justify-end mb-4">
-        <Button 
-          className="bg-lawblue-500 hover:bg-lawblue-600"
-          onClick={handleNovaTransacao}
-        >
-          <Plus className="mr-2 h-4 w-4" /> Nova Transação
-        </Button>
-      </div>
       
       <div className="glass-card rounded-lg p-6 mb-6">
         <div className="flex justify-between items-center mb-4">

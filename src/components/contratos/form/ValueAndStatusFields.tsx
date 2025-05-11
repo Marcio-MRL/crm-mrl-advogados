@@ -1,28 +1,46 @@
 
 import React from 'react';
-import { UseFormReturn } from 'react-hook-form';
+import { useFormContext } from 'react-hook-form';
 import { 
+  FormControl, 
   FormField, 
   FormItem, 
   FormLabel, 
-  FormControl, 
   FormMessage 
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ContratoFormValues } from '@/utils/contract-form-utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-interface ValueAndStatusFieldsProps {
-  form: UseFormReturn<ContratoFormValues>;
-}
+export function ValueAndStatusFields() {
+  const form = useFormContext();
 
-export const ValueAndStatusFields: React.FC<ValueAndStatusFieldsProps> = ({ form }) => {
+  // Handle currency formatting
+  const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value;
+    
+    // Remove non-numeric characters except for comma and dot
+    value = value.replace(/[^\d.,]/g, '');
+    
+    // Convert to Brazilian currency format
+    if (value) {
+      // Remove all dots (thousand separators)
+      value = value.replace(/\./g, '');
+      // Replace comma with dot for calculation
+      const numericValue = value.replace(',', '.');
+      // Parse value to get a number
+      let number = parseFloat(numericValue);
+      if (isNaN(number)) number = 0;
+      
+      // Format back to Brazilian format with comma as decimal separator
+      value = number.toLocaleString('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    }
+    
+    form.setValue('value', value);
+  };
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormField
@@ -30,24 +48,12 @@ export const ValueAndStatusFields: React.FC<ValueAndStatusFieldsProps> = ({ form
         name="value"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Valor</FormLabel>
+            <FormLabel>Valor (R$)</FormLabel>
             <FormControl>
               <Input 
-                placeholder="R$ 0,00" 
+                placeholder="0,00" 
                 {...field} 
-                onChange={(e) => {
-                  // Simple currency formatting
-                  let value = e.target.value.replace(/\D/g, '');
-                  if (value) {
-                    value = (parseInt(value) / 100).toLocaleString('pt-BR', {
-                      style: 'currency',
-                      currency: 'BRL'
-                    });
-                  } else {
-                    value = '';
-                  }
-                  field.onChange(value);
-                }}
+                onChange={handleValueChange}
               />
             </FormControl>
             <FormMessage />
@@ -61,7 +67,11 @@ export const ValueAndStatusFields: React.FC<ValueAndStatusFieldsProps> = ({ form
         render={({ field }) => (
           <FormItem>
             <FormLabel>Status</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select 
+              onValueChange={field.onChange} 
+              defaultValue={field.value}
+              value={field.value}
+            >
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o status" />
@@ -69,9 +79,10 @@ export const ValueAndStatusFields: React.FC<ValueAndStatusFieldsProps> = ({ form
               </FormControl>
               <SelectContent>
                 <SelectItem value="Ativo">Ativo</SelectItem>
-                <SelectItem value="Em elaboração">Em elaboração</SelectItem>
-                <SelectItem value="Vencido">Vencido</SelectItem>
+                <SelectItem value="Inativo">Inativo</SelectItem>
+                <SelectItem value="Concluído">Concluído</SelectItem>
                 <SelectItem value="Cancelado">Cancelado</SelectItem>
+                <SelectItem value="Pendente">Pendente</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />
@@ -80,4 +91,4 @@ export const ValueAndStatusFields: React.FC<ValueAndStatusFieldsProps> = ({ form
       />
     </div>
   );
-};
+}
