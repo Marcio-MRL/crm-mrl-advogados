@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useForm, FormProvider } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form } from "@/components/ui/form";
 import { supabase, getCurrentUserId } from '@/integrations/supabase/client';
@@ -43,7 +43,23 @@ export function LeadForm({ onSuccess, onCancel }: LeadFormProps) {
         return;
       }
 
-      // Simulação de envio para o banco de dados
+      const { error } = await supabase.from('leads').insert({
+        nome_lead: data.name,
+        email: data.email || null,
+        telefone: data.phone || null,
+        origem_lead: data.source || null,
+        status_lead: data.status,
+        observacoes: data.notes || null,
+        data_criacao: new Date().toISOString(),
+        data_ultima_interacao: new Date().toISOString()
+      });
+
+      if (error) {
+        console.error('Error inserting lead:', error);
+        toast.error('Erro ao adicionar lead: ' + error.message);
+        return;
+      }
+
       toast.success('Lead adicionado com sucesso!');
       form.reset();
       onSuccess?.();
@@ -56,16 +72,14 @@ export function LeadForm({ onSuccess, onCancel }: LeadFormProps) {
   };
 
   return (
-    <FormProvider {...form}>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <BasicInfoFields />
-          <ContactFields />
-          <ClassificationFields />
-          <NotesField />
-          <FormActions isSubmitting={isSubmitting} onCancel={onCancel} />
-        </form>
-      </Form>
-    </FormProvider>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <BasicInfoFields />
+        <ContactFields />
+        <ClassificationFields />
+        <NotesField />
+        <FormActions isSubmitting={isSubmitting} onCancel={onCancel} />
+      </form>
+    </Form>
   );
 }
