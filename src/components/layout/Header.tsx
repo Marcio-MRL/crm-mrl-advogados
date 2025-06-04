@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { 
   Bell, 
   Calendar,
@@ -9,6 +10,7 @@ import {
   User
 } from 'lucide-react';
 import { Input } from "@/components/ui/input";
+import { toast } from 'sonner';
 
 interface HeaderProps {
   title: string;
@@ -17,6 +19,7 @@ interface HeaderProps {
 
 export function Header({ title, subtitle }: HeaderProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   // Get first name if available or use email username
   const firstName = user?.user_metadata?.first_name || 
@@ -27,6 +30,18 @@ export function Header({ title, subtitle }: HeaderProps) {
     title === "Visão Geral" 
       ? `${firstName}, bem-vindo ao CRM do MRL Advogados.`
       : subtitle;
+
+  const handleCalendarClick = () => {
+    navigate('/agenda');
+  };
+
+  const handleNotificationsClick = () => {
+    toast.info("Central de notificações será implementada em breve.");
+  };
+
+  const handleProfileClick = () => {
+    toast.info("Perfil do usuário será implementado em breve.");
+  };
   
   return (
     <header className="w-full glass-card mb-6 rounded-lg">
@@ -47,16 +62,34 @@ export function Header({ title, subtitle }: HeaderProps) {
           </div>
           
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="text-gray-600">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-gray-600"
+              onClick={handleCalendarClick}
+              title="Ir para Agenda"
+            >
               <Calendar size={18} />
             </Button>
             
-            <Button variant="ghost" size="icon" className="text-gray-600 relative">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-gray-600 relative"
+              onClick={handleNotificationsClick}
+              title="Notificações"
+            >
               <Bell size={18} />
               <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-red-500"></span>
             </Button>
             
-            <Button variant="ghost" size="icon" className="text-gray-600">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="text-gray-600"
+              onClick={handleProfileClick}
+              title="Perfil do Usuário"
+            >
               <User size={18} />
             </Button>
           </div>

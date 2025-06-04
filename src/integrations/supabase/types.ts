@@ -250,51 +250,80 @@ export type Database = {
         }
         Relationships: []
       }
-      leads: {
+      lead_updates: {
         Row: {
           created_at: string
-          document: string | null
-          email: string | null
-          id: string
-          last_contact: string | null
-          name: string
-          notes: string | null
-          phone: string | null
-          responsible_lawyer: string | null
-          source: string | null
-          stage: string
+          data_update: string
+          lead_id: number
+          texto_update: string
+          update_id: number
           updated_at: string
-          user_id: string
         }
         Insert: {
           created_at?: string
-          document?: string | null
-          email?: string | null
-          id?: string
-          last_contact?: string | null
-          name: string
-          notes?: string | null
-          phone?: string | null
-          responsible_lawyer?: string | null
-          source?: string | null
-          stage?: string
+          data_update?: string
+          lead_id: number
+          texto_update: string
+          update_id?: number
           updated_at?: string
-          user_id: string
         }
         Update: {
           created_at?: string
-          document?: string | null
-          email?: string | null
-          id?: string
-          last_contact?: string | null
-          name?: string
-          notes?: string | null
-          phone?: string | null
-          responsible_lawyer?: string | null
-          source?: string | null
-          stage?: string
+          data_update?: string
+          lead_id?: number
+          texto_update?: string
+          update_id?: number
           updated_at?: string
-          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_lead_updates_lead_id"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["lead_id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          created_at: string | null
+          data_criacao: string
+          data_ultima_interacao: string | null
+          email: string | null
+          lead_id: number
+          nome_lead: string
+          observacoes: string | null
+          origem_lead: string | null
+          status_lead: string
+          telefone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_criacao?: string
+          data_ultima_interacao?: string | null
+          email?: string | null
+          lead_id?: number
+          nome_lead: string
+          observacoes?: string | null
+          origem_lead?: string | null
+          status_lead?: string
+          telefone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_criacao?: string
+          data_ultima_interacao?: string | null
+          email?: string | null
+          lead_id?: number
+          nome_lead?: string
+          observacoes?: string | null
+          origem_lead?: string | null
+          status_lead?: string
+          telefone?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
