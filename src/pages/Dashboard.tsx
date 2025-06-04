@@ -8,7 +8,7 @@ import { ChartsSection } from '@/components/dashboard/ChartsSection';
 import { BottomCharts } from '@/components/dashboard/BottomCharts';
 import { DashboardModals } from '@/components/dashboard/DashboardModals';
 
-const urgentTasks = [
+const initialUrgentTasks = [
   {
     id: '1',
     title: 'Protocolar recurso Processo 1234-5',
@@ -44,6 +44,7 @@ const urgentTasks = [
 ];
 
 export default function Dashboard() {
+  const [urgentTasks, setUrgentTasks] = useState(initialUrgentTasks);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [isProcessModalOpen, setIsProcessModalOpen] = useState(false);
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
@@ -72,6 +73,10 @@ export default function Dashboard() {
     toast.success("Lead adicionado com sucesso!");
   };
 
+  const handleTasksChange = (newTasks: typeof urgentTasks) => {
+    setUrgentTasks(newTasks);
+  };
+
   return (
     <div>
       <Header 
@@ -87,7 +92,10 @@ export default function Dashboard() {
       
       <StatsSection />
 
-      <ChartsSection urgentTasks={urgentTasks} />
+      <ChartsSection 
+        urgentTasks={urgentTasks} 
+        onTasksChange={handleTasksChange}
+      />
 
       <BottomCharts />
 

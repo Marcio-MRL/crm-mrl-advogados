@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { TaskList } from '@/components/dashboard/TaskList';
 import { RevenueChart } from '@/components/dashboard/RevenueChart';
+import { ProcessChart } from '@/components/dashboard/ProcessChart';
+import { TaskList } from '@/components/dashboard/TaskList';
 
 interface Task {
   id: string;
@@ -14,13 +15,18 @@ interface Task {
 
 interface ChartsSectionProps {
   urgentTasks: Task[];
+  onTasksChange?: (tasks: Task[]) => void;
 }
 
-export function ChartsSection({ urgentTasks }: ChartsSectionProps) {
+export function ChartsSection({ urgentTasks, onTasksChange }: ChartsSectionProps) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
       <RevenueChart />
-      <TaskList tasks={urgentTasks} className="h-full" />
+      <ProcessChart />
+      <TaskList 
+        tasks={urgentTasks} 
+        onTasksChange={onTasksChange}
+      />
     </div>
   );
 }

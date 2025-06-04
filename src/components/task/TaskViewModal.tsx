@@ -19,9 +19,11 @@ interface TaskViewModalProps {
   isOpen: boolean;
   onClose: () => void;
   onStatusChange: (taskId: string, completed: boolean) => void;
+  onEdit: (task: Task) => void;
+  onDelete: (taskId: string) => void;
 }
 
-export function TaskViewModal({ task, isOpen, onClose, onStatusChange }: TaskViewModalProps) {
+export function TaskViewModal({ task, isOpen, onClose, onStatusChange, onEdit, onDelete }: TaskViewModalProps) {
   if (!task) return null;
   
   const handleStatusToggle = () => {
@@ -30,8 +32,14 @@ export function TaskViewModal({ task, isOpen, onClose, onStatusChange }: TaskVie
   };
   
   const handleDeleteTask = () => {
-    // Em uma aplicação real, isso enviaria uma requisição para excluir a tarefa
-    toast.success("Tarefa excluída com sucesso");
+    if (window.confirm('Tem certeza que deseja excluir esta tarefa?')) {
+      onDelete(task.id);
+      onClose();
+    }
+  };
+
+  const handleEditTask = () => {
+    onEdit(task);
     onClose();
   };
   
@@ -103,7 +111,12 @@ export function TaskViewModal({ task, isOpen, onClose, onStatusChange }: TaskVie
           </div>
           
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="text-blue-600">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-blue-600"
+              onClick={handleEditTask}
+            >
               <Edit className="h-4 w-4 mr-1" /> Editar
             </Button>
             <Button 

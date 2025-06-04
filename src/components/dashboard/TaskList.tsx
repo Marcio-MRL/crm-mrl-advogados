@@ -4,6 +4,7 @@ import { Check, Clock } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { cn } from '@/lib/utils';
 import { TaskViewModal } from '@/components/task/TaskViewModal';
+import { TaskEditModal } from '@/components/task/TaskEditModal';
 import { toast } from 'sonner';
 
 interface Task {
@@ -18,29 +19,59 @@ interface Task {
 interface TaskListProps {
   tasks: Task[];
   className?: string;
+  onTasksChange?: (tasks: Task[]) => void;
 }
 
-export function TaskList({ tasks: initialTasks, className }: TaskListProps) {
+export function TaskList({ tasks: initialTasks, className, onTasksChange }: TaskListProps) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   
+  const updateTasks = (newTasks: Task[]) => {
+    setTasks(newTasks);
+    onTasksChange?.(newTasks);
+  };
+
   const handleTaskClick = (task: Task) => {
     setSelectedTask(task);
-    setIsModalOpen(true);
+    setIsViewModalOpen(true);
   };
   
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+  const handleCloseViewModal = () => {
+    setIsViewModalOpen(false);
     setSelectedTask(null);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditingTask(null);
+  };
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveTask = (updatedTask: Task) => {
+    const newTasks = tasks.map(task => 
+      task.id === updatedTask.id ? updatedTask : task
+    );
+    updateTasks(newTasks);
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    const newTasks = tasks.filter(task => task.id !== taskId);
+    updateTasks(newTasks);
+    toast.success("Tarefa excluída com sucesso");
   };
   
   const handleStatusChange = (taskId: string, completed: boolean) => {
-    setTasks(prevTasks => 
-      prevTasks.map(task => 
-        task.id === taskId ? { ...task, completed } : task
-      )
+    const newTasks = tasks.map(task => 
+      task.id === taskId ? { ...task, completed } : task
     );
+    updateTasks(newTasks);
   };
 
   return (
@@ -103,9 +134,18 @@ export function TaskList({ tasks: initialTasks, className }: TaskListProps) {
       
       <TaskViewModal 
         task={selectedTask}
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
+        isOpen={isViewModalOpen}
+        onClose={handleCloseViewModal}
         onStatusChange={handleStatusChange}
+        onEdit={handleEditTask}
+        onDelete={handleDeleteTask}
+      />
+
+      <TaskEditModal
+        task={editingTask}
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        onSave={handleSaveTask}
       />
     </>
   );
