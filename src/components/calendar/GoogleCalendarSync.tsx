@@ -21,6 +21,12 @@ interface SyncStats {
   autoSync: boolean;
 }
 
+interface SyncSettings {
+  eventsImported?: number;
+  eventsExported?: number;
+  autoSync?: boolean;
+}
+
 export function GoogleCalendarSync({ onSyncComplete }: GoogleCalendarSyncProps) {
   const { user } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
@@ -66,7 +72,12 @@ export function GoogleCalendarSync({ onSyncComplete }: GoogleCalendarSyncProps) 
         .single();
 
       if (!error && data) {
-        const settings = data.settings || {};
+        // Safely parse settings as object
+        let settings: SyncSettings = {};
+        if (data.settings && typeof data.settings === 'object' && !Array.isArray(data.settings)) {
+          settings = data.settings as SyncSettings;
+        }
+        
         setSyncStats({
           lastSync: data.last_synced,
           eventsImported: settings.eventsImported || 0,
