@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -26,10 +25,15 @@ interface TaskEditModalProps {
 }
 
 export function TaskEditModal({ task, isOpen, onClose, onSave }: TaskEditModalProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string;
+    dueDate: string;
+    priority: 'high' | 'medium' | 'low';
+    description: string;
+  }>({
     title: '',
     dueDate: '',
-    priority: 'medium' as const,
+    priority: 'medium',
     description: ''
   });
 
