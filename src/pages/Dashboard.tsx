@@ -7,15 +7,26 @@ import { AddButtons } from '@/components/dashboard/AddButtons';
 import { DashboardModals } from '@/components/dashboard/DashboardModals';
 import { useState } from 'react';
 
+interface Task {
+  id: string;
+  title: string;
+  dueDate: string;
+  priority: 'high' | 'medium' | 'low';
+  completed: boolean;
+  description?: string;
+  category: 'processo' | 'cliente' | 'audiencia' | 'prazo' | 'geral';
+}
+
 // Mock urgent tasks data
-const mockUrgentTasks = [
+const mockUrgentTasks: Task[] = [
   {
     id: '1',
     title: 'Revisar contrato ABC Corp',
     dueDate: '2024-01-15',
     priority: 'high' as const,
     completed: false,
-    description: 'Análise completa do contrato de prestação de serviços'
+    description: 'Análise completa do contrato de prestação de serviços',
+    category: 'processo'
   },
   {
     id: '2',
@@ -23,7 +34,8 @@ const mockUrgentTasks = [
     dueDate: '2024-01-16',
     priority: 'high' as const,
     completed: false,
-    description: 'Preparação de documentos e estratégia para audiência'
+    description: 'Preparação de documentos e estratégia para audiência',
+    category: 'audiencia'
   },
   {
     id: '3',
@@ -31,7 +43,8 @@ const mockUrgentTasks = [
     dueDate: '2024-01-17',
     priority: 'medium' as const,
     completed: false,
-    description: 'Esclarecimentos sobre andamento do processo'
+    description: 'Esclarecimentos sobre andamento do processo',
+    category: 'cliente'
   }
 ];
 
@@ -39,7 +52,7 @@ export default function Dashboard() {
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [isProcessModalOpen, setIsProcessModalOpen] = useState(false);
-  const [urgentTasks, setUrgentTasks] = useState(mockUrgentTasks);
+  const [urgentTasks, setUrgentTasks] = useState<Task[]>(mockUrgentTasks);
 
   const handleClientAdded = () => {
     setIsClientModalOpen(false);
@@ -51,6 +64,10 @@ export default function Dashboard() {
 
   const handleLeadAdded = () => {
     setIsLeadModalOpen(false);
+  };
+
+  const handleTasksChange = (newTasks: Task[]) => {
+    setUrgentTasks(newTasks);
   };
 
   return (
@@ -75,13 +92,13 @@ export default function Dashboard() {
           <div className="lg:col-span-2">
             <ChartsSection 
               urgentTasks={urgentTasks}
-              onTasksChange={setUrgentTasks}
+              onTasksChange={handleTasksChange}
             />
           </div>
           <div>
             <TaskList 
               tasks={urgentTasks}
-              onTasksChange={setUrgentTasks}
+              onTasksChange={handleTasksChange}
             />
           </div>
         </div>
