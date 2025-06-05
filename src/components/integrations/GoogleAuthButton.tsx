@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface GoogleAuthButtonProps {
@@ -26,23 +25,7 @@ export function GoogleAuthButton({ service, onSuccess }: GoogleAuthButtonProps) 
       // Simular processo de autenticação OAuth do Google
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Salvar integração no banco de dados
-      const { error } = await supabase
-        .from('integrations')
-        .upsert({
-          user_id: user.id,
-          service_name: service,
-          is_connected: true,
-          settings: {},
-          last_synced: new Date().toISOString()
-        });
-
-      if (error) {
-        console.error('Error saving integration:', error);
-        toast.error("Erro ao salvar integração");
-        return;
-      }
-
+      // Para esta demonstração, apenas simulamos a conexão
       toast.success(`Conectado com Google ${service === 'calendar' ? 'Calendar' : 'Sheets'} com sucesso!`);
       onSuccess?.();
     } catch (error) {
