@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
@@ -8,8 +9,10 @@ import { CalendarEventList } from '@/components/calendar/CalendarEventList';
 import { GoogleIntegrations } from '@/components/integrations/GoogleIntegrations';
 import { EventModal } from '@/components/calendar/EventModal';
 import { GoogleCalendarSync } from '@/components/calendar/GoogleCalendarSync';
-import { Plus, Calendar, Settings } from 'lucide-react';
+import { Plus, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Event {
   id: string;
@@ -26,10 +29,54 @@ interface Event {
 }
 
 export default function Agenda() {
+  const { user } = useAuth();
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [currentView, setCurrentView] = useState<'day' | 'week' | 'month'>('week');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      loadEvents();
+    }
+  }, [user]);
+
+  const loadEvents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .eq('user_id', user?.id);
+
+      if (error) {
+        console.error('Error loading events:', error);
+        toast.error('Erro ao carregar eventos');
+        return;
+      }
+
+      const formattedEvents: Event[] = data.map(event => ({
+        id: event.id,
+        title: event.title,
+        description: event.description || '',
+        date: new Date(event.event_date),
+        startTime: event.start_time,
+        endTime: event.end_time,
+        location: event.location || '',
+        client: event.client_name,
+        type: event.event_type as 'audiencia' | 'reuniao' | 'prazo' | 'outro',
+        participants: event.participants || [],
+        syncWithGoogle: event.sync_with_google
+      }));
+
+      setEvents(formattedEvents);
+    } catch (error) {
+      console.error('Error loading events:', error);
+      toast.error('Erro ao carregar eventos');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleNovoEvento = () => {
     setSelectedEvent(null);
@@ -41,32 +88,102 @@ export default function Agenda() {
     setIsEventModalOpen(true);
   };
 
-  const handleSaveEvent = (event: Event) => {
-    if (selectedEvent) {
-      // Editar evento existente
-      setEvents(prev => prev.map(e => e.id === event.id ? event : e));
-      toast.success("Evento atualizado com sucesso!");
-    } else {
-      // Criar novo evento
-      setEvents(prev => [...prev, event]);
-      toast.success("Evento criado com sucesso!");
+  const handleSaveEvent = async (event: Event) => {
+    try {
+      const eventData = {
+        user_id: user?.id,
+        title: event.title,
+        description: event.description,
+        event_date: event.date.toISOString().split('T')[0],
+        start_time: event.startTime,
+        end_time: event.endTime,
+        location: event.location,
+        client_name: event.client,
+        event_type: event.type,
+        participants: event.participants,
+        sync_with_google: event.syncWithGoogle
+      };
+
+      if (selectedEvent) {
+        // Atualizar evento existente
+        const { error } = await supabase
+          .from('calendar_events')
+          .update(eventData)
+          .eq('id', event.id)
+          .eq('user_id', user?.id);
+
+        if (error) {
+          console.error('Error updating event:', error);
+          toast.error('Erro ao atualizar evento');
+          return;
+        }
+
+        toast.success("Evento atualizado com sucesso!");
+      } else {
+        // Criar novo evento
+        const { error } = await supabase
+          .from('calendar_events')
+          .insert([eventData]);
+
+        if (error) {
+          console.error('Error creating event:', error);
+          toast.error('Erro ao criar evento');
+          return;
+        }
+
+        toast.success("Evento criado com sucesso!");
+      }
+
+      await loadEvents();
+      setIsEventModalOpen(false);
+      setSelectedEvent(null);
+    } catch (error) {
+      console.error('Error saving event:', error);
+      toast.error('Erro ao salvar evento');
     }
-    
-    setIsEventModalOpen(false);
-    setSelectedEvent(null);
   };
 
-  const handleDeleteEvent = (eventId: string) => {
+  const handleDeleteEvent = async (eventId: string) => {
     if (window.confirm('Tem certeza que deseja excluir este evento?')) {
-      setEvents(prev => prev.filter(e => e.id !== eventId));
-      toast.success("Evento excluído com sucesso!");
+      try {
+        const { error } = await supabase
+          .from('calendar_events')
+          .delete()
+          .eq('id', eventId)
+          .eq('user_id', user?.id);
+
+        if (error) {
+          console.error('Error deleting event:', error);
+          toast.error('Erro ao excluir evento');
+          return;
+        }
+
+        toast.success("Evento excluído com sucesso!");
+        await loadEvents();
+      } catch (error) {
+        console.error('Error deleting event:', error);
+        toast.error('Erro ao excluir evento');
+      }
     }
   };
 
   const handleSyncComplete = () => {
     toast.success("Sincronização concluída!");
-    // Aqui você poderia recarregar os eventos do servidor
+    loadEvents();
   };
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="w-full space-y-6">
+          <Header title="Agenda" subtitle="Carregando..." />
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-lawblue-500"></div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>

@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Globe, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,71 +11,62 @@ interface GoogleAuthButtonProps {
 }
 
 export function GoogleAuthButton({ service, onSuccess }: GoogleAuthButtonProps) {
-  const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
-  
-  const serviceNames = {
-    calendar: "Google Calendar",
-    sheets: "Google Sheets"
-  };
-  
-  const serviceName = serviceNames[service];
-  
-  const handleAuth = async () => {
+  const [isConnecting, setIsConnecting] = useState(false);
+
+  const handleConnect = async () => {
     if (!user) {
-      toast.error("Você precisa estar logado para conectar ao Google");
+      toast.error("Você precisa estar logado para conectar com o Google");
       return;
     }
-    
-    setIsLoading(true);
+
+    setIsConnecting(true);
     
     try {
-      // Em um cenário real, isso usaria a OAuth 2.0 do Google
-      // Para fins de demonstração, simulamos uma conexão bem-sucedida após 1 segundo
-      setTimeout(() => {
-        // Simulação de salvar a integração no banco de dados
-        const saveIntegration = async () => {
-          try {
-            const { error } = await supabase.from('integrations').insert({
-              user_id: user.id,
-              service_name: service,
-              is_connected: true,
-              last_synced: new Date().toISOString()
-            });
-            
-            if (error) throw error;
-            
-            toast.success(`Conectado com ${serviceName} com sucesso!`);
-            onSuccess?.();
-          } catch (err) {
-            console.error("Erro ao salvar integração:", err);
-            toast.error(`Erro ao conectar: ${(err as Error).message}`);
-          }
-        };
-        
-        saveIntegration();
-        setIsLoading(false);
-      }, 1000);
+      // Simular processo de autenticação OAuth do Google
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Salvar integração no banco de dados
+      const { error } = await supabase
+        .from('integrations')
+        .upsert({
+          user_id: user.id,
+          service_name: service,
+          is_connected: true,
+          settings: {},
+          last_synced: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error('Error saving integration:', error);
+        toast.error("Erro ao salvar integração");
+        return;
+      }
+
+      toast.success(`Conectado com Google ${service === 'calendar' ? 'Calendar' : 'Sheets'} com sucesso!`);
+      onSuccess?.();
     } catch (error) {
-      console.error("Erro ao autenticar com Google:", error);
-      toast.error(`Falha ao conectar com ${serviceName}`);
-      setIsLoading(false);
+      console.error('Error connecting to Google:', error);
+      toast.error("Erro ao conectar com o Google");
+    } finally {
+      setIsConnecting(false);
     }
   };
-  
+
   return (
     <Button 
-      onClick={handleAuth} 
-      disabled={isLoading} 
-      variant="outline" 
-      className="flex items-center gap-2"
+      onClick={handleConnect}
+      disabled={isConnecting}
+      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
     >
-      {isLoading ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
+      {isConnecting ? (
+        <>
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+          Conectando...
+        </>
       ) : (
-        <Globe className="h-4 w-4" />
+        `Conectar com Google ${service === 'calendar' ? 'Calendar' : 'Sheets'}`
       )}
-      Conectar {serviceName}
     </Button>
   );
 }
