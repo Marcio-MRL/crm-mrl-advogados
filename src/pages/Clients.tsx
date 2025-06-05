@@ -1,5 +1,5 @@
-
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { Header } from '@/components/layout/Header';
 import { Button } from "@/components/ui/button";
 import { Plus } from 'lucide-react';
@@ -68,50 +68,52 @@ export default function Clients() {
   });
 
   return (
-    <div>
-      <Header title="Clientes" subtitle="Gerenciamento de clientes e contratos" />
-      
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
-        <ClientTypeTabs onTypeChange={setClientType} />
+    <MainLayout>
+      <div className="w-full space-y-6">
+        <Header title="Clientes" subtitle="Gerenciamento de clientes e contratos" />
         
-        <Button 
-          className="bg-lawblue-500 hover:bg-lawblue-600"
-          onClick={openModal}
-        >
-          <Plus size={16} className="mr-1" /> Novo Cliente
-        </Button>
-      </div>
-      
-      <ClientFilters 
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-      />
-      
-      {loading ? (
-        <div className="text-center py-8">
-          <p className="text-gray-500">Carregando clientes...</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredClients.map((client: Client) => (
-            <ClientCard key={client.id} client={client} />
-          ))}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
+          <ClientTypeTabs onTypeChange={setClientType} />
           
-          {filteredClients.length === 0 && (
-            <div className="col-span-full text-center py-12">
-              <p className="text-gray-500">Nenhum cliente encontrado</p>
-            </div>
-          )}
+          <Button 
+            className="bg-lawblue-500 hover:bg-lawblue-600"
+            onClick={openModal}
+          >
+            <Plus size={16} className="mr-1" /> Novo Cliente
+          </Button>
         </div>
-      )}
+        
+        <ClientFilters 
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+        />
+        
+        {loading ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">Carregando clientes...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredClients.map((client: Client) => (
+              <ClientCard key={client.id} client={client} />
+            ))}
+            
+            {filteredClients.length === 0 && (
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-500">Nenhum cliente encontrado</p>
+              </div>
+            )}
+          </div>
+        )}
 
-      <FormModal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        title="Adicionar Novo Cliente"
-      >
-        <ClientForm onSuccess={handleClientAdded} onCancel={closeModal} />
-      </FormModal>
-    </div>
+        <FormModal
+          isOpen={isModalOpen}
+          onClose={closeModal}
+          title="Adicionar Novo Cliente"
+        >
+          <ClientForm onSuccess={handleClientAdded} onCancel={closeModal} />
+        </FormModal>
+      </div>
+    </MainLayout>
   );
 }

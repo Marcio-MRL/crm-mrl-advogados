@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -118,95 +119,97 @@ export default function Tarefas() {
   };
 
   return (
-    <div className="w-full space-y-6">
-      <Header 
-        title="Tarefas" 
-        subtitle="Gerencie suas tarefas e prazos" 
-      />
-      
-      <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
-        <div className="relative w-full md:w-auto">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-          <Input
-            type="search"
-            placeholder="Buscar tarefas..."
-            className="pl-8 w-full md:w-[300px] bg-white/70 border-lawblue-200"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+    <MainLayout>
+      <div className="w-full space-y-6">
+        <Header 
+          title="Tarefas" 
+          subtitle="Gerencie suas tarefas e prazos" 
+        />
         
-        <div className="flex gap-2">
-          <Button variant="outline" className="flex items-center gap-1">
-            <Filter className="h-4 w-4" /> Filtros
-          </Button>
-          <Button 
-            className="flex items-center gap-1 bg-lawblue-500 hover:bg-lawblue-600"
-            onClick={() => setIsCreateModalOpen(true)}
-          >
-            <Plus className="h-4 w-4" /> Nova Tarefa
-          </Button>
+        <div className="flex flex-col md:flex-row justify-between gap-4 mb-6">
+          <div className="relative w-full md:w-auto">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+            <Input
+              type="search"
+              placeholder="Buscar tarefas..."
+              className="pl-8 w-full md:w-[300px] bg-white/70 border-lawblue-200"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex items-center gap-1">
+              <Filter className="h-4 w-4" /> Filtros
+            </Button>
+            <Button 
+              className="flex items-center gap-1 bg-lawblue-500 hover:bg-lawblue-600"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              <Plus className="h-4 w-4" /> Nova Tarefa
+            </Button>
+          </div>
         </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="all">Todas</TabsTrigger>
+            <TabsTrigger value="pending">Pendentes</TabsTrigger>
+            <TabsTrigger value="completed">Concluídas</TabsTrigger>
+            <TabsTrigger value="processo">Processos</TabsTrigger>
+            <TabsTrigger value="audiencia">Audiências</TabsTrigger>
+            <TabsTrigger value="prazo">Prazos</TabsTrigger>
+            <TabsTrigger value="cliente">Clientes</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value={activeTab} className="space-y-4">
+            {filteredTasks.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500">Nenhuma tarefa encontrada</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredTasks.map((task) => (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onStatusChange={handleTaskStatusChange}
+                    onClick={handleTaskClick}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        <TaskCreateModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSave={handleCreateTask}
+        />
+
+        <TaskViewModal
+          task={selectedTask}
+          isOpen={isViewModalOpen}
+          onClose={() => {
+            setIsViewModalOpen(false);
+            setSelectedTask(null);
+          }}
+          onStatusChange={handleTaskStatusChange}
+          onEdit={handleEditTask}
+          onDelete={handleDeleteTask}
+        />
+
+        <TaskEditModal
+          task={selectedTask}
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedTask(null);
+          }}
+          onSave={handleSaveTask}
+        />
       </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-6">
-          <TabsTrigger value="all">Todas</TabsTrigger>
-          <TabsTrigger value="pending">Pendentes</TabsTrigger>
-          <TabsTrigger value="completed">Concluídas</TabsTrigger>
-          <TabsTrigger value="processo">Processos</TabsTrigger>
-          <TabsTrigger value="audiencia">Audiências</TabsTrigger>
-          <TabsTrigger value="prazo">Prazos</TabsTrigger>
-          <TabsTrigger value="cliente">Clientes</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value={activeTab} className="space-y-4">
-          {filteredTasks.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500">Nenhuma tarefa encontrada</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredTasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  onStatusChange={handleTaskStatusChange}
-                  onClick={handleTaskClick}
-                />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
-
-      <TaskCreateModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSave={handleCreateTask}
-      />
-
-      <TaskViewModal
-        task={selectedTask}
-        isOpen={isViewModalOpen}
-        onClose={() => {
-          setIsViewModalOpen(false);
-          setSelectedTask(null);
-        }}
-        onStatusChange={handleTaskStatusChange}
-        onEdit={handleEditTask}
-        onDelete={handleDeleteTask}
-      />
-
-      <TaskEditModal
-        task={selectedTask}
-        isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setSelectedTask(null);
-        }}
-        onSave={handleSaveTask}
-      />
-    </div>
+    </MainLayout>
   );
 }

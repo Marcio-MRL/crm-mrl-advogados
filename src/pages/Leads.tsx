@@ -1,5 +1,5 @@
-
-import React, { useState } from 'react';
+import React from 'react';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { Header } from '@/components/layout/Header';
 import { Button } from "@/components/ui/button";
 import { Plus } from 'lucide-react';
@@ -25,31 +25,33 @@ export default function Leads() {
   };
   
   return (
-    <div>
-      <Header title="Gestão de Leads" subtitle="Acompanhe e converta seus potenciais clientes" />
-      
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
-        <LeadStageTabs activeTab={activeTab} onTabChange={setActiveTab} />
+    <MainLayout>
+      <div className="w-full space-y-6">
+        <Header title="Gestão de Leads" subtitle="Acompanhe e converta seus potenciais clientes" />
         
-        <Button 
-          className="bg-lawblue-500 hover:bg-lawblue-600"
-          onClick={() => setIsAddModalOpen(true)}
-        >
-          <Plus size={16} className="mr-1" /> Novo Lead
-        </Button>
-      </div>
-      
-      <LeadFilters />
-      
-      <LeadGrid leads={filteredLeads} />
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
+          <LeadStageTabs activeTab={activeTab} onTabChange={setActiveTab} />
+          
+          <Button 
+            className="bg-lawblue-500 hover:bg-lawblue-600"
+            onClick={() => setIsAddModalOpen(true)}
+          >
+            <Plus size={16} className="mr-1" /> Novo Lead
+          </Button>
+        </div>
+        
+        <LeadFilters />
+        
+        <LeadGrid leads={filteredLeads} />
 
-      <FormModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        title="Adicionar Novo Lead"
-      >
-        <LeadForm onSuccess={handleAddSuccess} onCancel={() => setIsAddModalOpen(false)} />
-      </FormModal>
-    </div>
+        <FormModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          title="Adicionar Novo Lead"
+        >
+          <LeadForm onSuccess={handleAddSuccess} onCancel={() => setIsAddModalOpen(false)} />
+        </FormModal>
+      </div>
+    </MainLayout>
   );
 }

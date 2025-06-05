@@ -1,5 +1,5 @@
-
 import React, { useState } from 'react';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -69,111 +69,113 @@ export default function Agenda() {
   };
 
   return (
-    <div className="w-full space-y-6">
-      <Header 
-        title="Agenda" 
-        subtitle="Gerencie seus compromissos e integre com Google Calendar" 
-      />
-      
-      <div className="flex flex-col lg:flex-row justify-between gap-4 mb-6">
-        <div className="flex gap-2">
-          <Button 
-            className="bg-lawblue-500 hover:bg-lawblue-600"
-            onClick={handleNovoEvento}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Novo Evento
-          </Button>
-          
-          <Button variant="outline" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Visualização: {currentView === 'day' ? 'Dia' : currentView === 'week' ? 'Semana' : 'Mês'}
-          </Button>
-        </div>
+    <MainLayout>
+      <div className="w-full space-y-6">
+        <Header 
+          title="Agenda" 
+          subtitle="Gerencie seus compromissos e integre com Google Calendar" 
+        />
+        
+        <div className="flex flex-col lg:flex-row justify-between gap-4 mb-6">
+          <div className="flex gap-2">
+            <Button 
+              className="bg-lawblue-500 hover:bg-lawblue-600"
+              onClick={handleNovoEvento}
+            >
+              <Plus className="mr-2 h-4 w-4" /> Novo Evento
+            </Button>
+            
+            <Button variant="outline" className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Visualização: {currentView === 'day' ? 'Dia' : currentView === 'week' ? 'Semana' : 'Mês'}
+            </Button>
+          </div>
 
-        <div className="flex gap-2">
-          <Button
-            variant={currentView === 'day' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setCurrentView('day')}
-          >
-            Dia
-          </Button>
-          <Button
-            variant={currentView === 'week' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setCurrentView('week')}
-          >
-            Semana
-          </Button>
-          <Button
-            variant={currentView === 'month' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setCurrentView('month')}
-          >
-            Mês
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
-        <div className="xl:col-span-2">
-          <div className="glass-card rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Integrações Google
-            </h2>
-            <GoogleIntegrations hideGoogleSheets={true} />
+          <div className="flex gap-2">
+            <Button
+              variant={currentView === 'day' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setCurrentView('day')}
+            >
+              Dia
+            </Button>
+            <Button
+              variant={currentView === 'week' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setCurrentView('week')}
+            >
+              Semana
+            </Button>
+            <Button
+              variant={currentView === 'month' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setCurrentView('month')}
+            >
+              Mês
+            </Button>
           </div>
         </div>
-        
-        <div>
-          <GoogleCalendarSync onSyncComplete={handleSyncComplete} />
-        </div>
-      </div>
 
-      <Tabs defaultValue="calendar">
-        <TabsList className="mb-4">
-          <TabsTrigger value="calendar">Calendário</TabsTrigger>
-          <TabsTrigger value="list">Lista de Eventos</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="calendar" className="bg-white/70 p-6 rounded-lg shadow-sm">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-lg font-medium">
-              {currentView === 'day' && 'Visualização Diária'}
-              {currentView === 'week' && 'Visualização Semanal'}
-              {currentView === 'month' && 'Visualização Mensal'}
-            </h3>
-            <div className="text-sm text-gray-500">
-              {events.length} evento(s) encontrado(s)
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-6">
+          <div className="xl:col-span-2">
+            <div className="glass-card rounded-lg p-6">
+              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                Integrações Google
+              </h2>
+              <GoogleIntegrations hideGoogleSheets={true} />
             </div>
           </div>
-          <CalendarDaysView 
-            view={currentView} 
-            events={events}
-            onEventClick={handleEditEvent}
-            onEventDelete={handleDeleteEvent}
-          />
-        </TabsContent>
-        
-        <TabsContent value="list">
-          <CalendarEventList 
-            events={events}
-            onEventClick={handleEditEvent}
-            onEventDelete={handleDeleteEvent}
-          />
-        </TabsContent>
-      </Tabs>
+          
+          <div>
+            <GoogleCalendarSync onSyncComplete={handleSyncComplete} />
+          </div>
+        </div>
 
-      <EventModal
-        event={selectedEvent}
-        isOpen={isEventModalOpen}
-        onClose={() => {
-          setIsEventModalOpen(false);
-          setSelectedEvent(null);
-        }}
-        onSave={handleSaveEvent}
-      />
-    </div>
+        <Tabs defaultValue="calendar">
+          <TabsList className="mb-4">
+            <TabsTrigger value="calendar">Calendário</TabsTrigger>
+            <TabsTrigger value="list">Lista de Eventos</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="calendar" className="bg-white/70 p-6 rounded-lg shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-medium">
+                {currentView === 'day' && 'Visualização Diária'}
+                {currentView === 'week' && 'Visualização Semanal'}
+                {currentView === 'month' && 'Visualização Mensal'}
+              </h3>
+              <div className="text-sm text-gray-500">
+                {events.length} evento(s) encontrado(s)
+              </div>
+            </div>
+            <CalendarDaysView 
+              view={currentView} 
+              events={events}
+              onEventClick={handleEditEvent}
+              onEventDelete={handleDeleteEvent}
+            />
+          </TabsContent>
+          
+          <TabsContent value="list">
+            <CalendarEventList 
+              events={events}
+              onEventClick={handleEditEvent}
+              onEventDelete={handleDeleteEvent}
+            />
+          </TabsContent>
+        </Tabs>
+
+        <EventModal
+          event={selectedEvent}
+          isOpen={isEventModalOpen}
+          onClose={() => {
+            setIsEventModalOpen(false);
+            setSelectedEvent(null);
+          }}
+          onSave={handleSaveEvent}
+        />
+      </div>
+    </MainLayout>
   );
 }
