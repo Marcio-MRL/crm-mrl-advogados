@@ -22,12 +22,9 @@ export function GoogleAuthButton({ service, onSuccess }: GoogleAuthButtonProps) 
     setIsConnecting(true);
     
     try {
-      // Simular processo de autenticação OAuth do Google
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Para esta demonstração, apenas simulamos a conexão
-      toast.success(`Conectado com Google ${service === 'calendar' ? 'Calendar' : 'Sheets'} com sucesso!`);
-      onSuccess?.();
+      // Implementação real do OAuth do Google seria feita aqui
+      // Por enquanto, apenas mostra que a conexão não está implementada
+      toast.error("Integração com Google ainda não implementada. Conecte suas credenciais OAuth.");
     } catch (error) {
       console.error('Error connecting to Google:', error);
       toast.error("Erro ao conectar com o Google");

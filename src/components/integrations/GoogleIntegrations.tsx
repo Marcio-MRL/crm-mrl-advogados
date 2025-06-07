@@ -59,17 +59,7 @@ export function GoogleIntegrations({ hideGoogleSheets = false }: GoogleIntegrati
     fetchIntegrations();
   }, [user]);
   
-  const handleCalendarSuccess = () => {
-    setCalendarConnected(true);
-    setLastCalendarSync(new Date().toISOString());
-    toast.success("Conectado com Google Calendar com sucesso!");
-  };
-  
-  const handleSheetsSuccess = () => {
-    setSheetsConnected(true);
-    setLastSheetsSync(new Date().toISOString());
-    toast.success("Conectado com Google Sheets com sucesso!");
-  };
+  // Removido as funções handleCalendarSuccess e handleSheetsSuccess que simulavam conexão
   
   const formatDate = (dateString: string | null) => {
     if (!dateString) return '';
@@ -104,7 +94,7 @@ export function GoogleIntegrations({ hideGoogleSheets = false }: GoogleIntegrati
             )}
           </div>
         ) : (
-          <GoogleAuthButton service="calendar" onSuccess={handleCalendarSuccess} />
+          <GoogleAuthButton service="calendar" />
         )}
       </div>
       
@@ -134,7 +124,7 @@ export function GoogleIntegrations({ hideGoogleSheets = false }: GoogleIntegrati
               )}
             </div>
           ) : (
-            <GoogleAuthButton service="sheets" onSuccess={handleSheetsSuccess} />
+            <GoogleAuthButton service="sheets" />
           )}
         </div>
       )}
