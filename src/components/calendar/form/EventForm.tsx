@@ -20,8 +20,10 @@ interface EventFormProps {
   onCancel: () => void;
 }
 
+type EventFormData = Omit<Event, 'id'> & { id?: string };
+
 export function EventForm({ event, onSave, onCancel }: EventFormProps) {
-  const [formData, setFormData] = useState<Event>({
+  const [formData, setFormData] = useState<EventFormData>({
     title: '',
     description: '',
     date: new Date(),
