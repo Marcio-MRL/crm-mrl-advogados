@@ -11,14 +11,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus } from 'lucide-react';
+import type { Processo } from '@/data/mockProcessos';
 
 export default function Processos() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [selectedProcesso, setSelectedProcesso] = useState(null);
-  const [filteredData, setFilteredData] = useState([]);
+  const [selectedProcesso, setSelectedProcesso] = useState<Processo | null>(null);
+  const [filteredData, setFilteredData] = useState<Processo[]>([]);
   
-  const handleViewProcesso = (processo) => {
+  const handleViewProcesso = (processo: Processo) => {
     setSelectedProcesso(processo);
     setIsViewModalOpen(true);
   };

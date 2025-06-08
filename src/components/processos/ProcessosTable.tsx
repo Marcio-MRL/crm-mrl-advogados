@@ -10,10 +10,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { Processo } from '@/data/mockProcessos';
 
 interface ProcessosTableProps {
-  data: any[];
-  onViewProcesso: (processo: any) => void;
+  data: Processo[];
+  onViewProcesso: (processo: Processo) => void;
 }
 
 export function ProcessosTable({ data, onViewProcesso }: ProcessosTableProps) {
@@ -50,6 +51,7 @@ export function ProcessosTable({ data, onViewProcesso }: ProcessosTableProps) {
             <TableHead>Status</TableHead>
             <TableHead>Data Início</TableHead>
             <TableHead>Responsável</TableHead>
+            <TableHead>Andamentos</TableHead>
             <TableHead className="w-[100px]">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -66,6 +68,11 @@ export function ProcessosTable({ data, onViewProcesso }: ProcessosTableProps) {
               </TableCell>
               <TableCell>{formatDate(processo.dataInicio)}</TableCell>
               <TableCell>{processo.responsavel}</TableCell>
+              <TableCell>
+                <Badge variant="outline">
+                  {processo.andamentos.length} andamento{processo.andamentos.length !== 1 ? 's' : ''}
+                </Badge>
+              </TableCell>
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

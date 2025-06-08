@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, FilterX } from 'lucide-react';
 import { mockProcessos } from '@/data/mockProcessos';
+import type { Processo } from '@/data/mockProcessos';
 
 interface ProcessosFiltersProps {
-  onFilterChange: (filteredData: any[]) => void;
+  onFilterChange: (filteredData: Processo[]) => void;
 }
 
 export function ProcessosFilters({ onFilterChange }: ProcessosFiltersProps) {
