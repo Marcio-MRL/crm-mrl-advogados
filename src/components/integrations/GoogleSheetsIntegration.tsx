@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { GoogleDrive, RefreshCw, Settings, CheckCircle, XCircle, Plus } from 'lucide-react';
+import { HardDrive, RefreshCw, Settings, CheckCircle, XCircle, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface SheetMapping {
@@ -122,7 +121,7 @@ export function GoogleSheetsIntegration() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <GoogleDrive className="h-6 w-6 text-green-600" />
+              <HardDrive className="h-6 w-6 text-green-600" />
               <CardTitle>Integração Google Sheets</CardTitle>
             </div>
             <div className="flex items-center gap-2">
@@ -144,13 +143,13 @@ export function GoogleSheetsIntegration() {
         <CardContent>
           {!isConnected ? (
             <div className="text-center py-8">
-              <GoogleDrive className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+              <HardDrive className="h-16 w-16 mx-auto mb-4 text-gray-300" />
               <h3 className="text-lg font-medium mb-2">Conectar ao Google Sheets</h3>
               <p className="text-gray-600 mb-4">
                 Integre suas planilhas do Google Sheets para sincronização automática de dados
               </p>
               <Button onClick={handleConnect} className="bg-green-600 hover:bg-green-700">
-                <GoogleDrive className="h-4 w-4 mr-2" />
+                <HardDrive className="h-4 w-4 mr-2" />
                 Conectar com Google Sheets
               </Button>
             </div>

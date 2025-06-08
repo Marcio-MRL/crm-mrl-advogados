@@ -5,14 +5,11 @@ import { Header } from '@/components/layout/Header';
 import { FinancialSummary } from '@/components/financial/FinancialSummary';
 import { FinancialChart } from '@/components/financial/FinancialChart';
 import { FinancialTransactionsTable } from '@/components/financial/FinancialTransactionsTable';
-import { TransactionFilters } from '@/components/financial/TransactionFilters';
 import { GoogleSheetsIntegration } from '@/components/integrations/GoogleSheetsIntegration';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Financeiro() {
-  const [filteredTransactions, setFilteredTransactions] = useState([]);
-
   return (
     <MainLayout>
       <div className="w-full space-y-6">
@@ -44,16 +41,13 @@ export default function Financeiro() {
           </TabsContent>
           
           <TabsContent value="transactions" className="space-y-6">
-            {/* Filtros */}
-            <TransactionFilters onFilterChange={setFilteredTransactions} />
-            
             {/* Tabela de Transações */}
             <Card>
               <CardHeader>
                 <CardTitle>Transações Financeiras</CardTitle>
               </CardHeader>
               <CardContent>
-                <FinancialTransactionsTable data={filteredTransactions} />
+                <FinancialTransactionsTable />
               </CardContent>
             </Card>
           </TabsContent>
