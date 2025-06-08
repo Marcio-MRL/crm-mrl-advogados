@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Table, 
   TableHeader, 
@@ -10,9 +10,10 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, ArrowUpRight, ArrowDownRight, Plus, Filter, Settings } from 'lucide-react';
+import { Search, ArrowUpRight, ArrowDownRight, Plus, Settings } from 'lucide-react';
 import { TransactionCategoryBadge } from './TransactionCategoryBadge';
 import { CategoriesModal } from './CategoriesModal';
+import { TransactionFilters } from './TransactionFilters';
 import { Transaction } from '@/types/financial';
 import { toast } from 'sonner';
 
@@ -31,41 +32,61 @@ const mockTransactions: Transaction[] = [
 
 export function FinancialTransactionsTable() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions);
   const [isCategoriesModalOpen, setIsCategoriesModalOpen] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<{ start: string; end: string } | null>(null);
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value.toLowerCase();
-    setSearchQuery(query);
-    
-    if (query.trim() === '') {
-      filterTransactions(categoryFilter);
-      return;
+  const uniqueCategories = useMemo(() => 
+    Array.from(new Set(mockTransactions.map(t => t.categoria))), 
+    []
+  );
+
+  const filteredTransactions = useMemo(() => {
+    let filtered = mockTransactions;
+
+    // Filtro por busca
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (transaction) =>
+          transaction.descricao.toLowerCase().includes(query) ||
+          transaction.categoria.toLowerCase().includes(query)
+      );
     }
-    
-    const filtered = mockTransactions.filter(
-      (transaction) =>
-        transaction.descricao.toLowerCase().includes(query) ||
-        transaction.categoria.toLowerCase().includes(query)
-    );
-    
-    setTransactions(filtered);
+
+    // Filtro por categoria
+    if (categoryFilter) {
+      filtered = filtered.filter(transaction => transaction.categoria === categoryFilter);
+    }
+
+    // Filtro por tipo
+    if (typeFilter) {
+      filtered = filtered.filter(transaction => transaction.tipo === typeFilter);
+    }
+
+    // Filtro por período
+    if (dateRange) {
+      filtered = filtered.filter(transaction => {
+        const transactionDate = new Date(transaction.data);
+        const startDate = new Date(dateRange.start);
+        const endDate = new Date(dateRange.end);
+        return transactionDate >= startDate && transactionDate <= endDate;
+      });
+    }
+
+    return filtered;
+  }, [searchQuery, categoryFilter, typeFilter, dateRange]);
+
+  const handleDateRangeChange = (startDate: string, endDate: string) => {
+    setDateRange({ start: startDate, end: endDate });
   };
 
-  const filterTransactions = (category: string | null) => {
-    setCategoryFilter(category);
-    
-    if (!category) {
-      setTransactions(mockTransactions);
-      return;
-    }
-    
-    const filtered = mockTransactions.filter(
-      transaction => transaction.categoria === category
-    );
-    
-    setTransactions(filtered);
+  const handleClearFilters = () => {
+    setSearchQuery('');
+    setCategoryFilter(null);
+    setTypeFilter(null);
+    setDateRange(null);
   };
 
   const formatCurrency = (value: number, type: string) => {
@@ -79,15 +100,16 @@ export function FinancialTransactionsTable() {
     toast.info("Funcionalidade para adicionar transações será implementada em breve.");
   };
 
-  const handleFilter = () => {
-    toast.info("Funcionalidade de filtros avançados será implementada em breve.");
-  };
-
-  // Get unique categories for filter
-  const uniqueCategories = Array.from(new Set(mockTransactions.map(t => t.categoria)));
-
   return (
     <div>
+      <TransactionFilters
+        onDateRangeChange={handleDateRangeChange}
+        onCategoryChange={setCategoryFilter}
+        onTypeChange={setTypeFilter}
+        onClearFilters={handleClearFilters}
+        categories={uniqueCategories}
+      />
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 space-y-4 md:space-y-0">
         <div className="relative w-full md:w-[300px]">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
@@ -96,19 +118,11 @@ export function FinancialTransactionsTable() {
             placeholder="Buscar transações..."
             className="pl-8 w-full bg-white/70 border-lawblue-200"
             value={searchQuery}
-            onChange={handleSearch}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-1"
-            onClick={handleFilter}
-          >
-            <Filter className="h-4 w-4" /> Filtros
-          </Button>
-          
           <Button 
             variant="outline" 
             className="flex items-center gap-1"
@@ -129,7 +143,7 @@ export function FinancialTransactionsTable() {
       {/* Category chips for quick filtering */}
       <div className="flex flex-wrap gap-2 mb-4">
         <button
-          onClick={() => filterTransactions(null)}
+          onClick={() => setCategoryFilter(null)}
           className={`px-3 py-1 rounded-full text-xs ${
             !categoryFilter ? 'bg-lawblue-100 text-lawblue-800' : 'bg-gray-100 text-gray-800'
           } hover:bg-opacity-80 transition-colors`}
@@ -139,7 +153,7 @@ export function FinancialTransactionsTable() {
         {uniqueCategories.map(category => (
           <button
             key={category}
-            onClick={() => filterTransactions(category)}
+            onClick={() => setCategoryFilter(category)}
             className={`px-3 py-1 rounded-full text-xs ${
               categoryFilter === category ? 'bg-lawblue-100 text-lawblue-800' : 'bg-gray-100 text-gray-800'
             } hover:bg-opacity-80 transition-colors`}
@@ -160,7 +174,7 @@ export function FinancialTransactionsTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {transactions.map((transaction) => (
+            {filteredTransactions.map((transaction) => (
               <TableRow key={transaction.id}>
                 <TableCell>
                   {new Date(transaction.data).toLocaleDateString('pt-BR')}
@@ -188,6 +202,12 @@ export function FinancialTransactionsTable() {
           </TableBody>
         </Table>
       </div>
+
+      {filteredTransactions.length === 0 && (
+        <div className="text-center py-8 text-gray-500">
+          Nenhuma transação encontrada com os filtros aplicados.
+        </div>
+      )}
 
       <div className="flex justify-center mt-4">
         <Button variant="outline">Ver todas as transações</Button>
