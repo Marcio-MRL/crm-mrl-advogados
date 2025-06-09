@@ -50,6 +50,7 @@ export function LeadForm({ onSuccess, onCancel }: LeadFormProps) {
         origem_lead: data.source || null,
         status_lead: data.status,
         observacoes: data.notes || null,
+        user_id: userId,
         data_criacao: new Date().toISOString(),
         data_ultima_interacao: new Date().toISOString()
       });
