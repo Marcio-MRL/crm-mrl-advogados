@@ -36,7 +36,13 @@ export function useGoogleAuth() {
         return;
       }
 
-      setIntegrations(data || []);
+      // Type assertion para garantir que service_type seja do tipo correto
+      const typedData = (data || []).map(item => ({
+        ...item,
+        service_type: item.service_type as 'calendar' | 'sheets'
+      }));
+
+      setIntegrations(typedData);
     } catch (error) {
       console.error('Erro ao buscar integrações:', error);
     } finally {

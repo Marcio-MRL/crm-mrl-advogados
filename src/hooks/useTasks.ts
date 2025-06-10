@@ -50,7 +50,14 @@ export function useTasks() {
         return;
       }
 
-      setTasks(data || []);
+      // Type assertion para garantir que priority e category sejam dos tipos corretos
+      const typedData = (data || []).map(item => ({
+        ...item,
+        priority: item.priority as 'high' | 'medium' | 'low',
+        category: item.category as 'processo' | 'cliente' | 'audiencia' | 'prazo' | 'geral'
+      }));
+
+      setTasks(typedData);
     } catch (error) {
       console.error('Erro ao buscar tarefas:', error);
       toast.error('Ocorreu um erro ao carregar as tarefas');
