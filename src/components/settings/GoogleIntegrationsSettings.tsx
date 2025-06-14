@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calendar, Sheet, Drive, Unlink, ExternalLink } from 'lucide-react';
+import { Calendar, Sheet, HardDrive, Unlink, ExternalLink } from 'lucide-react';
 import { useGoogleOAuth } from '@/hooks/useGoogleOAuth';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDate } from '@/integrations/supabase/client';
@@ -20,7 +20,7 @@ export function GoogleIntegrationsSettings() {
     
     if (scope.includes('calendar')) return <Calendar className="h-4 w-4 text-blue-600" />;
     if (scope.includes('spreadsheets')) return <Sheet className="h-4 w-4 text-green-600" />;
-    if (scope.includes('drive')) return <Drive className="h-4 w-4 text-yellow-600" />;
+    if (scope.includes('drive')) return <HardDrive className="h-4 w-4 text-yellow-600" />;
     
     return <ExternalLink className="h-4 w-4" />;
   };
@@ -113,7 +113,7 @@ export function GoogleIntegrationsSettings() {
 
             <div className="border rounded-lg p-4">
               <div className="flex items-center gap-3 mb-3">
-                <Drive className="h-8 w-8 text-yellow-600" />
+                <HardDrive className="h-8 w-8 text-yellow-600" />
                 <div>
                   <h4 className="font-medium">Google Drive</h4>
                   <p className="text-sm text-gray-500">Armazene e compartilhe documentos</p>
@@ -125,7 +125,7 @@ export function GoogleIntegrationsSettings() {
                 className="w-full bg-yellow-600 hover:bg-yellow-700"
                 size="sm"
               >
-                <Drive className="h-4 w-4 mr-2" />
+                <HardDrive className="h-4 w-4 mr-2" />
                 Conectar Drive
               </Button>
             </div>
