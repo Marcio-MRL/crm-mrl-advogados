@@ -5,12 +5,13 @@ import { BankStatusService } from './statusService';
 import { BankSyncResult } from '@/types/bankIntegration';
 
 export class BankIntegrationService {
-  static async syncWithBankSheet(sheetsToken: string): Promise<BankSyncResult> {
+  static async syncWithBankSheet(sheetsToken: string, spreadsheetId?: string): Promise<BankSyncResult> {
     try {
       console.log('🏦 Iniciando sincronização com planilha bancária...');
+      console.log('📊 Planilha ID:', spreadsheetId || 'Busca automática');
       
       // Buscar dados da planilha
-      const sheetData = await BankSheetFetcher.fetchSheetData(sheetsToken);
+      const sheetData = await BankSheetFetcher.fetchSheetData(sheetsToken, spreadsheetId);
       
       if (!sheetData || sheetData.length === 0) {
         throw new Error('Nenhum dado encontrado na planilha bancária');

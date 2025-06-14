@@ -1,69 +1,42 @@
 
 export class BankSheetFetcher {
-  private static BANK_SHEET_NAME = 'BTG - Entradas e Saídas Caixa';
-
-  static async fetchSheetData(token: string): Promise<any[]> {
+  static async fetchSheetData(token: string, spreadsheetId?: string): Promise<any[]> {
     try {
-      console.log('🔍 Buscando planilha bancária:', this.BANK_SHEET_NAME);
-      
-      // Primeiro, listar todas as planilhas para encontrar a do BTG
-      const listResponse = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q=name="${this.BANK_SHEET_NAME}" and mimeType="application/vnd.google-apps.spreadsheet"`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      );
+      let targetSpreadsheetId = spreadsheetId;
 
-      if (!listResponse.ok) {
-        const errorText = await listResponse.text();
-        console.error('❌ Erro ao buscar planilha:', listResponse.status, errorText);
-        throw new Error(`Erro ao acessar Google Drive (${listResponse.status}): ${errorText}`);
-      }
-
-      const listData = await listResponse.json();
-      console.log('📋 Resultado da busca:', listData);
-      console.log('📋 Planilhas encontradas:', listData.files?.length || 0);
-      
-      // Log todas as planilhas encontradas para debug
-      if (listData.files && listData.files.length > 0) {
-        console.log('📊 Planilhas no Drive:');
-        listData.files.forEach((file: any, index: number) => {
-          console.log(`${index + 1}. Nome: "${file.name}", ID: ${file.id}`);
-        });
-      }
-      
-      if (!listData.files || listData.files.length === 0) {
-        // Vamos buscar todas as planilhas para ver o que existe
-        console.log('🔍 Planilha específica não encontrada. Buscando todas as planilhas...');
+      // Se não foi fornecido um ID específico, buscar pela planilha padrão
+      if (!targetSpreadsheetId) {
+        console.log('🔍 Buscando planilha bancária padrão: BTG - Entradas e Saídas Caixa');
         
-        const allSheetsResponse = await fetch(
-          `https://www.googleapis.com/drive/v3/files?q=mimeType="application/vnd.google-apps.spreadsheet"`,
+        const listResponse = await fetch(
+          `https://www.googleapis.com/drive/v3/files?q=name="BTG - Entradas e Saídas Caixa" and mimeType="application/vnd.google-apps.spreadsheet"`,
           {
             headers: {
               'Authorization': `Bearer ${token}`,
             },
           }
         );
+
+        if (!listResponse.ok) {
+          const errorText = await listResponse.text();
+          console.error('❌ Erro ao buscar planilha:', listResponse.status, errorText);
+          throw new Error(`Erro ao acessar Google Drive (${listResponse.status}): ${errorText}`);
+        }
+
+        const listData = await listResponse.json();
         
-        if (allSheetsResponse.ok) {
-          const allSheets = await allSheetsResponse.json();
-          console.log('📄 Todas as planilhas disponíveis:');
-          allSheets.files?.forEach((file: any, index: number) => {
-            console.log(`${index + 1}. "${file.name}" (ID: ${file.id})`);
-          });
+        if (!listData.files || listData.files.length === 0) {
+          throw new Error('Planilha "BTG - Entradas e Saídas Caixa" não encontrada. Selecione manualmente uma planilha.');
         }
         
-        throw new Error(`Planilha "${this.BANK_SHEET_NAME}" não encontrada no Google Drive. Verifique se o nome está exato e se você tem acesso à planilha.`);
+        targetSpreadsheetId = listData.files[0].id;
       }
 
-      const spreadsheetId = listData.files[0].id;
-      console.log('📊 Planilha bancária encontrada:', spreadsheetId);
+      console.log('📊 Usando planilha ID:', targetSpreadsheetId);
 
-      // Primeiro, vamos ver quais abas existem na planilha
+      // Buscar informações da planilha
       const sheetInfoResponse = await fetch(
-        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}`,
+        `https://sheets.googleapis.com/v4/spreadsheets/${targetSpreadsheetId}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -73,7 +46,8 @@ export class BankSheetFetcher {
 
       if (sheetInfoResponse.ok) {
         const sheetInfo = await sheetInfoResponse.json();
-        console.log('📋 Abas disponíveis na planilha:');
+        console.log('📋 Planilha:', sheetInfo.properties?.title);
+        console.log('📋 Abas disponíveis:');
         sheetInfo.sheets?.forEach((sheet: any, index: number) => {
           console.log(`${index + 1}. "${sheet.properties.title}" (${sheet.properties.gridProperties.rowCount} linhas, ${sheet.properties.gridProperties.columnCount} colunas)`);
         });
@@ -81,7 +55,7 @@ export class BankSheetFetcher {
 
       // Buscar dados da primeira aba
       const dataResponse = await fetch(
-        `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Sheet1?majorDimension=ROWS`,
+        `https://sheets.googleapis.com/v4/spreadsheets/${targetSpreadsheetId}/values/Sheet1?majorDimension=ROWS`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -93,9 +67,9 @@ export class BankSheetFetcher {
         const errorText = await dataResponse.text();
         console.error('❌ Erro ao ler dados da planilha:', dataResponse.status, errorText);
         
-        // Tentar com nome de aba diferente se Sheet1 não funcionar
+        // Tentar com método alternativo
         const dataResponse2 = await fetch(
-          `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A1:Z1000?majorDimension=ROWS`,
+          `https://sheets.googleapis.com/v4/spreadsheets/${targetSpreadsheetId}/values/A1:Z1000?majorDimension=ROWS`,
           {
             headers: {
               'Authorization': `Bearer ${token}`,

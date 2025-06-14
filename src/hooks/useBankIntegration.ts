@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { BankIntegrationService } from '@/services/bankIntegration';
 import { BankIntegrationStatus, BankSyncResult } from '@/types/bankIntegration';
 import { useGoogleOAuth } from '@/hooks/useGoogleOAuth';
+import { useBankSheetSelection } from '@/hooks/useBankSheetSelection';
 
 export function useBankIntegration() {
   const [status, setStatus] = useState<BankIntegrationStatus>({
@@ -15,6 +16,7 @@ export function useBankIntegration() {
   });
   const [syncProgress, setSyncProgress] = useState(0);
   const { tokens } = useGoogleOAuth();
+  const { selectedSheetId } = useBankSheetSelection();
 
   // Verificar se tem token do Google Sheets
   const sheetsToken = tokens.find(token => 
@@ -43,13 +45,18 @@ export function useBankIntegration() {
       return;
     }
 
+    if (!selectedSheetId) {
+      toast.error('Selecione uma planilha antes de sincronizar');
+      return;
+    }
+
     setStatus(prev => ({ ...prev, syncInProgress: true }));
     setSyncProgress(0);
 
     try {
       console.log('🔄 Iniciando sincronização com planilha bancária...');
       console.log('🔑 Token disponível:', !!sheetsToken.access_token);
-      console.log('🔑 Token scope:', sheetsToken.scope);
+      console.log('📊 Planilha selecionada:', selectedSheetId);
       toast.info('Iniciando sincronização com planilha bancária...');
       
       // Simular progresso
@@ -57,7 +64,10 @@ export function useBankIntegration() {
         setSyncProgress(prev => Math.min(prev + 10, 90));
       }, 200);
 
-      const result: BankSyncResult = await BankIntegrationService.syncWithBankSheet(sheetsToken.access_token);
+      const result: BankSyncResult = await BankIntegrationService.syncWithBankSheet(
+        sheetsToken.access_token, 
+        selectedSheetId
+      );
       
       clearInterval(progressInterval);
       setSyncProgress(100);
@@ -74,17 +84,16 @@ export function useBankIntegration() {
       } else {
         console.error('❌ Erros na sincronização:', result.errors);
         
-        // Tratamento mais específico de erros
         const errorMessage = result.errors[0] || 'Erro desconhecido';
         
         if (errorMessage.includes('não encontrada')) {
-          toast.error('Planilha "BTG - Entradas e Saídas Caixa" não encontrada. Verifique se ela existe no Google Drive e se o nome está correto.');
+          toast.error('Planilha não encontrada ou inacessível. Verifique se você tem acesso à planilha selecionada.');
         } else if (errorMessage.includes('vazia')) {
-          toast.error('A planilha foi encontrada mas está vazia. Adicione dados de transações bancárias antes de sincronizar.');
+          toast.error('A planilha selecionada está vazia. Adicione dados de transações bancárias antes de sincronizar.');
         } else if (errorMessage.includes('token') || errorMessage.includes('401')) {
-          toast.error('Token de acesso expirado ou inválido. Reconecte-se ao Google Sheets nas configurações.');
+          toast.error('Token de acesso expirado. Reconecte-se ao Google Sheets nas configurações.');
         } else if (errorMessage.includes('403')) {
-          toast.error('Acesso negado à planilha. Verifique se você tem permissão de leitura na planilha "BTG - Entradas e Saídas Caixa".');
+          toast.error('Acesso negado à planilha. Verifique se você tem permissão de leitura na planilha selecionada.');
         } else {
           toast.error(`Erro na sincronização: ${errorMessage}`);
         }
@@ -93,14 +102,11 @@ export function useBankIntegration() {
     } catch (error) {
       console.error('❌ Erro inesperado na sincronização:', error);
       
-      // Log detalhado do erro para debug
       if (error instanceof Error) {
         console.error('❌ Mensagem do erro:', error.message);
-        console.error('❌ Stack do erro:', error.stack);
         
-        // Tratamento de erros específicos
         if (error.message.includes('não encontrada')) {
-          toast.error('Planilha "BTG - Entradas e Saídas Caixa" não encontrada no Google Drive.');
+          toast.error('Planilha não encontrada.');
         } else if (error.message.includes('vazia')) {
           toast.error('A planilha existe mas não contém dados para sincronizar.');
         } else if (error.message.includes('401') || error.message.includes('token')) {
@@ -109,7 +115,7 @@ export function useBankIntegration() {
           toast.error(`Erro: ${error.message}`);
         }
       } else {
-        toast.error('Erro inesperado durante a sincronização. Verifique os logs do console para mais detalhes.');
+        toast.error('Erro inesperado durante a sincronização.');
       }
     } finally {
       setStatus(prev => ({ ...prev, syncInProgress: false }));
@@ -121,6 +127,7 @@ export function useBankIntegration() {
     status,
     syncProgress,
     sheetsToken,
+    selectedSheetId,
     handleSync,
     loadStatus
   };
