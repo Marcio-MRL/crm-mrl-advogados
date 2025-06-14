@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .from('profiles')
         .select('role, status, first_name, last_name')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('AuthContext: Error fetching profile:', error.message, error.details);
