@@ -8,78 +8,63 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase, getCurrentUserId } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useProcesses, type ProcessData } from '@/hooks/useProcesses';
 
 const processoFormSchema = z.object({
-  number: z.string().min(1, { message: "Número do processo é obrigatório" }),
+  process_number: z.string().min(1, { message: "Número do processo é obrigatório" }),
+  title: z.string().min(1, { message: "Título é obrigatório" }),
   client_id: z.string().optional(),
-  type: z.string().min(1, { message: "Tipo do processo é obrigatório" }),
+  client_name: z.string().optional(),
+  process_type: z.string().min(1, { message: "Tipo do processo é obrigatório" }),
   forum: z.string().optional(),
   status: z.string().min(1, { message: "Status é obrigatório" }),
   start_date: z.string().min(1, { message: "Data de início é obrigatória" }),
+  responsible: z.string().optional(),
   description: z.string().optional(),
 });
 
 type ProcessoFormValues = z.infer<typeof processoFormSchema>;
 
 interface ProcessoFormProps {
+  initialData?: ProcessData | null;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-export function ProcessoForm({ onSuccess, onCancel }: ProcessoFormProps) {
+export function ProcessoForm({ initialData, onSuccess, onCancel }: ProcessoFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [clients, setClients] = useState<{ id: string, name: string }[]>([]);
+  const { createProcess, updateProcess } = useProcesses();
   
   const form = useForm<ProcessoFormValues>({
     resolver: zodResolver(processoFormSchema),
     defaultValues: {
-      number: '',
-      client_id: '',
-      type: '',
-      forum: '',
-      status: 'Ativo',
-      start_date: new Date().toISOString().split('T')[0],
-      description: '',
+      process_number: initialData?.process_number || '',
+      title: initialData?.title || '',
+      client_id: initialData?.client_id || '',
+      client_name: initialData?.client_name || '',
+      process_type: initialData?.process_type || '',
+      forum: initialData?.forum || '',
+      status: initialData?.status || 'em_andamento',
+      start_date: initialData?.start_date || new Date().toISOString().split('T')[0],
+      responsible: initialData?.responsible || '',
+      description: initialData?.description || '',
     },
   });
-  
-  React.useEffect(() => {
-    const fetchClients = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('clients')
-          .select('id, name')
-          .order('name');
-        
-        if (error) throw error;
-        setClients(data || []);
-      } catch (error) {
-        console.error('Erro ao carregar clientes:', error);
-      }
-    };
-    
-    fetchClients();
-  }, []);
 
   const onSubmit = async (data: ProcessoFormValues) => {
     try {
       setIsSubmitting(true);
-      const userId = await getCurrentUserId();
       
-      if (!userId) {
-        toast.error('Você precisa estar logado para adicionar um processo');
-        return;
+      if (initialData?.id) {
+        await updateProcess(initialData.id, data);
+      } else {
+        await createProcess(data);
       }
-
-      // Simulação de envio para o banco de dados
-      toast.success('Processo adicionado com sucesso!');
+      
       form.reset();
       onSuccess?.();
     } catch (error) {
-      console.error('Erro ao adicionar processo:', error);
-      toast.error('Ocorreu um erro ao processar sua solicitação');
+      console.error('Erro ao salvar processo:', error);
     } finally {
       setIsSubmitting(false);
     }
@@ -91,12 +76,12 @@ export function ProcessoForm({ onSuccess, onCancel }: ProcessoFormProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="number"
+            name="process_number"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Número do Processo</FormLabel>
                 <FormControl>
-                  <Input placeholder="Número do processo" {...field} />
+                  <Input placeholder="Ex: 0001234-56.2024.8.09.0001" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -105,27 +90,13 @@ export function ProcessoForm({ onSuccess, onCancel }: ProcessoFormProps) {
           
           <FormField
             control={form.control}
-            name="client_id"
+            name="title"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Cliente</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o cliente" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {clients.map((client) => (
-                      <SelectItem key={client.id} value={client.id}>
-                        {client.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormLabel>Título do Processo</FormLabel>
+                <FormControl>
+                  <Input placeholder="Título do processo" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -135,14 +106,25 @@ export function ProcessoForm({ onSuccess, onCancel }: ProcessoFormProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="type"
+            name="client_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Cliente</FormLabel>
+                <FormControl>
+                  <Input placeholder="Nome do cliente" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="process_type"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Tipo</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  defaultValue={field.value}
-                >
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o tipo" />
@@ -154,13 +136,16 @@ export function ProcessoForm({ onSuccess, onCancel }: ProcessoFormProps) {
                     <SelectItem value="Tributário">Tributário</SelectItem>
                     <SelectItem value="Empresarial">Empresarial</SelectItem>
                     <SelectItem value="Criminal">Criminal</SelectItem>
+                    <SelectItem value="Família">Família</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="forum"
@@ -169,6 +154,20 @@ export function ProcessoForm({ onSuccess, onCancel }: ProcessoFormProps) {
                 <FormLabel>Fórum</FormLabel>
                 <FormControl>
                   <Input placeholder="Fórum" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="responsible"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Responsável</FormLabel>
+                <FormControl>
+                  <Input placeholder="Advogado responsável" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -183,20 +182,17 @@ export function ProcessoForm({ onSuccess, onCancel }: ProcessoFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Status</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
-                  defaultValue={field.value}
-                >
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o status" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="Ativo">Ativo</SelectItem>
-                    <SelectItem value="Arquivado">Arquivado</SelectItem>
-                    <SelectItem value="Suspenso">Suspenso</SelectItem>
-                    <SelectItem value="Concluído">Concluído</SelectItem>
+                    <SelectItem value="em_andamento">Em andamento</SelectItem>
+                    <SelectItem value="concluido">Concluído</SelectItem>
+                    <SelectItem value="suspenso">Suspenso</SelectItem>
+                    <SelectItem value="arquivado">Arquivado</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -251,7 +247,7 @@ export function ProcessoForm({ onSuccess, onCancel }: ProcessoFormProps) {
             disabled={isSubmitting}
             className="bg-lawblue-500 hover:bg-lawblue-600"
           >
-            {isSubmitting ? "Salvando..." : "Salvar Processo"}
+            {isSubmitting ? "Salvando..." : initialData?.id ? "Atualizar Processo" : "Salvar Processo"}
           </Button>
         </div>
       </form>
