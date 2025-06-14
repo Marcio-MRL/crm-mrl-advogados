@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -43,11 +44,13 @@ export function useGoogleDrive() {
 
   const fetchDriveToken = async () => {
     try {
+      console.log('Verificando token do Google Drive...');
+      
       const { data, error } = await supabase
         .from('google_oauth_tokens')
-        .select('access_token, expires_at')
+        .select('access_token, expires_at, scope')
         .eq('user_id', user?.id)
-        .like('scope', '%drive.file%')
+        .or('scope.like.%drive%,scope.like.%https://www.googleapis.com/auth/drive%')
         .maybeSingle();
 
       if (error) {
@@ -55,14 +58,29 @@ export function useGoogleDrive() {
         return;
       }
 
+      console.log('Token encontrado:', data);
+
       if (data && data.access_token) {
         const expiresAt = data.expires_at ? new Date(data.expires_at) : null;
-        if (!expiresAt || expiresAt > new Date()) {
+        const isExpired = expiresAt && expiresAt <= new Date();
+        
+        console.log('Token expira em:', expiresAt);
+        console.log('Token expirado:', isExpired);
+        
+        if (!isExpired) {
           setDriveToken(data.access_token);
+          console.log('Token do Google Drive configurado com sucesso');
+        } else {
+          console.log('Token do Google Drive expirado');
+          setDriveToken(null);
         }
+      } else {
+        console.log('Nenhum token do Google Drive encontrado');
+        setDriveToken(null);
       }
     } catch (error) {
       console.error('Erro ao verificar token do Google Drive:', error);
+      setDriveToken(null);
     }
   };
 
@@ -224,5 +242,6 @@ export function useGoogleDrive() {
     deleteFile,
     getFileDownloadLink,
     isConnected: !!driveToken,
+    refreshToken: fetchDriveToken,
   };
 }

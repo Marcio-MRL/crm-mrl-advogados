@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Header } from '@/components/layout/Header';
 import { GoogleDriveDocumentTable } from '@/components/documents/GoogleDriveDocumentTable';
@@ -15,7 +15,8 @@ import {
   FolderPlus,
   Filter,
   FileText,
-  HardDrive
+  HardDrive,
+  RefreshCw
 } from 'lucide-react';
 import { useDocuments } from '@/hooks/useDocuments';
 import { useGoogleDrive, type DocumentMetadata } from '@/hooks/useGoogleDrive';
@@ -27,7 +28,20 @@ export default function Documentos() {
   const [documentToDelete, setDocumentToDelete] = useState<DocumentMetadata | null>(null);
   
   const { documents, loading } = useDocuments();
-  const { deleteFile, isConnected } = useGoogleDrive();
+  const { deleteFile, isConnected, refreshToken } = useGoogleDrive();
+
+  // Verificar conexão quando o componente montar
+  useEffect(() => {
+    console.log('Página de documentos carregada, verificando conexão...');
+    if (refreshToken) {
+      refreshToken();
+    }
+  }, [refreshToken]);
+
+  // Log do status de conexão
+  useEffect(() => {
+    console.log('Status de conexão do Google Drive:', isConnected);
+  }, [isConnected]);
 
   const filteredDocuments = documents.filter(doc => 
     doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -49,6 +63,13 @@ export default function Documentos() {
       await deleteFile(documentToDelete.id, documentToDelete.drive_file_id);
       setIsDeleteModalOpen(false);
       setDocumentToDelete(null);
+    }
+  };
+
+  const handleRefreshConnection = () => {
+    console.log('Atualizando conexão com Google Drive...');
+    if (refreshToken) {
+      refreshToken();
     }
   };
 
@@ -150,12 +171,23 @@ export default function Documentos() {
         {!isConnected && (
           <Card className="border-orange-200 bg-orange-50">
             <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <HardDrive className="h-5 w-5 text-orange-600" />
-                <div>
-                  <p className="font-medium text-orange-800">Google Drive não conectado</p>
-                  <p className="text-sm text-orange-600">Vá para Configurações → Integrações para conectar sua conta do Google Drive.</p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <HardDrive className="h-5 w-5 text-orange-600" />
+                  <div>
+                    <p className="font-medium text-orange-800">Google Drive não conectado</p>
+                    <p className="text-sm text-orange-600">Vá para Configurações → Integrações para conectar sua conta do Google Drive.</p>
+                  </div>
                 </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRefreshConnection}
+                  className="text-orange-600 border-orange-200"
+                >
+                  <RefreshCw className="h-4 w-4 mr-1" />
+                  Verificar Conexão
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -201,6 +233,9 @@ export default function Documentos() {
             <CardTitle className="flex items-center gap-2">
               <HardDrive className="h-5 w-5" />
               Biblioteca de Documentos (Google Drive)
+              {isConnected && (
+                <span className="text-sm text-green-600 font-normal">• Conectado</span>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
