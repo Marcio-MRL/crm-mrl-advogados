@@ -24,14 +24,18 @@ export default function Auth() {
   const { isValid, reason, performRedirect } = useAuthValidation();
 
   useEffect(() => {
+    console.log('Auth page: isValid =', isValid, 'reason =', reason);
+    
     // Se usuário está válido, redirecionar para dashboard
     if (isValid) {
+      console.log('Auth page: User is valid, redirecting to dashboard');
       navigate('/');
       return;
     }
 
     // Se deve fazer redirect mas a razão não é aprovação pendente
     if (reason && reason !== 'pending_approval' && reason !== 'not_authenticated') {
+      console.log('Auth page: Forcing logout due to:', reason);
       // Força logout para casos de domínio inválido, conta suspensa, etc.
       supabase.auth.signOut();
     }
@@ -60,6 +64,8 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
     
+    console.log('Auth: Starting sign in for:', email);
+    
     const emailError = validateEmail(email);
     if (emailError) {
       toast({
@@ -78,6 +84,7 @@ export default function Auth() {
       });
       
       if (error) {
+        console.error('Auth: Sign in error:', error);
         let message = 'Ocorreu um erro ao tentar fazer login';
         
         if (error.message.includes('Invalid login credentials')) {
@@ -89,7 +96,10 @@ export default function Auth() {
         throw new Error(message);
       }
       
+      console.log('Auth: Sign in successful, waiting for redirect...');
+      
     } catch (error: any) {
+      console.error('Auth: Sign in failed:', error);
       toast({
         title: "Erro ao fazer login",
         description: error.message,

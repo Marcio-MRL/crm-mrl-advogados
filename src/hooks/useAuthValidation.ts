@@ -17,10 +17,16 @@ export function useAuthValidation() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (loading) return;
+    if (loading) {
+      console.log('AuthValidation: Still loading...');
+      return;
+    }
+
+    console.log('AuthValidation: Validating user:', user?.email, 'Profile:', userProfile);
 
     // Usuário não autenticado
     if (!user) {
+      console.log('AuthValidation: No user authenticated');
       setValidationState({
         isValid: false,
         reason: 'not_authenticated',
@@ -32,6 +38,7 @@ export function useAuthValidation() {
 
     // Verificar domínio do email
     if (user.email && !user.email.endsWith('@mrladvogados.com.br')) {
+      console.log('AuthValidation: Invalid domain');
       setValidationState({
         isValid: false,
         reason: 'invalid_domain',
@@ -43,6 +50,7 @@ export function useAuthValidation() {
 
     // Verificar se tem perfil
     if (!userProfile) {
+      console.log('AuthValidation: No profile found');
       setValidationState({
         isValid: false,
         reason: 'no_profile',
@@ -53,6 +61,7 @@ export function useAuthValidation() {
     }
 
     // Verificar status do usuário
+    console.log('AuthValidation: Profile status:', userProfile.status);
     switch (userProfile.status) {
       case 'pending_approval':
         setValidationState({
@@ -70,6 +79,7 @@ export function useAuthValidation() {
         });
         break;
       case 'active':
+        console.log('AuthValidation: User is valid and active');
         setValidationState({
           isValid: true,
           shouldRedirect: false
@@ -86,6 +96,7 @@ export function useAuthValidation() {
   }, [user, userProfile, loading]);
 
   const performRedirect = () => {
+    console.log('AuthValidation: Performing redirect to:', validationState.redirectTo);
     if (validationState.shouldRedirect && validationState.redirectTo) {
       navigate(validationState.redirectTo);
     }
