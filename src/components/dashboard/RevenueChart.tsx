@@ -23,8 +23,8 @@ const revenueData = [
 
 export function RevenueChart() {
   return (
-    <ChartCard title="Receitas Mensais" className="col-span-2">
-      <ResponsiveContainer width="100%" height={250}>
+    <ChartCard title="Receitas Mensais">
+      <ResponsiveContainer width="100%" height={200}>
         <LineChart data={revenueData}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis dataKey="name" stroke="#888" fontSize={12} />

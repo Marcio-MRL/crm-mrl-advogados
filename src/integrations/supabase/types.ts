@@ -101,6 +101,27 @@ export type Database = {
           },
         ]
       }
+      clientes: {
+        Row: {
+          cpf_cnpj: string | null
+          created_at: string
+          id: string
+          nome_razao_social: string | null
+        }
+        Insert: {
+          cpf_cnpj?: string | null
+          created_at?: string
+          id?: string
+          nome_razao_social?: string | null
+        }
+        Update: {
+          cpf_cnpj?: string | null
+          created_at?: string
+          id?: string
+          nome_razao_social?: string | null
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           address: string | null
@@ -204,6 +225,54 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          created_at: string
+          description: string | null
+          event_end_time: string | null
+          event_start_time: string
+          id: string
+          processo_id: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          event_end_time?: string | null
+          event_start_time: string
+          id?: string
+          processo_id?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          event_end_time?: string | null
+          event_start_time?: string
+          id?: string
+          processo_id?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_processo_id_fkey"
+            columns: ["processo_id"]
+            isOneToOne: false
+            referencedRelation: "processos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -463,6 +532,35 @@ export type Database = {
           },
         ]
       }
+      processos: {
+        Row: {
+          cliente_id: string | null
+          created_at: string
+          id: string
+          numero_processo: string | null
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string
+          id?: string
+          numero_processo?: string | null
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string
+          id?: string
+          numero_processo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "processos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -471,6 +569,8 @@ export type Database = {
           first_name: string | null
           id: string
           last_name: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          status: Database["public"]["Enums"]["user_status"]
           updated_at: string
         }
         Insert: {
@@ -480,6 +580,8 @@ export type Database = {
           first_name?: string | null
           id: string
           last_name?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          status?: Database["public"]["Enums"]["user_status"]
           updated_at?: string
         }
         Update: {
@@ -489,6 +591,8 @@ export type Database = {
           first_name?: string | null
           id?: string
           last_name?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          status?: Database["public"]["Enums"]["user_status"]
           updated_at?: string
         }
         Relationships: []
@@ -540,7 +644,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_role: "admin" | "editor" | "leitor"
+      user_status: "pending_approval" | "active" | "inactive"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -655,6 +760,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["admin", "editor", "leitor"],
+      user_status: ["pending_approval", "active", "inactive"],
+    },
   },
 } as const

@@ -2,7 +2,9 @@
 import { MainLayout } from '@/components/layout/MainLayout';
 import { StatsSection } from '@/components/dashboard/StatsSection';
 import { TaskList } from '@/components/dashboard/TaskList';
-import { ChartsSection } from '@/components/dashboard/ChartsSection';
+import { RevenueChart } from '@/components/dashboard/RevenueChart';
+import { ProcessChart } from '@/components/dashboard/ProcessChart';
+import { PerformanceCard } from '@/components/dashboard/PerformanceCard';
 import { AddButtons } from '@/components/dashboard/AddButtons';
 import { DashboardModals } from '@/components/dashboard/DashboardModals';
 import { useState } from 'react';
@@ -88,16 +90,30 @@ export default function Dashboard() {
 
         <StatsSection />
         
+        {/* Layout em 3 colunas mais balanceado */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <ChartsSection />
+          {/* Coluna 1: Receitas */}
+          <div className="lg:col-span-1">
+            <RevenueChart />
           </div>
-          <div>
+          
+          {/* Coluna 2: Processos */}
+          <div className="lg:col-span-1">
+            <ProcessChart />
+          </div>
+          
+          {/* Coluna 3: Tarefas Urgentes */}
+          <div className="lg:col-span-1">
             <TaskList 
               tasks={urgentTasks}
               onTasksChange={handleTasksChange}
             />
           </div>
+        </div>
+
+        {/* Seção adicional para performance */}
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
+          <PerformanceCard />
         </div>
 
         <DashboardModals 
