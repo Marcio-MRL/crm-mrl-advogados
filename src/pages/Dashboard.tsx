@@ -42,11 +42,12 @@ export default function Dashboard() {
     setIsLeadModalOpen(false);
   };
 
-  const handleTaskAdded = async (taskData: any) => {
+  const handleTaskAdded = async (taskData: any): Promise<boolean> => {
     const success = await createTask(taskData);
     if (success) {
       setIsTaskModalOpen(false);
     }
+    return success;
   };
 
   return (
