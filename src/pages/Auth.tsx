@@ -178,41 +178,41 @@ export default function Auth() {
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center space-y-4">
+      <Card className="w-full max-w-sm">
+        <CardHeader className="text-center space-y-3 pb-4">
           <div className="flex justify-center">
             <img 
               src="/lovable-uploads/27ce3e50-3cad-44f4-a295-b4890ec2ce52.png" 
               alt="MRL Advogados" 
-              className="h-16 w-auto"
+              className="h-12 w-auto"
             />
           </div>
-          <div>
-            <CardTitle className="text-xl font-bold text-lawblue-800">MRL Advogados</CardTitle>
-            <CardDescription className="text-sm">
-              Sistema de gestão jurídica
-            </CardDescription>
-          </div>
+          <CardDescription className="text-xs text-gray-600">
+            Sistema de gestão jurídica
+          </CardDescription>
         </CardHeader>
         
-        <Alert className="mx-6 mb-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription className="text-xs leading-relaxed">
-            Acesso restrito ao domínio @mrladvogados.com.br. Novos usuários precisam de aprovação do administrador.
-          </AlertDescription>
-        </Alert>
+        <div className="px-6 pb-4">
+          <Alert className="border-blue-200 bg-blue-50">
+            <AlertCircle className="h-3 w-3 text-blue-600" />
+            <AlertDescription className="text-xs leading-relaxed text-blue-800">
+              <strong>Acesso restrito</strong> ao domínio @mrladvogados.com.br. 
+              Novos usuários precisam de aprovação do administrador.
+            </AlertDescription>
+          </Alert>
+        </div>
         
-        <Tabs defaultValue="login">
-          <TabsList className="grid grid-cols-2 mb-4 mx-6">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="register">Cadastro</TabsTrigger>
+        <Tabs defaultValue="login" className="px-6">
+          <TabsList className="grid grid-cols-2 mb-4 w-full">
+            <TabsTrigger value="login" className="text-xs">Login</TabsTrigger>
+            <TabsTrigger value="register" className="text-xs">Cadastro</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="login">
+          <TabsContent value="login" className="mt-0">
             <form onSubmit={handleSignIn}>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email-login" className="text-sm">Email</Label>
+              <CardContent className="space-y-3 p-0">
+                <div className="space-y-1">
+                  <Label htmlFor="email-login" className="text-xs">Email</Label>
                   <Input 
                     id="email-login"
                     type="email" 
@@ -220,25 +220,25 @@ export default function Auth() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="text-sm"
+                    className="text-xs h-8"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password-login" className="text-sm">Senha</Label>
+                <div className="space-y-1">
+                  <Label htmlFor="password-login" className="text-xs">Senha</Label>
                   <Input 
                     id="password-login"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="text-sm"
+                    className="text-xs h-8"
                   />
                 </div>
               </CardContent>
-              <CardFooter>
+              <CardFooter className="pt-4 pb-6 px-0">
                 <Button 
                   type="submit" 
-                  className="w-full bg-lawblue-600 hover:bg-lawblue-700 text-sm"
+                  className="w-full bg-lawblue-600 hover:bg-lawblue-700 text-xs h-8"
                   disabled={loading}
                 >
                   {loading ? 'Processando...' : 'Entrar'}
@@ -247,33 +247,33 @@ export default function Auth() {
             </form>
           </TabsContent>
           
-          <TabsContent value="register">
+          <TabsContent value="register" className="mt-0">
             <form onSubmit={handleSignUp}>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="first-name" className="text-sm">Nome</Label>
+              <CardContent className="space-y-3 p-0">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label htmlFor="first-name" className="text-xs">Nome</Label>
                     <Input 
                       id="first-name"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       required
-                      className="text-sm"
+                      className="text-xs h-8"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="last-name" className="text-sm">Sobrenome</Label>
+                  <div className="space-y-1">
+                    <Label htmlFor="last-name" className="text-xs">Sobrenome</Label>
                     <Input 
                       id="last-name"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       required
-                      className="text-sm"
+                      className="text-xs h-8"
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email-register" className="text-sm">Email</Label>
+                <div className="space-y-1">
+                  <Label htmlFor="email-register" className="text-xs">Email</Label>
                   <Input 
                     id="email-register"
                     type="email" 
@@ -281,11 +281,11 @@ export default function Auth() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="text-sm"
+                    className="text-xs h-8"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password-register" className="text-sm">Senha</Label>
+                <div className="space-y-1">
+                  <Label htmlFor="password-register" className="text-xs">Senha</Label>
                   <Input 
                     id="password-register"
                     type="password"
@@ -293,15 +293,15 @@ export default function Auth() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     minLength={6}
-                    className="text-sm"
+                    className="text-xs h-8"
                   />
                   <p className="text-xs text-gray-500">Mínimo de 6 caracteres</p>
                 </div>
               </CardContent>
-              <CardFooter>
+              <CardFooter className="pt-4 pb-6 px-0">
                 <Button 
                   type="submit" 
-                  className="w-full bg-lawblue-600 hover:bg-lawblue-700 text-sm"
+                  className="w-full bg-lawblue-600 hover:bg-lawblue-700 text-xs h-8"
                   disabled={loading}
                 >
                   {loading ? 'Processando...' : 'Cadastrar'}
