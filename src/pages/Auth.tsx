@@ -183,7 +183,7 @@ export default function Auth() {
             <img 
               src="/lovable-uploads/27ce3e50-3cad-44f4-a295-b4890ec2ce52.png" 
               alt="MRL Advogados" 
-              className="h-18 w-auto"
+              className="h-16 w-auto"
             />
           </div>
           <CardDescription className="text-xs text-gray-600">
