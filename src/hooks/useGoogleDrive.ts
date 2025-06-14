@@ -17,6 +17,10 @@ export function useGoogleDrive() {
   useEffect(() => {
     if (user) {
       fetchDriveToken();
+    } else {
+      console.log('⚠️ Usuário não encontrado');
+      setIsConnected(false);
+      setDriveToken(null);
     }
   }, [user]);
 
@@ -24,6 +28,7 @@ export function useGoogleDrive() {
     if (!user) {
       console.log('⚠️ Usuário não encontrado, não é possível verificar token');
       setIsConnected(false);
+      setDriveToken(null);
       return;
     }
     
@@ -32,24 +37,24 @@ export function useGoogleDrive() {
       setLoading(true);
       
       const token = await GoogleDriveTokenManager.fetchToken(user.id);
-      setDriveToken(token);
       
       if (token) {
-        // Testar se o token realmente funciona
+        console.log('🔍 Token encontrado, testando conexão...');
         const connectionValid = await GoogleDriveTokenManager.testTokenConnection(token);
+        
+        setDriveToken(token);
         setIsConnected(connectionValid);
         
         if (connectionValid) {
           console.log('✅ Google Drive conectado e funcionando');
-          toast.success('Google Drive conectado com sucesso!');
         } else {
           console.log('❌ Token encontrado mas conexão falhou');
-          toast.error('Token do Google Drive inválido ou expirado');
           setDriveToken(null);
         }
       } else {
         console.log('⚠️ Nenhum token válido encontrado');
         setIsConnected(false);
+        setDriveToken(null);
       }
       
       setLastConnectionCheck(new Date());
@@ -57,7 +62,6 @@ export function useGoogleDrive() {
       console.error('❌ Erro na verificação de token:', error);
       setIsConnected(false);
       setDriveToken(null);
-      toast.error('Erro ao verificar conexão com Google Drive');
     } finally {
       setLoading(false);
     }

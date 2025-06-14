@@ -10,7 +10,7 @@ export class GoogleDriveTokenManager {
         .from('google_oauth_tokens')
         .select('access_token, expires_at, scope')
         .eq('user_id', userId)
-        .or('scope.ilike.%drive%,scope.ilike.%https://www.googleapis.com/auth/drive%')
+        .like('scope', '%drive%')
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -77,8 +77,14 @@ export class GoogleDriveTokenManager {
       const isValid = response.ok;
       console.log('🧪 Resultado do teste de conexão:', {
         status: response.status,
+        statusText: response.statusText,
         isValid
       });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('🧪 Detalhes do erro na API:', errorText);
+      }
 
       return isValid;
     } catch (error) {

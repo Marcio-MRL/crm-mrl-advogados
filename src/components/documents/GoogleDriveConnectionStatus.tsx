@@ -47,7 +47,7 @@ export function GoogleDriveConnectionStatus({
             className="text-orange-600 border-orange-200 hover:bg-orange-100"
           >
             <RefreshCw className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
-            {loading ? 'Verificando...' : 'Verificar Conexão'}
+            {loading ? 'Verificando...' : 'Verificar Novamente'}
           </Button>
         </div>
       </CardContent>
