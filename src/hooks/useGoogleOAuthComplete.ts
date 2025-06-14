@@ -64,7 +64,6 @@ export function useGoogleOAuthComplete() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return null;
 
-      // Buscar configuração OAuth diretamente da tabela
       const response = await fetch(
         `https://ncficjpokmmsugykmtdu.supabase.co/rest/v1/google_oauth_configs?user_id=eq.${user.id}&service_type=eq.calendar&select=client_id`,
         {
@@ -159,6 +158,7 @@ export function useGoogleOAuthComplete() {
 
     try {
       const oauthUrl = getOAuthUrl(service);
+      console.log('Iniciando OAuth para:', service, 'URL:', oauthUrl);
       
       const popup = window.open(
         oauthUrl,
@@ -172,7 +172,12 @@ export function useGoogleOAuthComplete() {
       }
 
       const handleMessage = (event: MessageEvent) => {
-        if (event.origin !== window.location.origin) return;
+        console.log('Mensagem recebida no popup:', event.data);
+        
+        if (event.origin !== window.location.origin) {
+          console.warn('Origem inválida da mensagem:', event.origin);
+          return;
+        }
 
         if (event.data.type === 'GOOGLE_OAUTH_SUCCESS') {
           popup.close();
@@ -192,6 +197,7 @@ export function useGoogleOAuthComplete() {
         if (popup.closed) {
           clearInterval(checkClosed);
           window.removeEventListener('message', handleMessage);
+          console.log('Popup fechado pelo usuário');
         }
       }, 1000);
 
@@ -203,6 +209,8 @@ export function useGoogleOAuthComplete() {
 
   const handleOAuthCallback = async (code: string, state: string) => {
     try {
+      console.log('handleOAuthCallback: Iniciando processamento...', { code: code.substring(0, 10) + '...', state });
+      
       const stateData = JSON.parse(state);
       const service = stateData.service;
 
@@ -210,6 +218,8 @@ export function useGoogleOAuthComplete() {
       if (!session) {
         throw new Error('Sessão não encontrada');
       }
+
+      console.log('handleOAuthCallback: Chamando edge function...');
 
       const response = await fetch('/functions/v1/google-oauth', {
         method: 'POST',
@@ -224,16 +234,34 @@ export function useGoogleOAuthComplete() {
         }),
       });
 
+      console.log('handleOAuthCallback: Resposta da edge function:', response.status, response.statusText);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro na autenticação');
+        const responseText = await response.text();
+        console.error('handleOAuthCallback: Erro na resposta:', responseText);
+        
+        try {
+          const errorData = JSON.parse(responseText);
+          throw new Error(errorData.error || 'Erro na autenticação');
+        } catch (parseError) {
+          throw new Error(`Erro HTTP ${response.status}: ${responseText || 'Resposta inválida do servidor'}`);
+        }
       }
 
-      const result = await response.json();
+      const responseText = await response.text();
+      console.log('handleOAuthCallback: Resposta raw:', responseText);
+      
+      if (!responseText.trim()) {
+        throw new Error('Resposta vazia do servidor');
+      }
+
+      const result = JSON.parse(responseText);
+      console.log('handleOAuthCallback: Resultado parseado:', result);
+      
       return result;
 
     } catch (error) {
-      console.error('Erro no callback OAuth:', error);
+      console.error('handleOAuthCallback: Erro completo:', error);
       throw error;
     }
   };
