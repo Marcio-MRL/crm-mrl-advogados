@@ -234,40 +234,34 @@ export class BankIntegrationService {
 
   private static async saveBankTransaction(transaction: BankTransaction): Promise<boolean> {
     try {
-      // Verificar se transação já existe
-      const { data: existing } = await supabase
-        .from('bank_transactions')
-        .select('id')
-        .eq('data', transaction.data)
-        .eq('valor', transaction.valor)
-        .eq('descricao', transaction.descricao)
-        .single();
+      // Verificar se transação já existe usando consulta SQL raw
+      const { data: existing } = await supabase.rpc('check_existing_transaction', {
+        transaction_date: transaction.data,
+        transaction_value: transaction.valor,
+        transaction_description: transaction.descricao
+      });
 
-      if (existing) {
+      if (existing && existing.length > 0) {
         console.log('📋 Transação já existe, pulando...');
         return false;
       }
 
-      // Salvar nova transação
-      const { data, error } = await supabase
-        .from('bank_transactions')
-        .insert({
-          data: transaction.data,
-          credito_debito: transaction.credito_debito,
-          valor: transaction.valor,
-          descricao: transaction.descricao,
-          mensagem: transaction.mensagem,
-          documento: transaction.documento,
-          pagador_recebedor: transaction.pagador_recebedor,
-          nome_pagador_recebedor: transaction.nome_pagador_recebedor,
-          banco_pagador_recebedor: transaction.banco_pagador_recebedor,
-          agencia_pagador_recebedor: transaction.agencia_pagador_recebedor,
-          conta_pagador_recebedor: transaction.conta_pagador_recebedor,
-          identificador: transaction.identificador,
-          raw_data: transaction.raw_data
-        })
-        .select()
-        .single();
+      // Salvar nova transação usando SQL raw
+      const { data, error } = await supabase.rpc('insert_bank_transaction', {
+        transaction_data: transaction.data,
+        credito_debito: transaction.credito_debito,
+        valor: transaction.valor,
+        descricao: transaction.descricao,
+        mensagem: transaction.mensagem,
+        documento: transaction.documento,
+        pagador_recebedor: transaction.pagador_recebedor,
+        nome_pagador_recebedor: transaction.nome_pagador_recebedor,
+        banco_pagador_recebedor: transaction.banco_pagador_recebedor,
+        agencia_pagador_recebedor: transaction.agencia_pagador_recebedor,
+        conta_pagador_recebedor: transaction.conta_pagador_recebedor,
+        identificador: transaction.identificador,
+        raw_data: transaction.raw_data
+      });
 
       if (error) {
         console.error('❌ Erro ao salvar transação:', error);
@@ -285,31 +279,15 @@ export class BankIntegrationService {
 
   static async getBankIntegrationStatus(): Promise<any> {
     try {
-      const { data, error } = await supabase
-        .from('bank_transactions')
-        .select('*')
-        .order('data', { ascending: false })
-        .limit(1);
-
-      if (error) {
-        console.error('❌ Erro ao buscar status:', error);
-        return {
-          connected: false,
-          lastSync: null,
-          totalTransactions: 0,
-          lastTransaction: null
-        };
-      }
-
-      const { count } = await supabase
-        .from('bank_transactions')
-        .select('*', { count: 'exact', head: true });
+      // Usar SQL raw para buscar dados da tabela bank_transactions
+      const { data: lastTransaction } = await supabase.rpc('get_last_bank_transaction');
+      const { data: transactionCount } = await supabase.rpc('get_bank_transactions_count');
 
       return {
         connected: true,
-        lastSync: data?.[0]?.created_at || null,
-        totalTransactions: count || 0,
-        lastTransaction: data?.[0] || null
+        lastSync: lastTransaction?.[0]?.created_at || null,
+        totalTransactions: transactionCount?.[0]?.count || 0,
+        lastTransaction: lastTransaction?.[0] || null
       };
 
     } catch (error) {

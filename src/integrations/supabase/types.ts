@@ -42,6 +42,69 @@ export type Database = {
         }
         Relationships: []
       }
+      bank_transactions: {
+        Row: {
+          agencia_pagador_recebedor: string | null
+          banco_pagador_recebedor: string | null
+          categoria: string | null
+          conta_pagador_recebedor: string | null
+          created_at: string | null
+          credito_debito: string
+          data: string
+          descricao: string
+          documento: string | null
+          id: string
+          identificador: string | null
+          mensagem: string | null
+          nome_pagador_recebedor: string | null
+          pagador_recebedor: string | null
+          raw_data: Json | null
+          updated_at: string | null
+          user_id: string | null
+          valor: number
+        }
+        Insert: {
+          agencia_pagador_recebedor?: string | null
+          banco_pagador_recebedor?: string | null
+          categoria?: string | null
+          conta_pagador_recebedor?: string | null
+          created_at?: string | null
+          credito_debito: string
+          data: string
+          descricao: string
+          documento?: string | null
+          id?: string
+          identificador?: string | null
+          mensagem?: string | null
+          nome_pagador_recebedor?: string | null
+          pagador_recebedor?: string | null
+          raw_data?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+          valor: number
+        }
+        Update: {
+          agencia_pagador_recebedor?: string | null
+          banco_pagador_recebedor?: string | null
+          categoria?: string | null
+          conta_pagador_recebedor?: string | null
+          created_at?: string | null
+          credito_debito?: string
+          data?: string
+          descricao?: string
+          documento?: string | null
+          id?: string
+          identificador?: string | null
+          mensagem?: string | null
+          nome_pagador_recebedor?: string | null
+          pagador_recebedor?: string | null
+          raw_data?: Json | null
+          updated_at?: string | null
+          user_id?: string | null
+          valor?: number
+        }
+        Relationships: []
+      }
       checklist_items: {
         Row: {
           checked: boolean | null
