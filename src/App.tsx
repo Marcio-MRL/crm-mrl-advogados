@@ -18,6 +18,7 @@ import Financeiro from "./pages/Financeiro";
 import Relatorios from "./pages/Relatorios";
 import Configuracoes from "./pages/Configuracoes";
 import Auth from "./pages/Auth";
+import GoogleOAuthCallback from "./pages/GoogleOAuthCallback";
 import NotFound from "./pages/NotFound";
 import "./App.css";
 
@@ -44,6 +45,7 @@ function App() {
             <Route path="/relatorios" element={<Relatorios />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/google/callback" element={<GoogleOAuthCallback />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster />

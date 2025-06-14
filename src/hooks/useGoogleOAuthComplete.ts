@@ -55,7 +55,29 @@ export const OAUTH_SERVICES: OAuthService[] = [
 export function useGoogleOAuthComplete() {
   const [tokens, setTokens] = useState<GoogleOAuthToken[]>([]);
   const [loading, setLoading] = useState(true);
+  const [clientId, setClientId] = useState<string | null>(null);
   const { user } = useAuth();
+
+  const fetchClientId = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return null;
+
+      const response = await fetch('/functions/v1/google-oauth-config', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data.client_id;
+      }
+    } catch (error) {
+      console.warn('Could not fetch client ID from server, OAuth may not be fully configured');
+    }
+    return null;
+  };
 
   const fetchTokens = async () => {
     if (!user) return;
@@ -83,7 +105,10 @@ export function useGoogleOAuthComplete() {
   };
 
   const getOAuthUrl = (service: 'calendar' | 'sheets' | 'drive'): string => {
-    const clientId = 'YOUR_GOOGLE_CLIENT_ID'; // Será configurado via secrets
+    if (!clientId) {
+      throw new Error('Client ID não configurado. Configure as credenciais OAuth primeiro.');
+    }
+
     const redirectUri = `${window.location.origin}/auth/google/callback`;
     const serviceConfig = OAUTH_SERVICES.find(s => s.type === service);
     
@@ -115,10 +140,14 @@ export function useGoogleOAuthComplete() {
       return;
     }
 
+    if (!clientId) {
+      toast.error('OAuth não configurado. Configure as credenciais primeiro.');
+      return;
+    }
+
     try {
       const oauthUrl = getOAuthUrl(service);
       
-      // Abrir popup para OAuth
       const popup = window.open(
         oauthUrl,
         'google-oauth',
@@ -130,7 +159,6 @@ export function useGoogleOAuthComplete() {
         return;
       }
 
-      // Escutar mensagem do popup
       const handleMessage = (event: MessageEvent) => {
         if (event.origin !== window.location.origin) return;
 
@@ -148,9 +176,16 @@ export function useGoogleOAuthComplete() {
 
       window.addEventListener('message', handleMessage);
 
+      const checkClosed = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkClosed);
+          window.removeEventListener('message', handleMessage);
+        }
+      }, 1000);
+
     } catch (error) {
       console.error('Erro ao iniciar OAuth:', error);
-      toast.error('Erro ao iniciar autenticação Google');
+      toast.error(error instanceof Error ? error.message : 'Erro ao iniciar autenticação Google');
     }
   };
 
@@ -240,12 +275,21 @@ export function useGoogleOAuthComplete() {
   };
 
   useEffect(() => {
-    fetchTokens();
+    const initialize = async () => {
+      if (user) {
+        const id = await fetchClientId();
+        setClientId(id);
+        await fetchTokens();
+      }
+    };
+    
+    initialize();
   }, [user]);
 
   return {
     tokens,
     loading,
+    clientId,
     initiateOAuth,
     handleOAuthCallback,
     revokeToken,

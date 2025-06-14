@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calendar, Sheet, HardDrive, Unlink, ExternalLink, CheckCircle } from 'lucide-react';
+import { Calendar, Sheet, HardDrive, Unlink, ExternalLink, CheckCircle, AlertCircle, Settings } from 'lucide-react';
 import { useGoogleOAuthComplete, OAUTH_SERVICES } from '@/hooks/useGoogleOAuthComplete';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -12,7 +12,8 @@ export function CompleteGoogleOAuthSection() {
   const { user } = useAuth();
   const { 
     tokens, 
-    loading, 
+    loading,
+    clientId,
     initiateOAuth, 
     revokeToken, 
     isServiceConnected,
@@ -20,6 +21,7 @@ export function CompleteGoogleOAuthSection() {
   } = useGoogleOAuthComplete();
 
   const isAuthorizedDomain = user?.email?.endsWith('@mrladvogados.com.br');
+  const isConfigured = clientId !== null;
 
   const getServiceIcon = (iconName: string, color: string) => {
     const iconProps = { className: `h-8 w-8 text-${color}-600` };
@@ -68,13 +70,45 @@ export function CompleteGoogleOAuthSection() {
             <Calendar className="h-5 w-5" />
             Integrações Google Workspace
           </CardTitle>
-          {!isAuthorizedDomain && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-              <p className="text-sm text-yellow-800">
-                As integrações Google estão disponíveis apenas para usuários do domínio @mrladvogados.com.br
-              </p>
-            </div>
-          )}
+          
+          {/* Status da configuração */}
+          <div className="space-y-2">
+            {!isConfigured && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-red-600" />
+                  <p className="text-sm text-red-800 font-medium">
+                    OAuth não configurado
+                  </p>
+                </div>
+                <p className="text-sm text-red-700 mt-1">
+                  Configure as credenciais GOOGLE_OAUTH_CLIENT_ID e GOOGLE_OAUTH_CLIENT_SECRET no Supabase.
+                </p>
+              </div>
+            )}
+            
+            {!isAuthorizedDomain && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-yellow-600" />
+                  <p className="text-sm text-yellow-800">
+                    As integrações Google estão disponíveis apenas para usuários do domínio @mrladvogados.com.br
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            {isConfigured && isAuthorizedDomain && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <p className="text-sm text-green-800">
+                    OAuth configurado e pronto para uso
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </CardHeader>
         
         <CardContent className="space-y-6">
@@ -85,6 +119,7 @@ export function CompleteGoogleOAuthSection() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {services.map((service) => {
                 const connected = isServiceConnected(service.type);
+                const canConnect = isConfigured && isAuthorizedDomain;
                 
                 return (
                   <div key={service.type} className="border rounded-lg p-4">
@@ -122,12 +157,21 @@ export function CompleteGoogleOAuthSection() {
                     ) : (
                       <Button
                         onClick={() => initiateOAuth(service.type)}
-                        disabled={!isAuthorizedDomain}
-                        className={`w-full bg-${service.color}-600 hover:bg-${service.color}-700`}
+                        disabled={!canConnect}
+                        className={`w-full ${canConnect ? `bg-${service.color}-600 hover:bg-${service.color}-700` : 'bg-gray-400'}`}
                         size="sm"
                       >
-                        {getServiceIcon(service.icon, 'white')}
-                        <span className="ml-2">Conectar</span>
+                        {canConnect ? (
+                          <>
+                            {getServiceIcon(service.icon, 'white')}
+                            <span className="ml-2">Conectar</span>
+                          </>
+                        ) : (
+                          <>
+                            <Settings className="h-4 w-4 mr-2" />
+                            <span>Configurar primeiro</span>
+                          </>
+                        )}
                       </Button>
                     )}
                   </div>
@@ -211,6 +255,7 @@ export function CompleteGoogleOAuthSection() {
               <li>Configure as credenciais OAuth no Google Cloud Console</li>
               <li>Adicione as variáveis GOOGLE_OAUTH_CLIENT_ID e GOOGLE_OAUTH_CLIENT_SECRET nos secrets do Supabase</li>
               <li>Configure os domínios autorizados no Google Cloud Console</li>
+              <li>URL de callback: <code className="bg-gray-200 px-1 rounded">{window.location.origin}/auth/google/callback</code></li>
             </ul>
           </div>
         </CardContent>
