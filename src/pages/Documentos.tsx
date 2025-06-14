@@ -19,11 +19,17 @@ export default function Documentos() {
   const [documentToDelete, setDocumentToDelete] = useState<DocumentMetadata | null>(null);
   
   const { documents, loading } = useDocuments();
-  const { deleteFile, isConnected, refreshToken } = useGoogleDrive();
+  const { 
+    deleteFile, 
+    isConnected, 
+    refreshToken, 
+    loading: driveLoading,
+    lastConnectionCheck 
+  } = useGoogleDrive();
 
   // Verificar conexão quando o componente montar
   useEffect(() => {
-    console.log('Página de documentos carregada, verificando conexão...');
+    console.log('📄 Página de documentos carregada, verificando conexão...');
     if (refreshToken) {
       refreshToken();
     }
@@ -31,8 +37,11 @@ export default function Documentos() {
 
   // Log do status de conexão
   useEffect(() => {
-    console.log('Status de conexão do Google Drive:', isConnected);
-  }, [isConnected]);
+    console.log('📄 Status de conexão do Google Drive atualizado:', { 
+      isConnected, 
+      lastCheck: lastConnectionCheck?.toISOString() 
+    });
+  }, [isConnected, lastConnectionCheck]);
 
   const filteredDocuments = documents.filter(doc => 
     doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -58,7 +67,7 @@ export default function Documentos() {
   };
 
   const handleRefreshConnection = () => {
-    console.log('Atualizando conexão com Google Drive...');
+    console.log('🔄 Solicitando atualização da conexão com Google Drive...');
     if (refreshToken) {
       refreshToken();
     }
@@ -89,6 +98,8 @@ export default function Documentos() {
         <GoogleDriveConnectionStatus 
           isConnected={isConnected}
           onRefreshConnection={handleRefreshConnection}
+          loading={driveLoading}
+          lastConnectionCheck={lastConnectionCheck}
         />
         
         {/* Barra de Ferramentas */}
@@ -105,8 +116,10 @@ export default function Documentos() {
             <CardTitle className="flex items-center gap-2">
               <HardDrive className="h-5 w-5" />
               Biblioteca de Documentos (Google Drive)
-              {isConnected && (
+              {isConnected ? (
                 <span className="text-sm text-green-600 font-normal">• Conectado</span>
+              ) : (
+                <span className="text-sm text-orange-600 font-normal">• Desconectado</span>
               )}
             </CardTitle>
           </CardHeader>
