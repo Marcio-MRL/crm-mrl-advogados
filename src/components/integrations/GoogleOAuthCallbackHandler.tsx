@@ -23,15 +23,23 @@ export function GoogleOAuthCallbackHandler() {
       if (error) {
         console.error('GoogleOAuthCallbackHandler: Erro do Google:', error);
         
-        // Enviar erro para o popup pai
-        if (window.opener) {
-          window.opener.postMessage({
-            type: 'GOOGLE_OAUTH_ERROR',
-            error: error
-          }, window.location.origin);
-          window.close();
-        } else {
-          // Se não é popup, mostrar erro na própria página
+        // Usar postMessage mais robusto para o popup pai
+        try {
+          if (window.opener && !window.opener.closed) {
+            window.opener.postMessage({
+              type: 'GOOGLE_OAUTH_ERROR',
+              error: error
+            }, '*');
+            window.close();
+          } else {
+            // Se não é popup, mostrar erro na própria página
+            toast.error(`Erro na autenticação: ${error}`);
+            setTimeout(() => {
+              window.location.href = '/configuracoes';
+            }, 2000);
+          }
+        } catch (e) {
+          console.error('Erro ao enviar mensagem para popup pai:', e);
           toast.error(`Erro na autenticação: ${error}`);
           setTimeout(() => {
             window.location.href = '/configuracoes';
@@ -47,16 +55,28 @@ export function GoogleOAuthCallbackHandler() {
           const result = await handleOAuthCallback(code, state);
           console.log('GoogleOAuthCallbackHandler: Callback processado com sucesso:', result);
           
-          // Enviar sucesso para o popup pai
-          if (window.opener) {
-            const parsedState = JSON.parse(state);
-            window.opener.postMessage({
-              type: 'GOOGLE_OAUTH_SUCCESS',
-              service: parsedState.service
-            }, window.location.origin);
-            window.close();
-          } else {
-            // Se não é popup, redirecionar para configurações
+          // Enviar sucesso para o popup pai com tratamento robusto
+          try {
+            if (window.opener && !window.opener.closed) {
+              const parsedState = JSON.parse(state);
+              window.opener.postMessage({
+                type: 'GOOGLE_OAUTH_SUCCESS',
+                service: parsedState.service
+              }, '*');
+              
+              // Aguardar um pouco antes de fechar para garantir que a mensagem foi enviada
+              setTimeout(() => {
+                window.close();
+              }, 500);
+            } else {
+              // Se não é popup, redirecionar para configurações
+              toast.success('Integração conectada com sucesso!');
+              setTimeout(() => {
+                window.location.href = '/configuracoes';
+              }, 1000);
+            }
+          } catch (e) {
+            console.error('Erro ao comunicar com popup pai:', e);
             toast.success('Integração conectada com sucesso!');
             setTimeout(() => {
               window.location.href = '/configuracoes';
@@ -68,15 +88,26 @@ export function GoogleOAuthCallbackHandler() {
           
           const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido no processamento';
           
-          // Enviar erro para o popup pai
-          if (window.opener) {
-            window.opener.postMessage({
-              type: 'GOOGLE_OAUTH_ERROR',
-              error: errorMessage
-            }, window.location.origin);
-            window.close();
-          } else {
-            // Se não é popup, mostrar erro e redirecionar
+          // Enviar erro para o popup pai com tratamento robusto
+          try {
+            if (window.opener && !window.opener.closed) {
+              window.opener.postMessage({
+                type: 'GOOGLE_OAUTH_ERROR',
+                error: errorMessage
+              }, '*');
+              
+              setTimeout(() => {
+                window.close();
+              }, 500);
+            } else {
+              // Se não é popup, mostrar erro e redirecionar
+              toast.error(`Erro no processamento: ${errorMessage}`);
+              setTimeout(() => {
+                window.location.href = '/configuracoes';
+              }, 2000);
+            }
+          } catch (e) {
+            console.error('Erro ao comunicar erro para popup pai:', e);
             toast.error(`Erro no processamento: ${errorMessage}`);
             setTimeout(() => {
               window.location.href = '/configuracoes';
@@ -86,13 +117,24 @@ export function GoogleOAuthCallbackHandler() {
       } else {
         console.warn('GoogleOAuthCallbackHandler: Parâmetros inválidos', { code, state });
         
-        if (window.opener) {
-          window.opener.postMessage({
-            type: 'GOOGLE_OAUTH_ERROR',
-            error: 'Parâmetros de callback inválidos'
-          }, window.location.origin);
-          window.close();
-        } else {
+        try {
+          if (window.opener && !window.opener.closed) {
+            window.opener.postMessage({
+              type: 'GOOGLE_OAUTH_ERROR',
+              error: 'Parâmetros de callback inválidos'
+            }, '*');
+            
+            setTimeout(() => {
+              window.close();
+            }, 500);
+          } else {
+            toast.error('Parâmetros de callback inválidos');
+            setTimeout(() => {
+              window.location.href = '/configuracoes';
+            }, 2000);
+          }
+        } catch (e) {
+          console.error('Erro ao comunicar parâmetros inválidos:', e);
           toast.error('Parâmetros de callback inválidos');
           setTimeout(() => {
             window.location.href = '/configuracoes';
