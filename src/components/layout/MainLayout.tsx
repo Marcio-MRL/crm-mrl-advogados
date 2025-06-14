@@ -1,30 +1,23 @@
 
 import React, { ReactNode } from 'react';
 import { Sidebar } from '@/components/sidebar/Sidebar';
-import { useAuth } from '@/contexts/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 interface MainLayoutProps {
   children: ReactNode;
+  requiredRole?: 'master' | 'admin' | 'advogado' | 'leitor';
+  allowedRoles?: ('master' | 'admin' | 'advogado' | 'leitor')[];
 }
 
-export function MainLayout({ children }: MainLayoutProps) {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return <div className="flex min-h-screen items-center justify-center">Carregando...</div>;
-  }
-
-  if (!user) {
-    return <Navigate to="/auth" />;
-  }
-
+export function MainLayout({ children, requiredRole, allowedRoles }: MainLayoutProps) {
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-      <main className="flex-1 p-6 overflow-y-auto ml-16 md:ml-64 transition-all">
-        {children}
-      </main>
-    </div>
+    <ProtectedRoute requiredRole={requiredRole} allowedRoles={allowedRoles}>
+      <div className="flex min-h-screen bg-gray-50">
+        <Sidebar />
+        <main className="flex-1 p-6 overflow-y-auto ml-16 md:ml-64 transition-all">
+          {children}
+        </main>
+      </div>
+    </ProtectedRoute>
   );
 }

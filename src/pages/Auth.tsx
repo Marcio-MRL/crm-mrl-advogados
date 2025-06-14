@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { AlertCircle, CheckCircle } from 'lucide-react';
+import { AuthStatusHandler } from '@/components/auth/AuthStatusHandler';
+import { useAuthValidation } from '@/hooks/useAuthValidation';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -19,58 +21,37 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [pendingApproval, setPendingApproval] = useState(false);
+  const { isValid, reason, performRedirect } = useAuthValidation();
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        // Verificar se o usuário está aprovado
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('status')
-          .eq('id', session.user.id)
-          .single();
+    // Se usuário está válido, redirecionar para dashboard
+    if (isValid) {
+      navigate('/');
+      return;
+    }
 
-        if (profile?.status === 'active') {
-          navigate('/');
-        } else if (profile?.status === 'pending_approval') {
-          setPendingApproval(true);
-        } else if (profile?.status === 'inactive') {
-          toast({
-            title: "Acesso Suspenso",
-            description: "Sua conta foi suspensa. Entre em contato com o administrador.",
-            variant: "destructive"
-          });
-          await supabase.auth.signOut();
-        }
-      }
-    };
-    
-    checkSession();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('status')
-          .eq('id', session.user.id)
-          .single();
+    // Se deve fazer redirect mas a razão não é aprovação pendente
+    if (reason && reason !== 'pending_approval' && reason !== 'not_authenticated') {
+      // Força logout para casos de domínio inválido, conta suspensa, etc.
+      supabase.auth.signOut();
+    }
+  }, [isValid, reason, navigate]);
 
-        if (profile?.status === 'active') {
-          navigate('/');
-        } else if (profile?.status === 'pending_approval') {
-          setPendingApproval(true);
-        }
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate, toast]);
+  // Se está aguardando aprovação, mostrar tela específica
+  if (reason === 'pending_approval') {
+    return <AuthStatusHandler reason={reason}>{null}</AuthStatusHandler>;
+  }
 
   const validateEmail = (email: string) => {
     if (!email.endsWith('@mrladvogados.com.br')) {
-      return 'O email deve pertencer ao domínio mrladvogados.com.br';
+      return 'O email deve pertencer ao domínio @mrladvogados.com.br';
+    }
+    return null;
+  };
+
+  const validatePassword = (password: string) => {
+    if (password.length < 6) {
+      return 'A senha deve ter pelo menos 6 caracteres';
     }
     return null;
   };
@@ -79,11 +60,11 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
     
-    const errorMessage = validateEmail(email);
-    if (errorMessage) {
+    const emailError = validateEmail(email);
+    if (emailError) {
       toast({
         title: "Erro",
-        description: errorMessage,
+        description: emailError,
         variant: "destructive"
       });
       setLoading(false);
@@ -96,12 +77,22 @@ export default function Auth() {
         password,
       });
       
-      if (error) throw error;
+      if (error) {
+        let message = 'Ocorreu um erro ao tentar fazer login';
+        
+        if (error.message.includes('Invalid login credentials')) {
+          message = 'Email ou senha incorretos';
+        } else if (error.message.includes('Email not confirmed')) {
+          message = 'Confirme seu email antes de fazer login';
+        }
+        
+        throw new Error(message);
+      }
       
     } catch (error: any) {
       toast({
         title: "Erro ao fazer login",
-        description: error.message || "Ocorreu um erro ao tentar fazer login",
+        description: error.message,
         variant: "destructive"
       });
     } finally {
@@ -113,11 +104,33 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
     
-    const errorMessage = validateEmail(email);
-    if (errorMessage) {
+    const emailError = validateEmail(email);
+    const passwordError = validatePassword(password);
+    
+    if (emailError) {
       toast({
         title: "Erro",
-        description: errorMessage,
+        description: emailError,
+        variant: "destructive"
+      });
+      setLoading(false);
+      return;
+    }
+
+    if (passwordError) {
+      toast({
+        title: "Erro",
+        description: passwordError,
+        variant: "destructive"
+      });
+      setLoading(false);
+      return;
+    }
+
+    if (!firstName.trim() || !lastName.trim()) {
+      toast({
+        title: "Erro",
+        description: "Nome e sobrenome são obrigatórios",
         variant: "destructive"
       });
       setLoading(false);
@@ -130,65 +143,38 @@ export default function Auth() {
         password,
         options: {
           data: {
-            first_name: firstName,
-            last_name: lastName,
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
           },
           emailRedirectTo: `${window.location.origin}/`,
         },
       });
       
-      if (error) throw error;
+      if (error) {
+        let message = 'Ocorreu um erro ao tentar se cadastrar';
+        
+        if (error.message.includes('User already registered')) {
+          message = 'Este email já está cadastrado. Tente fazer login.';
+        }
+        
+        throw new Error(message);
+      }
       
       toast({
         title: "Cadastro realizado",
-        description: "Verifique seu email para confirmar o cadastro",
+        description: "Verifique seu email para confirmar o cadastro. Após a confirmação, aguarde a aprovação do administrador.",
       });
       
     } catch (error: any) {
       toast({
         title: "Erro ao cadastrar",
-        description: error.message || "Ocorreu um erro ao tentar se cadastrar",
+        description: error.message,
         variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
-
-  if (pendingApproval) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-lawblue-800">MRL Advogados</CardTitle>
-            <CardDescription>
-              Aguardando Aprovação
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Alert>
-              <CheckCircle className="h-4 w-4" />
-              <AlertDescription>
-                Seu cadastro foi realizado com sucesso! Aguarde a aprovação do administrador para acessar o sistema.
-              </AlertDescription>
-            </Alert>
-            
-            <div className="text-center">
-              <Button 
-                variant="outline" 
-                onClick={async () => {
-                  await supabase.auth.signOut();
-                  setPendingApproval(false);
-                }}
-              >
-                Fazer Logout
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -292,7 +278,9 @@ export default function Auth() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    minLength={6}
                   />
+                  <p className="text-xs text-gray-500">Mínimo de 6 caracteres</p>
                 </div>
               </CardContent>
               <CardFooter>
