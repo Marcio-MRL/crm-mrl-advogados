@@ -20,7 +20,8 @@ import {
   ArrowRight,
   ArrowLeft,
   Plus,
-  User
+  User,
+  Settings
 } from 'lucide-react';
 
 const menuItems = [
@@ -34,7 +35,8 @@ const menuItems = [
   { icon: Calendar, name: 'Agenda', path: '/agenda' },
   { icon: FileArchive, name: 'Documentos', path: '/documentos' },
   { icon: ClipboardList, name: 'Checklists', path: '/checklists' },
-  { icon: BarChart2, name: 'Relatórios', path: '/relatorios' }
+  { icon: BarChart2, name: 'Relatórios', path: '/relatorios' },
+  { icon: Settings, name: 'Configurações', path: '/configuracoes' }
 ];
 
 interface SidebarProps {

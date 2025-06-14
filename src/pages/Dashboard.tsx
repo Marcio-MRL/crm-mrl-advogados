@@ -1,5 +1,6 @@
 
 import { MainLayout } from '@/components/layout/MainLayout';
+import { Header } from '@/components/layout/Header';
 import { StatsSection } from '@/components/dashboard/StatsSection';
 import { TaskList } from '@/components/dashboard/TaskList';
 import { RevenueChart } from '@/components/dashboard/RevenueChart';
@@ -53,12 +54,9 @@ export default function Dashboard() {
   return (
     <MainLayout>
       <div className="w-full space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-600">Visão geral do escritório</p>
-          </div>
-          
+        <Header title="Visão Geral" subtitle="Bem-vindo ao CRM do MRL Advogados" />
+        
+        <div className="flex justify-end">
           <AddButtons 
             openLeadModal={() => setIsLeadModalOpen(true)}
             openClientModal={() => setIsClientModalOpen(true)}
