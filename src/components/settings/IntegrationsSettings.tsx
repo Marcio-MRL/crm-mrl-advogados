@@ -3,10 +3,14 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Settings } from 'lucide-react';
 import { CompleteGoogleOAuthSection } from '@/components/integrations/CompleteGoogleOAuthSection';
+import { GoogleOAuthConfigSection } from './GoogleOAuthConfigSection';
 
 export function IntegrationsSettings() {
   return (
     <div className="space-y-6">
+      {/* Seção de configuração OAuth */}
+      <GoogleOAuthConfigSection />
+      
       {/* Seção completa de integrações Google OAuth */}
       <CompleteGoogleOAuthSection />
       
