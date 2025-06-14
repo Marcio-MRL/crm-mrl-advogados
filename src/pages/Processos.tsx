@@ -14,23 +14,10 @@ import { useProcesses, type ProcessData } from '@/hooks/useProcesses';
 export default function Processos() {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [editingProcess, setEditingProcess] = useState<ProcessData | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
-  const [typeFilter, setTypeFilter] = useState<string>('');
 
-  const { data: processes, loading, error } = useProcesses();
+  const { processes, loading, error } = useProcesses();
 
-  const filteredProcesses = processes.filter(process => {
-    const matchesSearch = searchQuery === '' || 
-      process.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      process.process_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      process.client_name?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesStatus = statusFilter === '' || process.status === statusFilter;
-    const matchesType = typeFilter === '' || process.process_type === typeFilter;
-    
-    return matchesSearch && matchesStatus && matchesType;
-  });
+  const [filteredProcesses, setFilteredProcesses] = useState<ProcessData[]>([]);
 
   const handleCreateProcess = () => {
     setEditingProcess(null);
@@ -42,6 +29,16 @@ export default function Processos() {
     setIsFormModalOpen(true);
   };
 
+  const handleViewProcess = (process: ProcessData) => {
+    // TODO: Implementar visualização do processo
+    console.log('Visualizar processo:', process);
+  };
+
+  const handleDeleteProcess = (process: ProcessData) => {
+    // TODO: Implementar exclusão do processo
+    console.log('Excluir processo:', process);
+  };
+
   const handleFormSuccess = () => {
     setIsFormModalOpen(false);
     setEditingProcess(null);
@@ -50,6 +47,10 @@ export default function Processos() {
   const handleFormCancel = () => {
     setIsFormModalOpen(false);
     setEditingProcess(null);
+  };
+
+  const handleFilterChange = (filtered: ProcessData[]) => {
+    setFilteredProcesses(filtered);
   };
 
   if (loading) {
@@ -84,12 +85,8 @@ export default function Processos() {
 
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <ProcessosFilters
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            statusFilter={statusFilter}
-            onStatusChange={setStatusFilter}
-            typeFilter={typeFilter}
-            onTypeChange={setTypeFilter}
+            data={processes}
+            onFilterChange={handleFilterChange}
           />
           
           <Button 
@@ -102,8 +99,11 @@ export default function Processos() {
         </div>
 
         <ProcessosTable 
-          processes={filteredProcesses}
-          onEdit={handleEditProcess}
+          data={filteredProcesses.length > 0 ? filteredProcesses : processes}
+          onViewProcesso={handleViewProcess}
+          onEditProcesso={handleEditProcess}
+          onDeleteProcesso={handleDeleteProcess}
+          loading={loading}
         />
 
         <Dialog open={isFormModalOpen} onOpenChange={setIsFormModalOpen}>
