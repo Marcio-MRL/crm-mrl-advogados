@@ -48,6 +48,7 @@ export function useBankIntegration() {
 
     try {
       console.log('🔄 Iniciando sincronização com planilha bancária...');
+      console.log('🔑 Token disponível:', !!sheetsToken.access_token);
       toast.info('Iniciando sincronização com planilha bancária...');
       
       // Simular progresso
@@ -71,12 +72,27 @@ export function useBankIntegration() {
         await loadStatus();
       } else {
         console.error('❌ Erros na sincronização:', result.errors);
-        toast.error(`Erro na sincronização: ${result.errors.join(', ')}`);
+        
+        // Tratamento mais específico de erros
+        if (result.errors.some(error => error.includes('não encontrada'))) {
+          toast.error('Planilha "BTG - Entradas e Saídas Caixa" não encontrada. Verifique se ela existe no Google Drive.');
+        } else if (result.errors.some(error => error.includes('token'))) {
+          toast.error('Token de acesso expirado. Reconecte-se ao Google Sheets.');
+        } else {
+          toast.error(`Erro na sincronização: ${result.errors[0] || 'Erro desconhecido'}`);
+        }
       }
 
     } catch (error) {
-      console.error('❌ Erro na sincronização:', error);
-      toast.error('Erro inesperado durante a sincronização. Verifique se a planilha "BTG - Entradas e Saídas Caixa" existe e está acessível.');
+      console.error('❌ Erro inesperado na sincronização:', error);
+      
+      // Log detalhado do erro para debug
+      if (error instanceof Error) {
+        console.error('❌ Mensagem do erro:', error.message);
+        console.error('❌ Stack do erro:', error.stack);
+      }
+      
+      toast.error('Erro inesperado durante a sincronização. Verifique se a planilha "BTG - Entradas e Saídas Caixa" existe e está acessível no Google Drive.');
     } finally {
       setStatus(prev => ({ ...prev, syncInProgress: false }));
       setSyncProgress(0);
