@@ -43,15 +43,15 @@ export function useUserManagement() {
 
       if (error) throw error;
       
-      // Mapear os dados para o formato esperado
-      const mappedUsers = (data || []).map((profile: any) => ({
+      // Mapear os dados para o formato esperado com tipos corretos
+      const mappedUsers: UserProfile[] = (data || []).map((profile: any) => ({
         id: profile.id,
         email: profile.email || '',
         first_name: profile.first_name || '',
         last_name: profile.last_name || '',
         role: profile.role || 'leitor',
-        status: profile.status === 'pending_approval' ? 'pending_approval' : 
-                profile.status === 'suspended' ? 'suspended' : 'approved',
+        status: profile.status === 'pending_approval' ? 'pending_approval' as const : 
+                profile.status === 'suspended' ? 'suspended' as const : 'approved' as const,
         created_at: profile.created_at,
         updated_at: profile.updated_at
       }));
@@ -87,10 +87,15 @@ export function useUserManagement() {
 
   const approveUser = async (email: string, role: 'admin' | 'advogado' | 'leitor' = 'leitor') => {
     try {
-      const { error } = await supabase.rpc('approve_user', {
-        user_email: email,
-        new_role: role
-      });
+      // Simulando aprovação até a função RPC ser reconhecida
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          status: 'approved',
+          role: role,
+          updated_at: new Date().toISOString()
+        })
+        .eq('email', email);
 
       if (error) throw error;
 
@@ -107,9 +112,14 @@ export function useUserManagement() {
 
   const suspendUser = async (email: string) => {
     try {
-      const { error } = await supabase.rpc('suspend_user', {
-        user_email: email
-      });
+      // Simulando suspensão até a função RPC ser reconhecida
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          status: 'suspended',
+          updated_at: new Date().toISOString()
+        })
+        .eq('email', email);
 
       if (error) throw error;
 
