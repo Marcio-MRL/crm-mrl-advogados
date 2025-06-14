@@ -1,35 +1,11 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-
-export interface DriveFile {
-  id: string;
-  name: string;
-  mimeType: string;
-  size: string;
-  createdTime: string;
-  modifiedTime: string;
-  webViewLink: string;
-  webContentLink: string;
-  parents: string[];
-}
-
-export interface DocumentMetadata {
-  id: string;
-  drive_file_id: string;
-  name: string;
-  description?: string;
-  category: string;
-  client_id?: string;
-  process_id?: string;
-  user_id: string;
-  file_size: number;
-  mime_type: string;
-  created_at: string;
-  updated_at: string;
-}
+import { GoogleDriveApiService } from '@/services/googleDriveApi';
+import { GoogleDriveTokenManager } from '@/utils/googleDriveToken';
+import { DocumentMetadataService } from '@/services/documentMetadataService';
+import type { DocumentMetadata, UploadMetadata } from '@/types/googleDrive';
 
 export function useGoogleDrive() {
   const [loading, setLoading] = useState(false);
@@ -43,56 +19,15 @@ export function useGoogleDrive() {
   }, [user]);
 
   const fetchDriveToken = async () => {
-    try {
-      console.log('Verificando token do Google Drive...');
-      
-      const { data, error } = await supabase
-        .from('google_oauth_tokens')
-        .select('access_token, expires_at, scope')
-        .eq('user_id', user?.id)
-        .or('scope.like.%drive%,scope.like.%https://www.googleapis.com/auth/drive%')
-        .maybeSingle();
-
-      if (error) {
-        console.error('Erro ao buscar token do Drive:', error);
-        return;
-      }
-
-      console.log('Token encontrado:', data);
-
-      if (data && data.access_token) {
-        const expiresAt = data.expires_at ? new Date(data.expires_at) : null;
-        const isExpired = expiresAt && expiresAt <= new Date();
-        
-        console.log('Token expira em:', expiresAt);
-        console.log('Token expirado:', isExpired);
-        
-        if (!isExpired) {
-          setDriveToken(data.access_token);
-          console.log('Token do Google Drive configurado com sucesso');
-        } else {
-          console.log('Token do Google Drive expirado');
-          setDriveToken(null);
-        }
-      } else {
-        console.log('Nenhum token do Google Drive encontrado');
-        setDriveToken(null);
-      }
-    } catch (error) {
-      console.error('Erro ao verificar token do Google Drive:', error);
-      setDriveToken(null);
-    }
+    if (!user) return;
+    
+    const token = await GoogleDriveTokenManager.fetchToken(user.id);
+    setDriveToken(token);
   };
 
   const uploadFile = async (
     file: File, 
-    metadata: {
-      name: string;
-      description?: string;
-      category: string;
-      client_id?: string;
-      process_id?: string;
-    }
+    metadata: UploadMetadata
   ): Promise<DocumentMetadata | null> => {
     if (!driveToken) {
       toast.error('Conecte-se ao Google Drive primeiro nas configurações');
@@ -107,60 +42,27 @@ export function useGoogleDrive() {
     setLoading(true);
 
     try {
+      const driveService = new GoogleDriveApiService(driveToken);
+      
       // 1. Upload para Google Drive
-      const formData = new FormData();
-      const driveMetadata = {
-        name: file.name,
-        parents: ['1BVG6lFz8rQyBmGKv_document_folder_id'] // Pasta específica do MRL
-      };
-
-      formData.append('metadata', new Blob([JSON.stringify(driveMetadata)], { type: 'application/json' }));
-      formData.append('file', file);
-
-      const driveResponse = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${driveToken}`,
-        },
-        body: formData,
-      });
-
-      if (!driveResponse.ok) {
-        throw new Error('Erro no upload para Google Drive');
-      }
-
-      const driveFile = await driveResponse.json();
+      const driveFile = await driveService.uploadFile(file);
 
       // 2. Salvar metadados no Supabase
-      const { data: documentData, error: supabaseError } = await supabase
-        .from('documents')
-        .insert({
-          drive_file_id: driveFile.id,
-          name: metadata.name,
-          description: metadata.description,
-          category: metadata.category,
-          client_id: metadata.client_id,
-          process_id: metadata.process_id,
-          user_id: user.id,
-          file_size: file.size,
-          mime_type: file.type,
-        })
-        .select()
-        .single();
+      try {
+        const documentData = await DocumentMetadataService.saveDocument(
+          driveFile.id,
+          file,
+          metadata,
+          user.id
+        );
 
-      if (supabaseError) {
+        toast.success('Documento enviado com sucesso!');
+        return documentData;
+      } catch (supabaseError) {
         // Se falhar no Supabase, tentar deletar do Drive
-        await fetch(`https://www.googleapis.com/drive/v3/files/${driveFile.id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${driveToken}`,
-          },
-        });
+        await driveService.deleteFile(driveFile.id);
         throw supabaseError;
       }
-
-      toast.success('Documento enviado com sucesso!');
-      return documentData as unknown as DocumentMetadata;
 
     } catch (error) {
       console.error('Erro no upload:', error);
@@ -178,27 +80,17 @@ export function useGoogleDrive() {
     }
 
     try {
+      const driveService = new GoogleDriveApiService(driveToken);
+      
       // 1. Deletar do Google Drive
-      const driveResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${driveToken}`,
-        },
-      });
-
-      if (!driveResponse.ok) {
+      const driveDeleted = await driveService.deleteFile(driveFileId);
+      
+      if (!driveDeleted) {
         console.warn('Erro ao deletar do Drive, mas continuando...');
       }
 
       // 2. Remover metadados do Supabase
-      const { error } = await supabase
-        .from('documents')
-        .delete()
-        .eq('id', documentId);
-
-      if (error) {
-        throw error;
-      }
+      await DocumentMetadataService.deleteDocument(documentId);
 
       toast.success('Documento excluído com sucesso!');
       return true;
@@ -215,24 +107,8 @@ export function useGoogleDrive() {
       return null;
     }
 
-    try {
-      const response = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}?fields=webContentLink`, {
-        headers: {
-          'Authorization': `Bearer ${driveToken}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao obter link de download');
-      }
-
-      const data = await response.json();
-      return data.webContentLink;
-
-    } catch (error) {
-      console.error('Erro ao obter link de download:', error);
-      return null;
-    }
+    const driveService = new GoogleDriveApiService(driveToken);
+    return await driveService.getFileDownloadLink(driveFileId);
   };
 
   return {
@@ -241,7 +117,10 @@ export function useGoogleDrive() {
     uploadFile,
     deleteFile,
     getFileDownloadLink,
-    isConnected: !!driveToken,
+    isConnected: GoogleDriveTokenManager.isTokenValid(driveToken),
     refreshToken: fetchDriveToken,
   };
 }
+
+// Re-export types for backward compatibility
+export type { DocumentMetadata, DriveFile } from '@/types/googleDrive';
