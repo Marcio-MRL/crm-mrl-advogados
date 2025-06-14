@@ -32,11 +32,11 @@ export default function Auth() {
           .eq('id', session.user.id)
           .single();
 
-        if (profile?.status === 'approved') {
+        if (profile?.status === 'active') {
           navigate('/');
         } else if (profile?.status === 'pending_approval') {
           setPendingApproval(true);
-        } else if (profile?.status === 'suspended') {
+        } else if (profile?.status === 'inactive') {
           toast({
             title: "Acesso Suspenso",
             description: "Sua conta foi suspensa. Entre em contato com o administrador.",
@@ -57,7 +57,7 @@ export default function Auth() {
           .eq('id', session.user.id)
           .single();
 
-        if (profile?.status === 'approved') {
+        if (profile?.status === 'active') {
           navigate('/');
         } else if (profile?.status === 'pending_approval') {
           setPendingApproval(true);

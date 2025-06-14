@@ -43,15 +43,17 @@ export function useUserManagement() {
 
       if (error) throw error;
       
-      // Mapear os dados para o formato esperado com tipos corretos
+      // Mapear os dados do banco para o formato esperado pela interface
       const mappedUsers: UserProfile[] = (data || []).map((profile: any) => ({
         id: profile.id,
         email: profile.email || '',
         first_name: profile.first_name || '',
         last_name: profile.last_name || '',
-        role: profile.role || 'leitor',
-        status: profile.status === 'pending_approval' ? 'pending_approval' as const : 
-                profile.status === 'suspended' ? 'suspended' as const : 'approved' as const,
+        // Mapear roles do banco para nossa interface
+        role: profile.role === 'editor' ? 'advogado' : (profile.role || 'leitor'),
+        // Mapear status do banco para nossa interface
+        status: profile.status === 'active' ? 'approved' as const : 
+                profile.status === 'inactive' ? 'suspended' as const : 'pending_approval' as const,
         created_at: profile.created_at,
         updated_at: profile.updated_at
       }));
@@ -87,12 +89,14 @@ export function useUserManagement() {
 
   const approveUser = async (email: string, role: 'admin' | 'advogado' | 'leitor' = 'leitor') => {
     try {
-      // Simulando aprovação até a função RPC ser reconhecida
+      // Mapear role da interface para o banco
+      const dbRole = role === 'advogado' ? 'editor' : role;
+      
       const { error } = await supabase
         .from('profiles')
         .update({ 
-          status: 'approved',
-          role: role,
+          status: 'active', // Usar valor do banco
+          role: dbRole,     // Usar valor mapeado
           updated_at: new Date().toISOString()
         })
         .eq('email', email);
@@ -112,11 +116,10 @@ export function useUserManagement() {
 
   const suspendUser = async (email: string) => {
     try {
-      // Simulando suspensão até a função RPC ser reconhecida
       const { error } = await supabase
         .from('profiles')
         .update({ 
-          status: 'suspended',
+          status: 'inactive', // Usar valor do banco
           updated_at: new Date().toISOString()
         })
         .eq('email', email);
