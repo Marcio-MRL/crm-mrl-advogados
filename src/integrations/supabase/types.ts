@@ -409,6 +409,42 @@ export type Database = {
         }
         Relationships: []
       }
+      google_oauth_configs: {
+        Row: {
+          client_id: string
+          client_secret: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          redirect_uri: string
+          service_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          client_secret?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          redirect_uri: string
+          service_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          client_secret?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          redirect_uri?: string
+          service_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       google_oauth_tokens: {
         Row: {
           access_token: string | null

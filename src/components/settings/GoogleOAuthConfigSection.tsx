@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Settings, Eye, EyeOff, Save, Trash2, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -46,24 +45,31 @@ export function GoogleOAuthConfigSection() {
   const loadConfigs = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('google_oauth_configs')
-        .select('*')
-        .eq('user_id', user?.id);
+      // Use fetch to make a direct query since the table might not be in TypeScript types yet
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 = table doesn't exist
-        console.error('Error loading configs:', error);
-        return;
-      }
+      const response = await fetch(
+        `https://ncficjpokmmsugykmtdu.supabase.co/rest/v1/google_oauth_configs?user_id=eq.${user?.id}&select=*`,
+        {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jZmljanBva21tc3VneWttdGR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY1MzY3NjQsImV4cCI6MjA2MjExMjc2NH0.qibulCIaQ-eLTJH3L-Z5nsfBGVj-CGlQsYCY3--uWOs',
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-      if (data) {
+      if (response.ok) {
+        const data = await response.json();
+        
         const configsMap: Record<string, OAuthConfig> = {
           calendar: { client_id: '', client_secret: '', redirect_uri: '', service_type: 'calendar' },
           sheets: { client_id: '', client_secret: '', redirect_uri: '', service_type: 'sheets' },
           drive: { client_id: '', client_secret: '', redirect_uri: '', service_type: 'drive' }
         };
 
-        data.forEach(config => {
+        data.forEach((config: any) => {
           if (config.service_type && configsMap[config.service_type]) {
             configsMap[config.service_type] = {
               id: config.id,
@@ -106,32 +112,53 @@ export function GoogleOAuthConfigSection() {
         is_active: true
       };
 
-      let result;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Sessão não encontrada');
+
+      let response;
       if (config.id) {
-        result = await supabase
-          .from('google_oauth_configs')
-          .update(configData)
-          .eq('id', config.id)
-          .select()
-          .single();
+        // Update existing config
+        response = await fetch(
+          `https://ncficjpokmmsugykmtdu.supabase.co/rest/v1/google_oauth_configs?id=eq.${config.id}`,
+          {
+            method: 'PATCH',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jZmljanBva21tc3VneWttdGR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY1MzY3NjQsImV4cCI6MjA2MjExMjc2NH0.qibulCIaQ-eLTJH3L-Z5nsfBGVj-CGlQsYCY3--uWOs',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(configData)
+          }
+        );
       } else {
-        result = await supabase
-          .from('google_oauth_configs')
-          .insert(configData)
-          .select()
-          .single();
+        // Insert new config
+        response = await fetch(
+          `https://ncficjpokmmsugykmtdu.supabase.co/rest/v1/google_oauth_configs`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jZmljanBva21tc3VneWttdGR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY1MzY3NjQsImV4cCI6MjA2MjExMjc2NH0.qibulCIaQ-eLTJH3L-Z5nsfBGVj-CGlQsYCY3--uWOs',
+              'Content-Type': 'application/json',
+              'Prefer': 'return=representation'
+            },
+            body: JSON.stringify(configData)
+          }
+        );
       }
 
-      if (result.error) {
-        throw result.error;
+      if (response.ok) {
+        const result = await response.json();
+        if (Array.isArray(result) && result.length > 0) {
+          setConfigs(prev => ({
+            ...prev,
+            [serviceType]: { ...config, id: result[0].id }
+          }));
+        }
+        toast.success(`Configuração do ${getServiceName(serviceType)} salva com sucesso!`);
+      } else {
+        throw new Error('Erro ao salvar configuração');
       }
-
-      setConfigs(prev => ({
-        ...prev,
-        [serviceType]: { ...config, id: result.data.id }
-      }));
-
-      toast.success(`Configuração do ${getServiceName(serviceType)} salva com sucesso!`);
     } catch (error) {
       console.error('Error saving config:', error);
       toast.error('Erro ao salvar configuração');
@@ -145,24 +172,35 @@ export function GoogleOAuthConfigSection() {
     if (!config.id) return;
 
     try {
-      const { error } = await supabase
-        .from('google_oauth_configs')
-        .delete()
-        .eq('id', config.id);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Sessão não encontrada');
 
-      if (error) throw error;
-
-      setConfigs(prev => ({
-        ...prev,
-        [serviceType]: { 
-          client_id: '', 
-          client_secret: '', 
-          redirect_uri: '', 
-          service_type: serviceType as 'calendar' | 'sheets' | 'drive' 
+      const response = await fetch(
+        `https://ncficjpokmmsugykmtdu.supabase.co/rest/v1/google_oauth_configs?id=eq.${config.id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jZmljanBva21tc3VneWttdGR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY1MzY3NjQsImV4cCI6MjA2MjExMjc2NH0.qibulCIaQ-eLTJH3L-Z5nsfBGVj-CGlQsYCY3--uWOs',
+            'Content-Type': 'application/json'
+          }
         }
-      }));
+      );
 
-      toast.success(`Configuração do ${getServiceName(serviceType)} removida`);
+      if (response.ok) {
+        setConfigs(prev => ({
+          ...prev,
+          [serviceType]: { 
+            client_id: '', 
+            client_secret: '', 
+            redirect_uri: '', 
+            service_type: serviceType as 'calendar' | 'sheets' | 'drive' 
+          }
+        }));
+        toast.success(`Configuração do ${getServiceName(serviceType)} removida`);
+      } else {
+        throw new Error('Erro ao remover configuração');
+      }
     } catch (error) {
       console.error('Error deleting config:', error);
       toast.error('Erro ao remover configuração');
