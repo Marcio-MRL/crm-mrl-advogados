@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Header } from '@/components/layout/Header';
@@ -10,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LGPDSettings } from '@/components/settings/LGPDSettings';
+import { SecuritySettings } from '@/components/settings/SecuritySettings';
 import { toast } from 'sonner';
 import { 
   User, 
@@ -20,7 +21,8 @@ import {
   Mail,
   Calendar,
   FileText,
-  Settings
+  Settings,
+  Scale
 } from 'lucide-react';
 
 export default function Configuracoes() {
@@ -48,10 +50,6 @@ export default function Configuracoes() {
     toast.success("Configurações de notificação atualizadas!");
   };
 
-  const handleSaveSecurity = () => {
-    toast.success("Configurações de segurança atualizadas!");
-  };
-
   const handleExportData = () => {
     toast.info("Exportação de dados iniciada. Você receberá um email quando estiver pronta.");
   };
@@ -62,7 +60,7 @@ export default function Configuracoes() {
         <Header title="Configurações" subtitle="Gerencie suas preferências e configurações do sistema" />
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="profile" className="flex items-center gap-2">
               <User className="h-4 w-4" />
               Perfil
@@ -75,9 +73,17 @@ export default function Configuracoes() {
               <Shield className="h-4 w-4" />
               Segurança
             </TabsTrigger>
+            <TabsTrigger value="lgpd" className="flex items-center gap-2">
+              <Scale className="h-4 w-4" />
+              LGPD
+            </TabsTrigger>
             <TabsTrigger value="appearance" className="flex items-center gap-2">
               <Palette className="h-4 w-4" />
               Aparência
+            </TabsTrigger>
+            <TabsTrigger value="integrations" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Integrações
             </TabsTrigger>
             <TabsTrigger value="data" className="flex items-center gap-2">
               <Database className="h-4 w-4" />
@@ -240,56 +246,11 @@ export default function Configuracoes() {
           </TabsContent>
 
           <TabsContent value="security" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Configurações de Segurança</CardTitle>
-                <CardDescription>
-                  Gerencie a segurança da sua conta
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="currentPassword">Senha Atual</Label>
-                    <Input id="currentPassword" type="password" placeholder="Digite sua senha atual" />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="newPassword">Nova Senha</Label>
-                    <Input id="newPassword" type="password" placeholder="Digite a nova senha" />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
-                    <Input id="confirmPassword" type="password" placeholder="Confirme a nova senha" />
-                  </div>
-                </div>
-                
-                <Separator />
-                
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Autenticação de Dois Fatores</Label>
-                      <p className="text-sm text-gray-500">Adicione uma camada extra de segurança</p>
-                    </div>
-                    <Button variant="outline">Configurar</Button>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Sessões Ativas</Label>
-                      <p className="text-sm text-gray-500">Gerencie dispositivos conectados</p>
-                    </div>
-                    <Button variant="outline">Ver Sessões</Button>
-                  </div>
-                </div>
-                
-                <Button onClick={handleSaveSecurity} className="bg-lawblue-500 hover:bg-lawblue-600">
-                  Atualizar Senha
-                </Button>
-              </CardContent>
-            </Card>
+            <SecuritySettings />
+          </TabsContent>
+
+          <TabsContent value="lgpd" className="space-y-6">
+            <LGPDSettings />
           </TabsContent>
 
           <TabsContent value="appearance" className="space-y-6">
@@ -348,6 +309,72 @@ export default function Configuracoes() {
                 <Button className="bg-lawblue-500 hover:bg-lawblue-600">
                   Salvar Preferências
                 </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="integrations" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Integrações Disponíveis</CardTitle>
+                <CardDescription>
+                  Configure integrações com serviços externos
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Calendar className="h-6 w-6 text-blue-600" />
+                      <div>
+                        <h4 className="font-medium">Google Calendar</h4>
+                        <p className="text-sm text-gray-500">Sincronize eventos e compromissos</p>
+                      </div>
+                    </div>
+                    <Button variant="outline" className="w-full">
+                      Configurar
+                    </Button>
+                  </div>
+                  
+                  <div className="p-4 border rounded-lg">
+                    <div className="flex items-center gap-3 mb-3">
+                      <FileText className="h-6 w-6 text-green-600" />
+                      <div>
+                        <h4 className="font-medium">Google Sheets</h4>
+                        <p className="text-sm text-gray-500">Exporte dados para planilhas</p>
+                      </div>
+                    </div>
+                    <Button variant="outline" className="w-full">
+                      Configurar
+                    </Button>
+                  </div>
+                  
+                  <div className="p-4 border rounded-lg opacity-50">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Mail className="h-6 w-6 text-yellow-600" />
+                      <div>
+                        <h4 className="font-medium">WhatsApp Business</h4>
+                        <p className="text-sm text-gray-500">Envio de notificações (Em breve)</p>
+                      </div>
+                    </div>
+                    <Button variant="outline" className="w-full" disabled>
+                      Em Desenvolvimento
+                    </Button>
+                  </div>
+                  
+                  <div className="p-4 border rounded-lg opacity-50">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Settings className="h-6 w-6 text-purple-600" />
+                      <div>
+                        <h4 className="font-medium">API Externa</h4>
+                        <p className="text-sm text-gray-500">Integração personalizada (Em breve)</p>
+                      </div>
+                    </div>
+                    <Button variant="outline" className="w-full" disabled>
+                      Em Desenvolvimento
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
