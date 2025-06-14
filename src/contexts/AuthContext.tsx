@@ -30,14 +30,35 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchUserProfile = async (userId: string) => {
     try {
       console.log('AuthContext: Fetching profile for user:', userId);
-      const { data, error } = await supabase
+      
+      // Primeiro vamos verificar se o usuário está autenticado
+      const { data: sessionData } = await supabase.auth.getSession();
+      console.log('AuthContext: Current session check:', {
+        hasSession: !!sessionData.session,
+        sessionUserId: sessionData.session?.user?.id
+      });
+
+      // Fazer a consulta com mais detalhes de debug
+      const { data, error, count } = await supabase
         .from('profiles')
-        .select('role, status, first_name, last_name')
+        .select('role, status, first_name, last_name', { count: 'exact' })
         .eq('id', userId)
         .maybeSingle();
 
+      console.log('AuthContext: Profile query details:', {
+        userId,
+        data,
+        error: error ? {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        } : null,
+        count
+      });
+
       if (error) {
-        console.error('AuthContext: Error fetching profile:', error.message, error.details);
+        console.error('AuthContext: Error fetching profile:', error.message, error.details, error);
         return null;
       }
 
