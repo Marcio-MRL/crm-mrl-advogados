@@ -29,22 +29,31 @@ serve(async (req) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '', // Usar service role key para ter permissões administrativas
     );
 
-    // Verificar autenticação
+    // Verificar autenticação usando o token do header Authorization
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('Authorization header required');
     }
 
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(
+    // Criar cliente com anon key para verificar o usuário
+    const anonClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+    );
+
+    const { data: { user }, error: authError } = await anonClient.auth.getUser(
       authHeader.replace('Bearer ', '')
     );
 
     if (authError || !user) {
+      console.error('Auth error:', authError);
       throw new Error('User not authenticated');
     }
+
+    console.log('Authenticated user:', user.email);
 
     // Verificar domínio autorizado
     if (!user.email?.endsWith('@mrladvogados.com.br')) {
@@ -53,14 +62,22 @@ serve(async (req) => {
 
     if (req.method === 'POST') {
       const { code, service, redirectUri }: OAuthRequest = await req.json();
+      console.log('Processing OAuth callback for service:', service);
 
-      // Configurar credenciais OAuth baseadas no serviço
-      const clientId = Deno.env.get('GOOGLE_OAUTH_CLIENT_ID');
-      const clientSecret = Deno.env.get('GOOGLE_OAUTH_CLIENT_SECRET');
+      // Buscar credenciais OAuth configuradas
+      const { data: configData, error: configError } = await supabaseClient
+        .from('google_oauth_configs')
+        .select('client_id, client_secret')
+        .eq('user_id', user.id)
+        .eq('service_type', service)
+        .single();
 
-      if (!clientId || !clientSecret) {
-        throw new Error('Credenciais OAuth não configuradas');
+      if (configError || !configData) {
+        console.error('Config error:', configError);
+        throw new Error('Credenciais OAuth não configuradas para este serviço');
       }
+
+      const { client_id: clientId, client_secret: clientSecret } = configData;
 
       // Trocar código por tokens
       const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
@@ -84,12 +101,13 @@ serve(async (req) => {
       }
 
       const tokens: TokenResponse = await tokenResponse.json();
+      console.log('Tokens received successfully');
 
       // Calcular data de expiração
       const expiresAt = new Date(Date.now() + tokens.expires_in * 1000);
 
-      // Armazenar tokens no banco
-      const { error: insertError } = await supabaseClient
+      // Armazenar tokens no banco usando service role key
+      const { data: insertData, error: insertError } = await supabaseClient
         .from('google_oauth_tokens')
         .upsert({
           user_id: user.id,
@@ -98,12 +116,16 @@ serve(async (req) => {
           token_type: tokens.token_type,
           expires_at: expiresAt.toISOString(),
           scope: tokens.scope,
-        });
+        })
+        .select()
+        .single();
 
       if (insertError) {
         console.error('Error storing tokens:', insertError);
         throw new Error('Erro ao armazenar tokens');
       }
+
+      console.log('Tokens stored successfully:', insertData);
 
       // Registrar log de acesso
       await supabaseClient
@@ -129,14 +151,13 @@ serve(async (req) => {
     }
 
     if (req.method === 'DELETE') {
-      const url = new URL(req.url);
-      const tokenId = url.searchParams.get('tokenId');
+      const { tokenId } = await req.json();
 
       if (!tokenId) {
         throw new Error('Token ID required');
       }
 
-      // Revogar token no Google
+      // Buscar token antes de revogar
       const { data: tokenData } = await supabaseClient
         .from('google_oauth_tokens')
         .select('access_token')
@@ -144,10 +165,15 @@ serve(async (req) => {
         .eq('user_id', user.id)
         .single();
 
+      // Revogar token no Google se existir
       if (tokenData?.access_token) {
-        await fetch(`https://oauth2.googleapis.com/revoke?token=${tokenData.access_token}`, {
-          method: 'POST',
-        });
+        try {
+          await fetch(`https://oauth2.googleapis.com/revoke?token=${tokenData.access_token}`, {
+            method: 'POST',
+          });
+        } catch (error) {
+          console.warn('Failed to revoke token on Google:', error);
+        }
       }
 
       // Remover token do banco
@@ -158,6 +184,7 @@ serve(async (req) => {
         .eq('user_id', user.id);
 
       if (deleteError) {
+        console.error('Error deleting token:', deleteError);
         throw new Error('Erro ao revogar token');
       }
 
