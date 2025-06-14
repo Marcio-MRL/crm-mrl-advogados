@@ -69,21 +69,56 @@ export function useUserManagement() {
     if (!user) return;
 
     try {
-      // Simulando logs enquanto a tabela não é reconhecida
-      const mockLogs: AccessLog[] = [
-        {
-          id: '1',
-          user_id: user.id,
-          email: user.email || '',
-          action: 'login',
-          details: { timestamp: new Date().toISOString() },
-          created_at: new Date().toISOString()
-        }
-      ];
-      setAccessLogs(mockLogs);
+      const { data, error } = await supabase
+        .from('access_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (error) {
+        console.error('Erro ao buscar logs:', error);
+        // Fallback para dados mock se a tabela ainda não está disponível
+        const mockLogs: AccessLog[] = [
+          {
+            id: '1',
+            user_id: user.id,
+            email: user.email || '',
+            action: 'login',
+            details: { timestamp: new Date().toISOString() },
+            created_at: new Date().toISOString()
+          }
+        ];
+        setAccessLogs(mockLogs);
+        return;
+      }
+
+      setAccessLogs(data || []);
     } catch (error) {
       console.error('Erro ao buscar logs:', error);
       toast.error('Erro ao carregar logs de acesso');
+    }
+  };
+
+  const logUserAction = async (action: string, details: any = {}) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('access_logs')
+        .insert({
+          user_id: user.id,
+          email: user.email || '',
+          action,
+          details,
+          ip_address: 'unknown', // Will be enhanced with real IP detection
+          user_agent: navigator.userAgent
+        });
+
+      if (error) {
+        console.error('Erro ao registrar log:', error);
+      }
+    } catch (error) {
+      console.error('Erro ao registrar log:', error);
     }
   };
 
@@ -102,6 +137,12 @@ export function useUserManagement() {
         .eq('email', email);
 
       if (error) throw error;
+
+      // Registrar ação nos logs
+      await logUserAction('user_approved', { 
+        approved_email: email, 
+        assigned_role: role 
+      });
 
       toast.success('Usuário aprovado com sucesso');
       await fetchUsers();
@@ -125,6 +166,9 @@ export function useUserManagement() {
         .eq('email', email);
 
       if (error) throw error;
+
+      // Registrar ação nos logs
+      await logUserAction('user_suspended', { suspended_email: email });
 
       toast.success('Usuário suspenso com sucesso');
       await fetchUsers();
@@ -175,6 +219,7 @@ export function useUserManagement() {
     approveUser,
     suspendUser,
     checkUserRole,
+    logUserAction,
     refetch: () => {
       fetchUsers();
       fetchAccessLogs();

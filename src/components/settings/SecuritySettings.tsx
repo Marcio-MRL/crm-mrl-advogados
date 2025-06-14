@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -5,41 +6,17 @@ import { Shield, Users, Key, Activity } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserManagementSettings } from './UserManagementSettings';
 import { GoogleIntegrationsSettings } from './GoogleIntegrationsSettings';
-import { supabase } from '@/integrations/supabase/client';
 
 export function SecuritySettings() {
-  const { user } = useAuth();
-  const [sessions, setSessions] = React.useState([]);
-  const [twoFA, setTwoFA] = React.useState(null);
+  const { userProfile } = useAuth();
 
   // Verificar se o usuário é master
-  const [userRole, setUserRole] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    // Verificar role do usuário
-    const checkUserRole = async () => {
-      if (!user) return;
-      
-      try {
-        const { data } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-        
-        setUserRole(data?.role || null);
-      } catch (error) {
-        console.error('Erro ao verificar role:', error);
-      }
-    };
-
-    checkUserRole();
-  }, [user]);
+  const isMaster = userProfile?.role === 'master';
 
   return (
     <div className="space-y-6">
       <Tabs defaultValue="sessions" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className={`grid w-full ${isMaster ? 'grid-cols-4' : 'grid-cols-3'}`}>
           <TabsTrigger value="sessions" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
             Sessões
@@ -52,7 +29,7 @@ export function SecuritySettings() {
             <Shield className="h-4 w-4" />
             Google OAuth
           </TabsTrigger>
-          {userRole === 'master' && (
+          {isMaster && (
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Usuários
@@ -61,7 +38,6 @@ export function SecuritySettings() {
         </TabsList>
 
         <TabsContent value="sessions" className="space-y-6">
-          {/* Componente de Sessões existente */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -81,7 +57,6 @@ export function SecuritySettings() {
         </TabsContent>
 
         <TabsContent value="2fa" className="space-y-6">
-          {/* Componente de 2FA existente */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -104,7 +79,7 @@ export function SecuritySettings() {
           <GoogleIntegrationsSettings />
         </TabsContent>
 
-        {userRole === 'master' && (
+        {isMaster && (
           <TabsContent value="users" className="space-y-6">
             <UserManagementSettings />
           </TabsContent>

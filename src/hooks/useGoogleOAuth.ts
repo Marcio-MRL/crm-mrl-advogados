@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export interface GoogleOAuthToken {
@@ -24,8 +25,20 @@ export function useGoogleOAuth() {
     if (!user) return;
 
     try {
-      // Simulando dados enquanto o Supabase não reconhece a nova tabela
-      setTokens([]);
+      const { data, error } = await supabase
+        .from('google_oauth_tokens')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Erro ao buscar tokens:', error);
+        // Fallback para dados vazios se a tabela ainda não está disponível
+        setTokens([]);
+        return;
+      }
+
+      setTokens(data || []);
     } catch (error) {
       console.error('Erro ao buscar tokens OAuth:', error);
       toast.error('Erro ao carregar tokens OAuth');
@@ -64,8 +77,9 @@ export function useGoogleOAuth() {
           break;
       }
 
-      // Por enquanto, mostrar mensagem de que precisa ser configurado
-      toast.info('Integração Google OAuth em configuração. Entre em contato com o administrador.');
+      // ⚠️ INTERVENÇÃO MANUAL NECESSÁRIA:
+      // Será implementado quando você configurar as credenciais OAuth no Google Cloud Console
+      toast.info(`Integração Google OAuth para ${service} será ativada após configuração das credenciais no Google Cloud Console.`);
       
     } catch (error) {
       console.error('Erro ao iniciar OAuth:', error);
@@ -77,7 +91,15 @@ export function useGoogleOAuth() {
     if (!user) return;
 
     try {
-      // Simulando armazenamento
+      const { error } = await supabase
+        .from('google_oauth_tokens')
+        .insert({
+          user_id: user.id,
+          ...tokenData
+        });
+
+      if (error) throw error;
+
       toast.success('Token OAuth armazenado com sucesso');
       await fetchTokens();
     } catch (error) {
@@ -88,7 +110,14 @@ export function useGoogleOAuth() {
 
   const revokeOAuthToken = async (tokenId: string) => {
     try {
-      // Simulando revogação
+      const { error } = await supabase
+        .from('google_oauth_tokens')
+        .delete()
+        .eq('id', tokenId)
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+
       toast.success('Token OAuth revogado com sucesso');
       await fetchTokens();
     } catch (error) {
