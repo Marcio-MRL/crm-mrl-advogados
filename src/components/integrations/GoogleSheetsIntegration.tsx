@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { HardDrive, RefreshCw, Settings, CheckCircle, XCircle, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { BankIntegrationSection } from './BankIntegrationSection';
 
 interface SheetMapping {
   id: string;
@@ -20,16 +22,7 @@ interface SheetMapping {
 export function GoogleSheetsIntegration() {
   const [isConnected, setIsConnected] = useState(false);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
-  const [sheets, setSheets] = useState<SheetMapping[]>([
-    {
-      id: '1',
-      name: 'Controle Financeiro 2024',
-      url: 'https://docs.google.com/spreadsheets/d/abc123',
-      lastSync: '2024-06-07T10:30:00Z',
-      status: 'connected',
-      type: 'financial'
-    }
-  ]);
+  const [sheets, setSheets] = useState<SheetMapping[]>([]);
   
   const [newSheet, setNewSheet] = useState({
     name: '',
@@ -38,7 +31,6 @@ export function GoogleSheetsIntegration() {
   });
 
   const handleConnect = () => {
-    // Simulação da conexão com Google Sheets
     setIsConnected(true);
     toast.success('Conectado com Google Sheets com sucesso!');
   };
@@ -56,7 +48,6 @@ export function GoogleSheetsIntegration() {
         : sheet
     ));
     
-    // Simular sincronização
     setTimeout(() => {
       setSheets(prev => prev.map(sheet => 
         sheet.id === sheetId 
@@ -117,12 +108,16 @@ export function GoogleSheetsIntegration() {
 
   return (
     <div className="space-y-6">
+      {/* Integração Bancária BTG - Seção Principal */}
+      <BankIntegrationSection />
+      
+      {/* Outras Planilhas Google Sheets */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <HardDrive className="h-6 w-6 text-green-600" />
-              <CardTitle>Integração Google Sheets</CardTitle>
+              <CardTitle>Outras Planilhas Google Sheets</CardTitle>
             </div>
             <div className="flex items-center gap-2">
               {isConnected ? (
@@ -146,7 +141,7 @@ export function GoogleSheetsIntegration() {
               <HardDrive className="h-16 w-16 mx-auto mb-4 text-gray-300" />
               <h3 className="text-lg font-medium mb-2">Conectar ao Google Sheets</h3>
               <p className="text-gray-600 mb-4">
-                Integre suas planilhas do Google Sheets para sincronização automática de dados
+                Integre outras planilhas do Google Sheets para sincronização de dados adicionais
               </p>
               <Button onClick={handleConnect} className="bg-green-600 hover:bg-green-700">
                 <HardDrive className="h-4 w-4 mr-2" />
@@ -157,7 +152,7 @@ export function GoogleSheetsIntegration() {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <p className="text-sm text-gray-600">
-                  Planilhas conectadas: {sheets.length}
+                  Planilhas adicionais: {sheets.length}
                 </p>
                 <div className="flex gap-2">
                   <Button 
@@ -230,7 +225,7 @@ export function GoogleSheetsIntegration() {
             <div>
               <label className="block text-sm font-medium mb-1">Nome da Planilha</label>
               <Input
-                placeholder="Ex: Controle Financeiro 2024"
+                placeholder="Ex: Controle de Clientes"
                 value={newSheet.name}
                 onChange={(e) => setNewSheet({...newSheet, name: e.target.value})}
               />
