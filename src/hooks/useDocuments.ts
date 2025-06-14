@@ -39,7 +39,7 @@ export function useDocuments() {
         throw fetchError;
       }
 
-      setDocuments((data as DocumentMetadata[]) || []);
+      setDocuments((data as unknown as DocumentMetadata[]) || []);
     } catch (err) {
       console.error('Erro ao buscar documentos:', err);
       setError('Erro ao carregar documentos');
@@ -58,7 +58,7 @@ export function useDocuments() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return (data as DocumentMetadata[]) || [];
+      return (data as unknown as DocumentMetadata[]) || [];
     } catch (err) {
       console.error('Erro ao buscar documentos do cliente:', err);
       return [];
@@ -74,7 +74,7 @@ export function useDocuments() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return (data as DocumentMetadata[]) || [];
+      return (data as unknown as DocumentMetadata[]) || [];
     } catch (err) {
       console.error('Erro ao buscar documentos do processo:', err);
       return [];
