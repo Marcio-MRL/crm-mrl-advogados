@@ -31,29 +31,41 @@ As credenciais do Supabase estão hardcoded no cliente (seguro para frontend pú
 2. Aguarde o build terminar (2-5 minutos)
 3. Anote a URL gerada (ex: `https://mrl-advogados.vercel.app`)
 
-## Passo 4: Atualizar Supabase URLs
+## Passo 4: Configurar Domínio Personalizado
+
+1. No Vercel, vá em **Settings > Domains**
+2. Adicione `crm.mrladvogados.com.br`
+3. Configure DNS conforme instruções
+4. Aguarde propagação do DNS
+
+## Passo 5: Atualizar Supabase URLs
 
 1. Acesse o [Dashboard do Supabase](https://supabase.com/dashboard/project/ncficjpokmmsugykmtdu)
 2. Vá em **Authentication > URL Configuration**
 3. Configure:
-   - **Site URL**: `https://SEU-DOMINIO.vercel.app`
-   - **Redirect URLs**: Adicione a URL do Vercel
+   - **Site URL**: `https://crm.mrladvogados.com.br`
+   - **Redirect URLs**: 
+     - `https://crm.mrladvogados.com.br`
+     - `https://crm.mrladvogados.com.br/auth/google/callback`
 
-## Passo 5: Testar Funcionalidades
+## Passo 6: Configurar Google OAuth
+
+No [Google Cloud Console](https://console.cloud.google.com/apis/credentials):
+
+1. **Authorized JavaScript origins**:
+   - `https://crm.mrladvogados.com.br`
+
+2. **Authorized redirect URLs**:
+   - `https://crm.mrladvogados.com.br/auth/google/callback`
+
+## Passo 7: Testar Funcionalidades
 
 Teste estas funcionalidades após o deploy:
 - [ ] Login/Registro de usuários
 - [ ] Criação e edição de tarefas
 - [ ] Kanban de leads
 - [ ] Navegação entre páginas
-- [ ] Integrações (placeholder)
-
-## Passo 6: Configurar Domínio Personalizado (Opcional)
-
-1. No Vercel, vá em **Settings > Domains**
-2. Adicione `mrladvogados.com.br`
-3. Configure DNS conforme instruções
-4. Atualize URLs no Supabase novamente
+- [ ] Integrações Google OAuth
 
 ## Workflow de Desenvolvimento
 
@@ -88,6 +100,12 @@ Após deploy bem-sucedido:
 3. Adicionar validações robustas
 4. Otimizar performance
 5. Configurar CI/CD avançado
+
+## URLs Finais
+
+- **Produção**: https://crm.mrladvogados.com.br
+- **GitHub**: [REPO_URL]
+- **Supabase**: https://ncficjpokmmsugykmtdu.supabase.co
 
 ## Suporte
 

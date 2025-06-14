@@ -12,22 +12,26 @@
 - [ ] Projeto importado no Vercel
 - [ ] Configurações automáticas verificadas
 - [ ] Deploy executado com sucesso
-- [ ] URL de produção anotada
+- [ ] Domínio personalizado configurado: **crm.mrladvogados.com.br**
+
+## Configurações de Produção
+- [ ] **Supabase URLs atualizadas**:
+  - Site URL: `https://crm.mrladvogados.com.br`
+  - Redirect URLs: `https://crm.mrladvogados.com.br/auth/google/callback`
+- [ ] **Google Cloud Console configurado**:
+  - Authorized JavaScript origins: `https://crm.mrladvogados.com.br`
+  - Authorized redirect URLs: `https://crm.mrladvogados.com.br/auth/google/callback`
+- [ ] **Supabase Secrets configurados**:
+  - GOOGLE_OAUTH_CLIENT_ID
+  - GOOGLE_OAUTH_CLIENT_SECRET
 
 ## Pós-Deploy
-- [ ] URLs atualizadas no Supabase Auth
 - [ ] Login/Registro testado
 - [ ] CRUD de tarefas funcionando
 - [ ] Kanban de leads operacional
+- [ ] **Integrações Google OAuth testadas**
 - [ ] Navegação testada
 - [ ] Performance verificada
-
-## Configurações Avançadas (Opcional)
-- [ ] Domínio personalizado configurado
-- [ ] DNS atualizado
-- [ ] SSL verificado
-- [ ] Analytics ativado
-- [ ] Monitoramento configurado
 
 ## Desenvolvimento Contínuo
 - [ ] Workflow Git → Vercel testado
@@ -36,7 +40,6 @@
 - [ ] Documentação atualizada
 
 ## Melhorias Futuras
-- [ ] Google OAuth para produção
 - [ ] Sistema de notificações
 - [ ] Validações robustas
 - [ ] Testes automatizados
@@ -44,6 +47,7 @@
 
 ---
 
-**Status Atual**: ✅ Pronto para Deploy
+**Status Atual**: ✅ Configurado para crm.mrladvogados.com.br
 **Responsável**: Equipe MRL Advogados
 **Data**: ${new Date().toLocaleDateString('pt-BR')}
+**URL de Produção**: https://crm.mrladvogados.com.br

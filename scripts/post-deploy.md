@@ -6,44 +6,51 @@ Execute estes comandos após o deploy bem-sucedido:
 ## 1. Atualizar URLs no Supabase
 
 ```bash
-# Substitua YOUR_VERCEL_URL pela URL real gerada
-export VERCEL_URL="https://mrl-advogados.vercel.app"
+# URL de produção configurada
+export PRODUCTION_URL="https://crm.mrladvogados.com.br"
 
 echo "Atualize no Supabase Dashboard:"
 echo "Authentication > URL Configuration"
-echo "Site URL: $VERCEL_URL"
-echo "Redirect URLs: $VERCEL_URL"
+echo "Site URL: $PRODUCTION_URL"
+echo "Redirect URLs: $PRODUCTION_URL/auth/google/callback"
 ```
 
-## 2. Teste Automático das APIs
+## 2. Configurar Google OAuth
+
+```bash
+echo "Configure no Google Cloud Console:"
+echo "Authorized JavaScript origins: $PRODUCTION_URL"
+echo "Authorized redirect URLs: $PRODUCTION_URL/auth/google/callback"
+```
+
+## 3. Teste Automático das APIs
 
 ```bash
 # Teste básico de conectividade
-curl -I $VERCEL_URL
+curl -I https://crm.mrladvogados.com.br
 
 # Teste se Supabase está respondendo
 curl -I "https://ncficjpokmmsugykmtdu.supabase.co/rest/v1/"
 ```
 
-## 3. Validação Manual
+## 4. Validação Manual
 
 Acesse cada página e teste:
 - [ ] `/` - Dashboard
 - [ ] `/leads` - Kanban funcionando
 - [ ] `/tarefas` - CRUD de tarefas
-- [ ] `/agenda` - Integrações
+- [ ] `/agenda` - Integrações Google
 - [ ] `/auth` - Login/Registro
 
-## 4. Configurar Monitoramento
+## 5. Configurar Monitoramento
 
 No dashboard Vercel:
 - Ativar Analytics
 - Configurar alertas
 - Revisar métricas de performance
 
-## 5. Documentar URLs Finais
+## 6. URLs Finais Configuradas
 
-Atualize este arquivo com as URLs reais:
-- **Produção**: [URL_FINAL]
-- **Preview**: [URL_PREVIEW]
-- **GitHub**: [REPO_URL]
+- **Produção**: https://crm.mrladvogados.com.br
+- **Supabase**: https://ncficjpokmmsugykmtdu.supabase.co
+- **Google OAuth Callback**: https://crm.mrladvogados.com.br/auth/google/callback

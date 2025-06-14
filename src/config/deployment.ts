@@ -3,7 +3,7 @@
 export const deploymentConfig = {
   // URLs base para diferentes ambientes
   production: {
-    url: 'https://mrl-advogados.vercel.app', // Será atualizada após deploy
+    url: 'https://crm.mrladvogados.com.br',
     supabase: {
       url: 'https://ncficjpokmmsugykmtdu.supabase.co',
       anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jZmljanBva21tc3VneWttdGR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY1MzY3NjQsImV4cCI6MjA2MjExMjc2NH0.qibulCIaQ-eLTJH3L-Z5nsfBGVj-CGlQsYCY3--uWOs'
