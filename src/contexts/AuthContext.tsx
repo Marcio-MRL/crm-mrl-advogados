@@ -29,6 +29,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log('Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('role, status, first_name, last_name')
@@ -40,6 +41,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return null;
       }
 
+      console.log('Profile fetched successfully:', data);
       return data;
     } catch (error) {
       console.error('Erro ao buscar perfil:', error);
@@ -55,19 +57,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
+    console.log('Setting up auth state listener');
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
+        console.log('Auth state changed:', event, currentSession?.user?.email);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
         if (currentSession?.user) {
-          // Buscar perfil do usuário com setTimeout para evitar deadlock
+          console.log('User authenticated, fetching profile...');
+          // Usar timeout para evitar deadlock
           setTimeout(async () => {
-            const profile = await fetchUserProfile(currentSession.user.id);
-            setUserProfile(profile);
-            setLoading(false);
-          }, 0);
+            try {
+              const profile = await fetchUserProfile(currentSession.user.id);
+              setUserProfile(profile);
+              setLoading(false);
+            } catch (error) {
+              console.error('Error fetching profile:', error);
+              setLoading(false);
+            }
+          }, 100);
         } else {
+          console.log('No user, clearing profile');
           setUserProfile(null);
           setLoading(false);
         }
@@ -75,16 +87,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 
     // Check for existing session
+    console.log('Checking for existing session');
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      console.log('Existing session:', currentSession?.user?.email);
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
       if (currentSession?.user) {
         setTimeout(async () => {
-          const profile = await fetchUserProfile(currentSession.user.id);
-          setUserProfile(profile);
-          setLoading(false);
-        }, 0);
+          try {
+            const profile = await fetchUserProfile(currentSession.user.id);
+            setUserProfile(profile);
+            setLoading(false);
+          } catch (error) {
+            console.error('Error fetching profile:', error);
+            setLoading(false);
+          }
+        }, 100);
       } else {
         setLoading(false);
       }
@@ -94,6 +113,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signOut = async () => {
+    console.log('Signing out...');
     await supabase.auth.signOut();
     setUserProfile(null);
   };
