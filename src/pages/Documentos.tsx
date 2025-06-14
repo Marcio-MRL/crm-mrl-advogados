@@ -27,15 +27,7 @@ export default function Documentos() {
     lastConnectionCheck 
   } = useGoogleDrive();
 
-  // Verificar conexão quando o componente montar
-  useEffect(() => {
-    console.log('📄 Página de documentos carregada, verificando conexão...');
-    if (refreshToken) {
-      refreshToken();
-    }
-  }, [refreshToken]);
-
-  // Log do status de conexão
+  // Log do status de conexão apenas quando realmente muda
   useEffect(() => {
     console.log('📄 Status de conexão do Google Drive atualizado:', { 
       isConnected, 

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { GoogleDriveApiService } from '@/services/googleDriveApi';
@@ -14,19 +14,9 @@ export function useGoogleDrive() {
   const [lastConnectionCheck, setLastConnectionCheck] = useState<Date | null>(null);
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (user) {
-      fetchDriveToken();
-    } else {
-      console.log('⚠️ Usuário não encontrado');
-      setIsConnected(false);
-      setDriveToken(null);
-    }
-  }, [user]);
-
-  const fetchDriveToken = async () => {
-    if (!user) {
-      console.log('⚠️ Usuário não encontrado, não é possível verificar token');
+  const fetchDriveToken = useCallback(async () => {
+    if (!user || loading) {
+      console.log('⚠️ Usuário não encontrado ou já carregando, não é possível verificar token');
       setIsConnected(false);
       setDriveToken(null);
       return;
@@ -65,7 +55,18 @@ export function useGoogleDrive() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, loading]);
+
+  // Verificação inicial apenas uma vez quando o usuário está disponível
+  useEffect(() => {
+    if (user && !lastConnectionCheck) {
+      fetchDriveToken();
+    } else if (!user) {
+      console.log('⚠️ Usuário não encontrado');
+      setIsConnected(false);
+      setDriveToken(null);
+    }
+  }, [user, lastConnectionCheck, fetchDriveToken]);
 
   const uploadFile = async (
     file: File, 
@@ -153,11 +154,11 @@ export function useGoogleDrive() {
     return await driveService.getFileDownloadLink(driveFileId);
   };
 
-  // Função para forçar uma nova verificação
-  const refreshConnection = async () => {
+  // Função para forçar uma nova verificação (manual)
+  const refreshConnection = useCallback(async () => {
     console.log('🔄 Forçando nova verificação de conexão...');
     await fetchDriveToken();
-  };
+  }, [fetchDriveToken]);
 
   return {
     loading,
