@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -48,7 +47,7 @@ export function useGoogleDrive() {
         .from('google_oauth_tokens')
         .select('access_token, expires_at')
         .eq('user_id', user?.id)
-        .contains('scope', 'https://www.googleapis.com/auth/drive.file')
+        .like('scope', '%drive.file%')
         .maybeSingle();
 
       if (error) {
@@ -78,7 +77,7 @@ export function useGoogleDrive() {
     }
   ): Promise<DocumentMetadata | null> => {
     if (!driveToken) {
-      toast.error('Conecte-se ao Google Drive primeiro');
+      toast.error('Conecte-se ao Google Drive primeiro nas configurações');
       return null;
     }
 
@@ -116,7 +115,7 @@ export function useGoogleDrive() {
 
       // 2. Salvar metadados no Supabase
       const { data: documentData, error: supabaseError } = await supabase
-        .from('documents' as any)
+        .from('documents')
         .insert({
           drive_file_id: driveFile.id,
           name: metadata.name,
@@ -175,7 +174,7 @@ export function useGoogleDrive() {
 
       // 2. Remover metadados do Supabase
       const { error } = await supabase
-        .from('documents' as any)
+        .from('documents')
         .delete()
         .eq('id', documentId);
 
