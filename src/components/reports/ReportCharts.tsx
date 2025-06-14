@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 // Dados mock para Status de Processos
@@ -142,6 +143,48 @@ export function ReportTimeTracking() {
           <Bar dataKey="horas" name="Horas Trabalhadas" fill="#8b5cf6" />
         </BarChart>
       </ResponsiveContainer>
+    </div>
+  );
+}
+
+export function ReportCharts() {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Status dos Processos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ReportProcessStatus />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Distribuição de Clientes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ReportClientDistribution />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Acompanhamento Financeiro</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ReportFinancialOverview />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Horas Trabalhadas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ReportTimeTracking />
+        </CardContent>
+      </Card>
     </div>
   );
 }
