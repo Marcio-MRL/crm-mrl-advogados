@@ -13,13 +13,15 @@ interface DocumentToolbarProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   onUploadClick: () => void;
+  onCreateFolderClick?: () => void;
   isConnected: boolean;
 }
 
 export function DocumentToolbar({ 
   searchQuery, 
   onSearchChange, 
-  onUploadClick, 
+  onUploadClick,
+  onCreateFolderClick,
   isConnected 
 }: DocumentToolbarProps) {
   return (
@@ -49,7 +51,11 @@ export function DocumentToolbar({
           Upload para Drive
         </Button>
         
-        <Button variant="outline" disabled>
+        <Button 
+          variant="outline" 
+          onClick={onCreateFolderClick}
+          disabled={!isConnected}
+        >
           <FolderPlus className="h-4 w-4 mr-2" />
           Nova Pasta
         </Button>

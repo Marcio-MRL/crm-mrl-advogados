@@ -85,10 +85,13 @@ export function useGoogleDrive() {
     setLoading(true);
 
     try {
+      console.log('📤 Iniciando upload do arquivo:', file.name);
+      
       const driveService = new GoogleDriveApiService(driveToken);
       
       // 1. Upload para Google Drive
       const driveFile = await driveService.uploadFile(file);
+      console.log('✅ Arquivo enviado para o Google Drive:', driveFile);
 
       // 2. Salvar metadados no Supabase
       try {
@@ -99,17 +102,40 @@ export function useGoogleDrive() {
           user.id
         );
 
-        toast.success('Documento enviado com sucesso!');
+        console.log('✅ Metadados salvos no Supabase:', documentData);
+        toast.success(`Documento "${metadata.name}" enviado com sucesso!`);
         return documentData;
       } catch (supabaseError) {
+        console.error('❌ Erro ao salvar metadados no Supabase:', supabaseError);
         // Se falhar no Supabase, tentar deletar do Drive
-        await driveService.deleteFile(driveFile.id);
+        try {
+          await driveService.deleteFile(driveFile.id);
+          console.log('🗑️ Arquivo removido do Google Drive devido ao erro no Supabase');
+        } catch (cleanupError) {
+          console.error('❌ Erro ao limpar arquivo do Drive:', cleanupError);
+        }
         throw supabaseError;
       }
 
     } catch (error) {
       console.error('❌ Erro no upload:', error);
-      toast.error('Erro ao enviar documento');
+      
+      if (error instanceof Error) {
+        if (error.message.includes('404')) {
+          toast.error('Erro: Pasta não encontrada no Google Drive. Tentando criar pasta automaticamente...');
+        } else if (error.message.includes('403')) {
+          toast.error('Erro: Permissão negada. Verifique se o token do Google Drive ainda é válido.');
+        } else if (error.message.includes('401')) {
+          toast.error('Erro: Token expirado. Reconecte ao Google Drive nas configurações.');
+          setIsConnected(false);
+          setDriveToken(null);
+        } else {
+          toast.error(`Erro ao enviar documento: ${error.message}`);
+        }
+      } else {
+        toast.error('Erro inesperado ao enviar documento');
+      }
+      
       return null;
     } finally {
       setLoading(false);

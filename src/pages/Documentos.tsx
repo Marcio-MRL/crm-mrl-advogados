@@ -7,6 +7,7 @@ import { DocumentStats } from '@/components/documents/DocumentStats';
 import { GoogleDriveConnectionStatus } from '@/components/documents/GoogleDriveConnectionStatus';
 import { DocumentToolbar } from '@/components/documents/DocumentToolbar';
 import { DocumentModals } from '@/components/documents/DocumentModals';
+import { CreateFolderModal } from '@/components/documents/CreateFolderModal';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { HardDrive } from 'lucide-react';
 import { useDocuments } from '@/hooks/useDocuments';
@@ -15,6 +16,7 @@ import { useGoogleDrive, type DocumentMetadata } from '@/hooks/useGoogleDrive';
 export default function Documentos() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [documentToDelete, setDocumentToDelete] = useState<DocumentMetadata | null>(null);
   
@@ -99,6 +101,7 @@ export default function Documentos() {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
           onUploadClick={() => setIsUploadModalOpen(true)}
+          onCreateFolderClick={() => setIsCreateFolderModalOpen(true)}
           isConnected={isConnected}
         />
         
@@ -132,6 +135,12 @@ export default function Documentos() {
           documentToDelete={documentToDelete}
           onUploadSuccess={handleUploadSuccess}
           onConfirmDelete={confirmDelete}
+        />
+
+        {/* Modal de Criação de Pasta */}
+        <CreateFolderModal 
+          isOpen={isCreateFolderModalOpen}
+          onClose={() => setIsCreateFolderModalOpen(false)}
         />
       </div>
     </MainLayout>
