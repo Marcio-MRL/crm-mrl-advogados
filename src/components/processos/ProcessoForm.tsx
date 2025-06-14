@@ -55,10 +55,24 @@ export function ProcessoForm({ initialData, onSuccess, onCancel }: ProcessoFormP
     try {
       setIsSubmitting(true);
       
+      // Ensure all required fields are present with proper types
+      const processData = {
+        process_number: data.process_number,
+        title: data.title,
+        client_id: data.client_id,
+        client_name: data.client_name,
+        process_type: data.process_type,
+        forum: data.forum,
+        status: data.status,
+        start_date: data.start_date,
+        responsible: data.responsible,
+        description: data.description,
+      };
+      
       if (initialData?.id) {
-        await updateProcess(initialData.id, data);
+        await updateProcess(initialData.id, processData);
       } else {
-        await createProcess(data);
+        await createProcess(processData);
       }
       
       form.reset();
