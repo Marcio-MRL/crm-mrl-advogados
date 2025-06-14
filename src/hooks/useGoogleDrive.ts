@@ -143,7 +143,7 @@ export function useGoogleDrive() {
       }
 
       toast.success('Documento enviado com sucesso!');
-      return documentData;
+      return documentData as DocumentMetadata;
 
     } catch (error) {
       console.error('Erro no upload:', error);

@@ -31,24 +31,18 @@ export function useDocuments() {
       setError(null);
 
       const { data, error: fetchError } = await supabase
-        .rpc('get_documents_for_user')
-        .then(async () => {
-          // Fallback to direct query if RPC doesn't exist
-          return await supabase
-            .from('documents' as any)
-            .select('*')
-            .order('created_at', { ascending: false });
-        });
+        .from('documents' as any)
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (fetchError) {
         throw fetchError;
       }
 
-      setDocuments(data || []);
+      setDocuments((data as DocumentMetadata[]) || []);
     } catch (err) {
       console.error('Erro ao buscar documentos:', err);
       setError('Erro ao carregar documentos');
-      // Set empty array on error to prevent crashes
       setDocuments([]);
     } finally {
       setLoading(false);
@@ -64,7 +58,7 @@ export function useDocuments() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data as DocumentMetadata[]) || [];
     } catch (err) {
       console.error('Erro ao buscar documentos do cliente:', err);
       return [];
@@ -80,7 +74,7 @@ export function useDocuments() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data as DocumentMetadata[]) || [];
     } catch (err) {
       console.error('Erro ao buscar documentos do processo:', err);
       return [];
