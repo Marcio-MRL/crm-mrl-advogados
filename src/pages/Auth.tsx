@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { AlertCircle, CheckCircle } from 'lucide-react';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -17,25 +19,54 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [pendingApproval, setPendingApproval] = useState(false);
 
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate('/');
+        // Verificar se o usuário está aprovado
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('status')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile?.status === 'approved') {
+          navigate('/');
+        } else if (profile?.status === 'pending_approval') {
+          setPendingApproval(true);
+        } else if (profile?.status === 'suspended') {
+          toast({
+            title: "Acesso Suspenso",
+            description: "Sua conta foi suspensa. Entre em contato com o administrador.",
+            variant: "destructive"
+          });
+          await supabase.auth.signOut();
+        }
       }
     };
     
     checkSession();
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session) {
-        navigate('/');
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('status')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile?.status === 'approved') {
+          navigate('/');
+        } else if (profile?.status === 'pending_approval') {
+          setPendingApproval(true);
+        }
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, toast]);
 
   const validateEmail = (email: string) => {
     if (!email.endsWith('@mrladvogados.com.br')) {
@@ -123,6 +154,41 @@ export default function Auth() {
       setLoading(false);
     }
   };
+
+  if (pendingApproval) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold text-lawblue-800">MRL Advogados</CardTitle>
+            <CardDescription>
+              Aguardando Aprovação
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert>
+              <CheckCircle className="h-4 w-4" />
+              <AlertDescription>
+                Seu cadastro foi realizado com sucesso! Aguarde a aprovação do administrador para acessar o sistema.
+              </AlertDescription>
+            </Alert>
+            
+            <div className="text-center">
+              <Button 
+                variant="outline" 
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  setPendingApproval(false);
+                }}
+              >
+                Fazer Logout
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -133,6 +199,14 @@ export default function Auth() {
             Sistema de gestão jurídica
           </CardDescription>
         </CardHeader>
+        
+        <Alert className="mx-6 mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Acesso restrito ao domínio @mrladvogados.com.br. Novos usuários precisam de aprovação do administrador.
+          </AlertDescription>
+        </Alert>
+        
         <Tabs defaultValue="login">
           <TabsList className="grid grid-cols-2 mb-4 mx-6">
             <TabsTrigger value="login">Login</TabsTrigger>
