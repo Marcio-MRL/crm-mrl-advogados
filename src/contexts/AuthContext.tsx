@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      console.log('Fetching profile for user:', userId);
+      console.log('AuthContext: Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('role, status, first_name, last_name')
@@ -37,49 +37,56 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .single();
 
       if (error) {
-        console.error('Erro ao buscar perfil:', error);
+        console.error('AuthContext: Error fetching profile:', error.message, error.details);
         return null;
       }
 
-      console.log('Profile fetched successfully:', data);
+      console.log('AuthContext: Profile fetched successfully:', data);
       return data;
     } catch (error) {
-      console.error('Erro ao buscar perfil:', error);
+      console.error('AuthContext: Exception fetching profile:', error);
       return null;
     }
   };
 
   const refreshProfile = async () => {
     if (user) {
+      console.log('AuthContext: Refreshing profile for user:', user.id);
       const profile = await fetchUserProfile(user.id);
       setUserProfile(profile);
     }
   };
 
   useEffect(() => {
-    console.log('Setting up auth state listener');
+    console.log('AuthContext: Setting up auth state listener');
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
-        console.log('Auth state changed:', event, currentSession?.user?.email);
+        console.log('AuthContext: Auth state changed:', event, {
+          hasSession: !!currentSession,
+          userEmail: currentSession?.user?.email,
+          userId: currentSession?.user?.id
+        });
+        
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
         if (currentSession?.user) {
-          console.log('User authenticated, fetching profile...');
+          console.log('AuthContext: User authenticated, fetching profile...');
           // Usar timeout para evitar deadlock
           setTimeout(async () => {
             try {
               const profile = await fetchUserProfile(currentSession.user.id);
+              console.log('AuthContext: Setting profile:', profile);
               setUserProfile(profile);
               setLoading(false);
             } catch (error) {
-              console.error('Error fetching profile:', error);
+              console.error('AuthContext: Error in profile fetch timeout:', error);
               setLoading(false);
             }
           }, 100);
         } else {
-          console.log('No user, clearing profile');
+          console.log('AuthContext: No user, clearing profile and setting loading false');
           setUserProfile(null);
           setLoading(false);
         }
@@ -87,24 +94,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 
     // Check for existing session
-    console.log('Checking for existing session');
+    console.log('AuthContext: Checking for existing session');
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      console.log('Existing session:', currentSession?.user?.email);
+      console.log('AuthContext: Existing session check:', {
+        hasSession: !!currentSession,
+        userEmail: currentSession?.user?.email,
+        userId: currentSession?.user?.id
+      });
+      
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
       if (currentSession?.user) {
+        console.log('AuthContext: Existing session found, fetching profile...');
         setTimeout(async () => {
           try {
             const profile = await fetchUserProfile(currentSession.user.id);
+            console.log('AuthContext: Setting profile from existing session:', profile);
             setUserProfile(profile);
             setLoading(false);
           } catch (error) {
-            console.error('Error fetching profile:', error);
+            console.error('AuthContext: Error in existing session profile fetch:', error);
             setLoading(false);
           }
         }, 100);
       } else {
+        console.log('AuthContext: No existing session, setting loading false');
         setLoading(false);
       }
     });
@@ -113,7 +128,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signOut = async () => {
-    console.log('Signing out...');
+    console.log('AuthContext: Signing out...');
     await supabase.auth.signOut();
     setUserProfile(null);
   };
@@ -126,6 +141,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     loading,
     refreshProfile,
   };
+
+  console.log('AuthContext: Current state:', {
+    hasUser: !!user,
+    hasProfile: !!userProfile,
+    loading,
+    userEmail: user?.email,
+    profileStatus: userProfile?.status,
+    profileRole: userProfile?.role
+  });
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
