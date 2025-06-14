@@ -2,16 +2,22 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, Clock, Edit, Trash2 } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { CalendarIcon, Clock, Edit, Trash2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatDate } from '@/integrations/supabase/client';
 
 interface Task {
   id: string;
   title: string;
-  dueDate: string;
-  priority: 'high' | 'medium' | 'low';
-  completed: boolean;
   description?: string;
+  due_date?: string;
+  priority: 'high' | 'medium' | 'low';
+  category: 'processo' | 'cliente' | 'audiencia' | 'prazo' | 'geral';
+  completed: boolean;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
 }
 
 interface TaskViewModalProps {
@@ -47,34 +53,62 @@ export function TaskViewModal({ task, isOpen, onClose, onStatusChange, onEdit, o
     toast.success("Tarefa adicionada ao Google Calendar");
   };
   
-  const getPriorityColor = (priority: string) => {
+  const getPriorityConfig = (priority: string) => {
     switch(priority) {
-      case 'high': return 'bg-red-500';
-      case 'medium': return 'bg-yellow-500';
-      case 'low': return 'bg-blue-500';
-      default: return 'bg-gray-500';
+      case 'high': return { label: 'Alta', color: 'bg-red-100 text-red-800', icon: AlertTriangle };
+      case 'medium': return { label: 'Média', color: 'bg-yellow-100 text-yellow-800', icon: Clock };
+      case 'low': return { label: 'Baixa', color: 'bg-green-100 text-green-800', icon: Clock };
+      default: return { label: 'Média', color: 'bg-gray-100 text-gray-800', icon: Clock };
     }
   };
+
+  const getCategoryConfig = (category: string) => {
+    switch(category) {
+      case 'processo': return { label: 'Processo', color: 'bg-blue-100 text-blue-800' };
+      case 'cliente': return { label: 'Cliente', color: 'bg-purple-100 text-purple-800' };
+      case 'audiencia': return { label: 'Audiência', color: 'bg-orange-100 text-orange-800' };
+      case 'prazo': return { label: 'Prazo', color: 'bg-red-100 text-red-800' };
+      default: return { label: 'Geral', color: 'bg-gray-100 text-gray-800' };
+    }
+  };
+
+  const priorityConfig = getPriorityConfig(task.priority);
+  const categoryConfig = getCategoryConfig(task.category);
+  const PriorityIcon = priorityConfig.icon;
+  
+  const isOverdue = task.due_date && new Date(task.due_date) < new Date() && !task.completed;
   
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="text-xl">{task.title}</DialogTitle>
+          <DialogTitle className="text-xl flex items-center gap-2">
+            {task.title}
+            {isOverdue && <AlertTriangle className="h-5 w-5 text-red-500" />}
+          </DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
           <div className="flex items-center gap-2">
-            <span className={`w-3 h-3 rounded-full ${getPriorityColor(task.priority)}`}></span>
-            <span className="text-sm text-gray-600">
-              Prioridade: {task.priority === 'high' ? 'Alta' : task.priority === 'medium' ? 'Média' : 'Baixa'}
-            </span>
+            <Badge className={priorityConfig.color}>
+              <PriorityIcon className="h-3 w-3 mr-1" />
+              {priorityConfig.label}
+            </Badge>
+            
+            <Badge className={categoryConfig.color}>
+              {categoryConfig.label}
+            </Badge>
           </div>
           
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-gray-500" />
-            <span className="text-sm text-gray-600">Prazo: {task.dueDate}</span>
-          </div>
+          {task.due_date && (
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-gray-500" />
+              <span className={`text-sm ${isOverdue ? 'text-red-600 font-medium' : 'text-gray-600'}`}>
+                Prazo: {formatDate(task.due_date)}
+                {isOverdue && ' (Atrasada)'}
+              </span>
+            </div>
+          )}
           
           {task.description && (
             <div className="mt-4">

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -11,29 +12,35 @@ import { useState, useEffect } from 'react';
 interface Task {
   id: string;
   title: string;
-  dueDate: string;
-  priority: 'high' | 'medium' | 'low';
-  completed: boolean;
   description?: string;
+  due_date?: string;
+  priority: 'high' | 'medium' | 'low';
+  category: 'processo' | 'cliente' | 'audiencia' | 'prazo' | 'geral';
+  completed: boolean;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
 }
 
 interface TaskEditModalProps {
   task: Task | null;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (task: Task) => void;
+  onSave: (updates: Partial<Task>) => void;
 }
 
 export function TaskEditModal({ task, isOpen, onClose, onSave }: TaskEditModalProps) {
   const [formData, setFormData] = useState<{
     title: string;
-    dueDate: string;
+    due_date: string;
     priority: 'high' | 'medium' | 'low';
+    category: 'processo' | 'cliente' | 'audiencia' | 'prazo' | 'geral';
     description: string;
   }>({
     title: '',
-    dueDate: '',
+    due_date: '',
     priority: 'medium',
+    category: 'geral',
     description: ''
   });
 
@@ -41,8 +48,9 @@ export function TaskEditModal({ task, isOpen, onClose, onSave }: TaskEditModalPr
     if (task) {
       setFormData({
         title: task.title,
-        dueDate: task.dueDate,
+        due_date: task.due_date ? task.due_date.split('T')[0] : '',
         priority: task.priority,
+        category: task.category,
         description: task.description || ''
       });
     }
@@ -56,15 +64,18 @@ export function TaskEditModal({ task, isOpen, onClose, onSave }: TaskEditModalPr
       return;
     }
 
-    const updatedTask: Task = {
-      ...task,
+    const updates: Partial<Task> = {
       title: formData.title,
-      dueDate: formData.dueDate,
       priority: formData.priority,
+      category: formData.category,
       description: formData.description
     };
 
-    onSave(updatedTask);
+    if (formData.due_date) {
+      updates.due_date = formData.due_date;
+    }
+
+    onSave(updates);
     toast.success("Tarefa atualizada com sucesso!");
     onClose();
   };
@@ -93,31 +104,54 @@ export function TaskEditModal({ task, isOpen, onClose, onSave }: TaskEditModalPr
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="dueDate">Prazo</Label>
-            <Input
-              id="dueDate"
-              value={formData.dueDate}
-              onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-              placeholder="Ex: Hoje, 16:00"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="due_date">Prazo</Label>
+              <Input
+                id="due_date"
+                type="date"
+                value={formData.due_date}
+                onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="priority">Prioridade</Label>
+              <Select
+                value={formData.priority}
+                onValueChange={(value: 'high' | 'medium' | 'low') => 
+                  setFormData({ ...formData, priority: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="high">Alta</SelectItem>
+                  <SelectItem value="medium">Média</SelectItem>
+                  <SelectItem value="low">Baixa</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="priority">Prioridade</Label>
+            <Label htmlFor="category">Categoria</Label>
             <Select
-              value={formData.priority}
-              onValueChange={(value: 'high' | 'medium' | 'low') => 
-                setFormData({ ...formData, priority: value })
+              value={formData.category}
+              onValueChange={(value: 'processo' | 'cliente' | 'audiencia' | 'prazo' | 'geral') => 
+                setFormData({ ...formData, category: value })
               }
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="high">Alta</SelectItem>
-                <SelectItem value="medium">Média</SelectItem>
-                <SelectItem value="low">Baixa</SelectItem>
+                <SelectItem value="geral">Geral</SelectItem>
+                <SelectItem value="processo">Processo</SelectItem>
+                <SelectItem value="cliente">Cliente</SelectItem>
+                <SelectItem value="audiencia">Audiência</SelectItem>
+                <SelectItem value="prazo">Prazo</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -138,7 +172,7 @@ export function TaskEditModal({ task, isOpen, onClose, onSave }: TaskEditModalPr
           <Button variant="outline" onClick={handleClose}>
             Cancelar
           </Button>
-          <Button onClick={handleSave}>
+          <Button onClick={handleSave} className="bg-lawblue-500 hover:bg-lawblue-600">
             Salvar Alterações
           </Button>
         </div>

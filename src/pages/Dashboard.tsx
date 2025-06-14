@@ -7,54 +7,28 @@ import { ProcessChart } from '@/components/dashboard/ProcessChart';
 import { PerformanceCard } from '@/components/dashboard/PerformanceCard';
 import { AddButtons } from '@/components/dashboard/AddButtons';
 import { DashboardModals } from '@/components/dashboard/DashboardModals';
+import { TaskFormModal } from '@/components/task/TaskFormModal';
+import { useTasks } from '@/hooks/useTasks';
 import { useState } from 'react';
-
-interface Task {
-  id: string;
-  title: string;
-  dueDate: string;
-  priority: 'high' | 'medium' | 'low';
-  completed: boolean;
-  description?: string;
-  category: 'processo' | 'cliente' | 'audiencia' | 'prazo' | 'geral';
-}
-
-// Mock urgent tasks data
-const mockUrgentTasks: Task[] = [
-  {
-    id: '1',
-    title: 'Revisar contrato ABC Corp',
-    dueDate: '2024-01-15',
-    priority: 'high' as const,
-    completed: false,
-    description: 'Análise completa do contrato de prestação de serviços',
-    category: 'processo'
-  },
-  {
-    id: '2',
-    title: 'Preparar audiência processo 123',
-    dueDate: '2024-01-16',
-    priority: 'high' as const,
-    completed: false,
-    description: 'Preparação de documentos e estratégia para audiência',
-    category: 'audiencia'
-  },
-  {
-    id: '3',
-    title: 'Responder email cliente XYZ',
-    dueDate: '2024-01-17',
-    priority: 'medium' as const,
-    completed: false,
-    description: 'Esclarecimentos sobre andamento do processo',
-    category: 'cliente'
-  }
-];
 
 export default function Dashboard() {
   const [isLeadModalOpen, setIsLeadModalOpen] = useState(false);
   const [isClientModalOpen, setIsClientModalOpen] = useState(false);
   const [isProcessModalOpen, setIsProcessModalOpen] = useState(false);
-  const [urgentTasks, setUrgentTasks] = useState<Task[]>(mockUrgentTasks);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  
+  const { tasks, loading, createTask } = useTasks();
+
+  // Filter urgent tasks: high priority or due within 3 days
+  const urgentTasks = tasks.filter(task => {
+    if (task.completed) return false;
+    
+    const isHighPriority = task.priority === 'high';
+    const isDueSoon = task.due_date && 
+      new Date(task.due_date) <= new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+    
+    return isHighPriority || isDueSoon;
+  }).slice(0, 5); // Show max 5 urgent tasks
 
   const handleClientAdded = () => {
     setIsClientModalOpen(false);
@@ -68,8 +42,11 @@ export default function Dashboard() {
     setIsLeadModalOpen(false);
   };
 
-  const handleTasksChange = (newTasks: Task[]) => {
-    setUrgentTasks(newTasks);
+  const handleTaskAdded = async (taskData: any) => {
+    const success = await createTask(taskData);
+    if (success) {
+      setIsTaskModalOpen(false);
+    }
   };
 
   return (
@@ -85,6 +62,7 @@ export default function Dashboard() {
             openLeadModal={() => setIsLeadModalOpen(true)}
             openClientModal={() => setIsClientModalOpen(true)}
             openProcessModal={() => setIsProcessModalOpen(true)}
+            openTaskModal={() => setIsTaskModalOpen(true)}
           />
         </div>
 
@@ -106,7 +84,8 @@ export default function Dashboard() {
           <div className="lg:col-span-1">
             <TaskList 
               tasks={urgentTasks}
-              onTasksChange={handleTasksChange}
+              loading={loading}
+              showHeader={true}
             />
           </div>
         </div>
@@ -126,6 +105,12 @@ export default function Dashboard() {
           handleClientAdded={handleClientAdded}
           handleProcessAdded={handleProcessAdded}
           handleLeadAdded={handleLeadAdded}
+        />
+
+        <TaskFormModal
+          isOpen={isTaskModalOpen}
+          onClose={() => setIsTaskModalOpen(false)}
+          onSubmit={handleTaskAdded}
         />
       </div>
     </MainLayout>
