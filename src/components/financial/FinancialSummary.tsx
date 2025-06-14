@@ -21,14 +21,14 @@ export function FinancialSummary() {
 
   if (isLoading) {
     return (
-      <>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">Saldo Atual</CardTitle>
           </CardHeader>
           <CardContent>
-            <Skeleton className="h-8 w-48 mb-2" />
-            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-6 w-32 mb-1" />
+            <Skeleton className="h-3 w-24" />
           </CardContent>
         </Card>
 
@@ -37,8 +37,8 @@ export function FinancialSummary() {
             <CardTitle className="text-sm font-medium text-gray-500">Receitas (Mês)</CardTitle>
           </CardHeader>
           <CardContent>
-            <Skeleton className="h-8 w-48 mb-2" />
-            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-6 w-32 mb-1" />
+            <Skeleton className="h-3 w-24" />
           </CardContent>
         </Card>
 
@@ -47,11 +47,11 @@ export function FinancialSummary() {
             <CardTitle className="text-sm font-medium text-gray-500">Despesas (Mês)</CardTitle>
           </CardHeader>
           <CardContent>
-            <Skeleton className="h-8 w-48 mb-2" />
-            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-6 w-32 mb-1" />
+            <Skeleton className="h-3 w-24" />
           </CardContent>
         </Card>
-      </>
+      </div>
     );
   }
 
@@ -67,15 +67,15 @@ export function FinancialSummary() {
   }
 
   return (
-    <>
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-medium text-gray-500">Saldo Atual</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-baseline gap-2">
-            <DollarSign className="h-5 w-5 text-gray-500" />
-            <span className={`text-2xl font-bold ${
+            <DollarSign className="h-4 w-4 text-gray-500" />
+            <span className={`text-lg font-bold ${
               summary.currentBalance >= 0 ? 'text-green-600' : 'text-red-600'
             }`}>
               {formatCurrency(summary.currentBalance)}
@@ -93,8 +93,8 @@ export function FinancialSummary() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2">
-            <ArrowUpRight className="h-5 w-5 text-green-500" />
-            <span className="text-2xl font-bold text-green-600">
+            <ArrowUpRight className="h-4 w-4 text-green-500" />
+            <span className="text-lg font-bold text-green-600">
               {formatCurrency(summary.monthlyRevenue)}
             </span>
           </div>
@@ -110,8 +110,8 @@ export function FinancialSummary() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2">
-            <ArrowDownRight className="h-5 w-5 text-red-500" />
-            <span className="text-2xl font-bold text-red-600">
+            <ArrowDownRight className="h-4 w-4 text-red-500" />
+            <span className="text-lg font-bold text-red-600">
               {formatCurrency(summary.monthlyExpenses)}
             </span>
           </div>
@@ -120,6 +120,6 @@ export function FinancialSummary() {
           </p>
         </CardContent>
       </Card>
-    </>
+    </div>
   );
 }

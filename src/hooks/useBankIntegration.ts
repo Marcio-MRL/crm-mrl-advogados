@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { BankIntegrationService } from '@/services/bankIntegrationService';
+import { BankIntegrationService } from '@/services/bankIntegration';
 import { BankIntegrationStatus, BankSyncResult } from '@/types/bankIntegration';
 import { useGoogleOAuth } from '@/hooks/useGoogleOAuth';
 
@@ -27,10 +27,13 @@ export function useBankIntegration() {
 
   const loadStatus = async () => {
     try {
+      console.log('🔍 Carregando status da integração bancária...');
       const statusData = await BankIntegrationService.getBankIntegrationStatus();
+      console.log('📊 Status carregado:', statusData);
       setStatus(prev => ({ ...prev, ...statusData }));
     } catch (error) {
       console.error('❌ Erro ao carregar status:', error);
+      toast.error('Erro ao carregar status da integração bancária');
     }
   };
 
@@ -44,6 +47,7 @@ export function useBankIntegration() {
     setSyncProgress(0);
 
     try {
+      console.log('🔄 Iniciando sincronização com planilha bancária...');
       toast.info('Iniciando sincronização com planilha bancária...');
       
       // Simular progresso
@@ -56,20 +60,23 @@ export function useBankIntegration() {
       clearInterval(progressInterval);
       setSyncProgress(100);
 
+      console.log('✅ Resultado da sincronização:', result);
+
       if (result.success) {
         toast.success(
           `Sincronização concluída! ${result.newTransactions} novas transações importadas.`
         );
         
-        // Atualizar status
+        // Atualizar status após sucesso
         await loadStatus();
       } else {
+        console.error('❌ Erros na sincronização:', result.errors);
         toast.error(`Erro na sincronização: ${result.errors.join(', ')}`);
       }
 
     } catch (error) {
       console.error('❌ Erro na sincronização:', error);
-      toast.error('Erro inesperado durante a sincronização');
+      toast.error('Erro inesperado durante a sincronização. Verifique se a planilha "BTG - Entradas e Saídas Caixa" existe e está acessível.');
     } finally {
       setStatus(prev => ({ ...prev, syncInProgress: false }));
       setSyncProgress(0);

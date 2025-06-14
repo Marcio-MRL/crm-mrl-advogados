@@ -8,9 +8,11 @@ import { GoogleSheetsToolbar } from './googleSheets/GoogleSheetsToolbar';
 import { GoogleSheetsList } from './googleSheets/GoogleSheetsList';
 import { AddSheetModal } from './googleSheets/AddSheetModal';
 import { useGoogleSheetsIntegration } from '@/hooks/useGoogleSheetsIntegration';
+import { useGoogleOAuth } from '@/hooks/useGoogleOAuth';
 
 export function GoogleSheetsIntegration() {
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const { tokens } = useGoogleOAuth();
   const {
     isConnected,
     sheets,
@@ -20,6 +22,13 @@ export function GoogleSheetsIntegration() {
     handleAddSheet
   } = useGoogleSheetsIntegration();
 
+  // Verificar se há tokens válidos do Google Sheets
+  const hasValidToken = tokens.some(token => 
+    token.scope?.includes('spreadsheets') || token.scope?.includes('drive')
+  );
+
+  const effectivelyConnected = isConnected || hasValidToken;
+
   return (
     <div className="space-y-6">
       {/* Integração Bancária BTG - Seção Principal */}
@@ -27,10 +36,10 @@ export function GoogleSheetsIntegration() {
       
       {/* Outras Planilhas Google Sheets */}
       <Card>
-        <GoogleSheetsHeader isConnected={isConnected} />
+        <GoogleSheetsHeader isConnected={effectivelyConnected} />
         
         <CardContent>
-          {!isConnected ? (
+          {!effectivelyConnected ? (
             <GoogleSheetsConnectionPrompt onConnect={handleConnect} />
           ) : (
             <div className="space-y-4">

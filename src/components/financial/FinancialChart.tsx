@@ -9,7 +9,7 @@ export function FinancialChart() {
 
   if (isLoading) {
     return (
-      <div className="w-full h-72">
+      <div className="w-full h-80">
         <Skeleton className="w-full h-full" />
       </div>
     );
@@ -17,7 +17,7 @@ export function FinancialChart() {
 
   if (!monthlyData || monthlyData.length === 0) {
     return (
-      <div className="w-full h-72 flex items-center justify-center">
+      <div className="w-full h-80 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-500">Nenhum dado disponível para exibir</p>
           <p className="text-sm text-gray-400 mt-2">
@@ -29,7 +29,7 @@ export function FinancialChart() {
   }
 
   return (
-    <div className="w-full h-72">
+    <div className="w-full h-80">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={monthlyData}
