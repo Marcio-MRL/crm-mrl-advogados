@@ -11,23 +11,53 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Plus } from 'lucide-react';
-import type { Processo } from '@/data/mockProcessos';
+import { useProcesses, type ProcessData } from '@/hooks/useProcesses';
+import { toast } from 'sonner';
 
 export default function Processos() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [selectedProcesso, setSelectedProcesso] = useState<Processo | null>(null);
-  const [filteredData, setFilteredData] = useState<Processo[]>([]);
+  const [selectedProcesso, setSelectedProcesso] = useState<ProcessData | null>(null);
+  const [filteredData, setFilteredData] = useState<ProcessData[]>([]);
   
-  const handleViewProcesso = (processo: Processo) => {
+  const { processes, loading, deleteProcess } = useProcesses();
+  
+  const handleViewProcesso = (processo: ProcessData) => {
     setSelectedProcesso(processo);
     setIsViewModalOpen(true);
   };
 
+  const handleEditProcesso = (processo: ProcessData) => {
+    setSelectedProcesso(processo);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteProcesso = async (processo: ProcessData) => {
+    if (window.confirm('Tem certeza que deseja excluir este processo?')) {
+      try {
+        if (processo.id) {
+          await deleteProcess(processo.id);
+        }
+      } catch (error) {
+        console.error('Erro ao excluir processo:', error);
+      }
+    }
+  };
+
   const handleCreateSuccess = () => {
     setIsCreateModalOpen(false);
-    // Aqui seria onde atualizaríamos a lista de processos
+    toast.success('Processo criado com sucesso!');
   };
+
+  const handleEditSuccess = () => {
+    setIsEditModalOpen(false);
+    setSelectedProcesso(null);
+    toast.success('Processo atualizado com sucesso!');
+  };
+
+  // Use os dados filtrados se existirem, caso contrário use todos os processos
+  const displayData = filteredData.length > 0 ? filteredData : processes;
 
   return (
     <MainLayout>
@@ -38,12 +68,15 @@ export default function Processos() {
         />
         
         {/* Cards de Estatísticas */}
-        <ProcessosStats />
+        <ProcessosStats data={processes} />
         
         {/* Filtros e Botão de Adicionar */}
         <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
           <div className="flex-1 w-full">
-            <ProcessosFilters onFilterChange={setFilteredData} />
+            <ProcessosFilters 
+              data={processes} 
+              onFilterChange={setFilteredData} 
+            />
           </div>
           <Button 
             onClick={() => setIsCreateModalOpen(true)}
@@ -61,8 +94,11 @@ export default function Processos() {
           </CardHeader>
           <CardContent>
             <ProcessosTable 
-              data={filteredData}
+              data={displayData}
+              loading={loading}
               onViewProcesso={handleViewProcesso}
+              onEditProcesso={handleEditProcesso}
+              onDeleteProcesso={handleDeleteProcesso}
             />
           </CardContent>
         </Card>
@@ -76,6 +112,23 @@ export default function Processos() {
             <ProcessoForm 
               onSuccess={handleCreateSuccess}
               onCancel={() => setIsCreateModalOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
+        
+        {/* Modal de Edição */}
+        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Editar Processo</DialogTitle>
+            </DialogHeader>
+            <ProcessoForm 
+              initialData={selectedProcesso}
+              onSuccess={handleEditSuccess}
+              onCancel={() => {
+                setIsEditModalOpen(false);
+                setSelectedProcesso(null);
+              }}
             />
           </DialogContent>
         </Dialog>

@@ -554,38 +554,97 @@ export type Database = {
           },
         ]
       }
+      process_movements: {
+        Row: {
+          created_at: string | null
+          date: string
+          deadline: string | null
+          description: string
+          id: string
+          process_id: string
+          responsible: string | null
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          date?: string
+          deadline?: string | null
+          description: string
+          id?: string
+          process_id: string
+          responsible?: string | null
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          deadline?: string | null
+          description?: string
+          id?: string
+          process_id?: string
+          responsible?: string | null
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_movements_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       processes: {
         Row: {
-          area: string
           client_id: string | null
+          client_name: string | null
           created_at: string
           description: string | null
+          forum: string | null
           id: string
-          number: string | null
+          process_number: string | null
+          process_type: string
+          responsible: string | null
+          start_date: string | null
           status: string | null
           title: string
           updated_at: string
           user_id: string | null
         }
         Insert: {
-          area: string
           client_id?: string | null
+          client_name?: string | null
           created_at?: string
           description?: string | null
+          forum?: string | null
           id?: string
-          number?: string | null
+          process_number?: string | null
+          process_type: string
+          responsible?: string | null
+          start_date?: string | null
           status?: string | null
           title: string
           updated_at?: string
           user_id?: string | null
         }
         Update: {
-          area?: string
           client_id?: string | null
+          client_name?: string | null
           created_at?: string
           description?: string | null
+          forum?: string | null
           id?: string
-          number?: string | null
+          process_number?: string | null
+          process_type?: string
+          responsible?: string | null
+          start_date?: string | null
           status?: string | null
           title?: string
           updated_at?: string
