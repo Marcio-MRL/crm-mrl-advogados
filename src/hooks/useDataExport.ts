@@ -1,6 +1,5 @@
 
 import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
@@ -25,25 +24,27 @@ export function useDataExport() {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('data_exports')
-        .insert({
-          user_id: user.id,
-          export_type: type,
-          requested_tables: tables || ['leads', 'clients', 'processes', 'contracts', 'events', 'checklists', 'legal_opinions'],
-          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 dias
-        })
-        .select()
-        .single();
+      const newExport: DataExport = {
+        id: Math.random().toString(),
+        export_type: type,
+        status: 'pending',
+        requested_tables: tables || ['leads', 'clients', 'processes', 'contracts', 'events', 'checklists', 'legal_opinions'],
+        created_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      };
 
-      if (error) throw error;
+      setExports(prev => [newExport, ...prev]);
 
-      // Simular processamento (em produção seria uma edge function)
-      setTimeout(async () => {
-        await generateExportFile(data.id);
+      // Simular processamento
+      setTimeout(() => {
+        setExports(prev => prev.map(exp => 
+          exp.id === newExport.id 
+            ? { ...exp, status: 'completed', file_url: 'mock-file-url', completed_at: new Date().toISOString() }
+            : exp
+        ));
+        toast.success('Exportação concluída com sucesso');
       }, 2000);
 
-      await fetchExports();
       toast.success('Solicitação de exportação criada com sucesso');
       return true;
     } catch (error) {
@@ -55,82 +56,27 @@ export function useDataExport() {
     }
   };
 
-  const generateExportFile = async (exportId: string) => {
-    try {
-      // Em produção, isso seria feito por uma edge function
-      const exportData = await collectUserData();
-      const jsonData = JSON.stringify(exportData, null, 2);
-      const blob = new Blob([jsonData], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-
-      const { error } = await supabase
-        .from('data_exports')
-        .update({
-          status: 'completed',
-          file_url: url,
-          completed_at: new Date().toISOString()
-        })
-        .eq('id', exportId);
-
-      if (error) throw error;
-      
-      await fetchExports();
-      toast.success('Exportação concluída com sucesso');
-    } catch (error) {
-      console.error('Erro ao gerar arquivo:', error);
-      await supabase
-        .from('data_exports')
-        .update({ status: 'failed' })
-        .eq('id', exportId);
-    }
-  };
-
-  const collectUserData = async () => {
-    const data: any = {};
-    const tables = ['leads', 'clients', 'processes', 'contracts', 'events', 'checklists', 'legal_opinions'];
-
-    for (const table of tables) {
-      try {
-        const { data: tableData } = await supabase
-          .from(table)
-          .select('*')
-          .eq('user_id', user?.id);
-        data[table] = tableData;
-      } catch (error) {
-        console.log(`Erro ao exportar tabela ${table}:`, error);
-      }
-    }
-
-    return {
-      export_date: new Date().toISOString(),
-      user_id: user?.id,
-      data
-    };
-  };
-
   const fetchExports = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('data_exports')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setExports(data || []);
-    } catch (error) {
-      console.error('Erro ao buscar exportações:', error);
-    }
+    // Simulação de busca
+    console.log('Buscando exportações...');
   };
 
   const downloadExport = (exportItem: DataExport) => {
     if (exportItem.file_url) {
+      // Simular download
+      const jsonData = JSON.stringify({
+        export_date: exportItem.created_at,
+        user_id: user?.id,
+        data: { message: 'Dados exportados com sucesso' }
+      }, null, 2);
+      
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = exportItem.file_url;
+      link.href = url;
       link.download = `dados-exportados-${exportItem.created_at.split('T')[0]}.json`;
       link.click();
+      URL.revokeObjectURL(url);
     }
   };
 

@@ -1,59 +1,26 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Header } from '@/components/layout/Header';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LGPDSettings } from '@/components/settings/LGPDSettings';
+import { ProfileSettings } from '@/components/settings/ProfileSettings';
+import { NotificationSettings } from '@/components/settings/NotificationSettings';
 import { SecuritySettings } from '@/components/settings/SecuritySettings';
-import { toast } from 'sonner';
+import { LGPDSettings } from '@/components/settings/LGPDSettings';
+import { AppearanceSettings } from '@/components/settings/AppearanceSettings';
+import { IntegrationsSettings } from '@/components/settings/IntegrationsSettings';
+import { DataSettings } from '@/components/settings/DataSettings';
 import { 
   User, 
   Bell, 
   Shield, 
   Palette, 
   Database, 
-  Mail,
-  Calendar,
-  FileText,
   Settings,
   Scale
 } from 'lucide-react';
 
 export default function Configuracoes() {
-  const [notifications, setNotifications] = useState({
-    email: true,
-    push: false,
-    leads: true,
-    tasks: true,
-    processes: false
-  });
-
-  const [profile, setProfile] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    position: ''
-  });
-
-  const handleSaveProfile = () => {
-    toast.success("Perfil atualizado com sucesso!");
-  };
-
-  const handleSaveNotifications = () => {
-    toast.success("Configurações de notificação atualizadas!");
-  };
-
-  const handleExportData = () => {
-    toast.info("Exportação de dados iniciada. Você receberá um email quando estiver pronta.");
-  };
-
   return (
     <MainLayout>
       <div className="w-full space-y-6">
@@ -92,157 +59,11 @@ export default function Configuracoes() {
           </TabsList>
 
           <TabsContent value="profile" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Informações Pessoais</CardTitle>
-                <CardDescription>
-                  Atualize suas informações de perfil
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">Nome</Label>
-                    <Input
-                      id="firstName"
-                      value={profile.firstName}
-                      onChange={(e) => setProfile({...profile, firstName: e.target.value})}
-                      placeholder="Seu nome"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Sobrenome</Label>
-                    <Input
-                      id="lastName"
-                      value={profile.lastName}
-                      onChange={(e) => setProfile({...profile, lastName: e.target.value})}
-                      placeholder="Seu sobrenome"
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={profile.email}
-                    onChange={(e) => setProfile({...profile, email: e.target.value})}
-                    placeholder="seu@email.com"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Telefone</Label>
-                    <Input
-                      id="phone"
-                      value={profile.phone}
-                      onChange={(e) => setProfile({...profile, phone: e.target.value})}
-                      placeholder="(11) 99999-9999"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="position">Cargo</Label>
-                    <Select value={profile.position} onValueChange={(value) => setProfile({...profile, position: value})}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione seu cargo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="advogado">Advogado</SelectItem>
-                        <SelectItem value="estagiario">Estagiário</SelectItem>
-                        <SelectItem value="secretario">Secretário</SelectItem>
-                        <SelectItem value="administrador">Administrador</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                
-                <Button onClick={handleSaveProfile} className="bg-lawblue-500 hover:bg-lawblue-600">
-                  Salvar Alterações
-                </Button>
-              </CardContent>
-            </Card>
+            <ProfileSettings />
           </TabsContent>
 
           <TabsContent value="notifications" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Preferências de Notificação</CardTitle>
-                <CardDescription>
-                  Configure como você deseja receber notificações
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="flex items-center gap-2">
-                        <Mail className="h-4 w-4" />
-                        Notificações por Email
-                      </Label>
-                      <p className="text-sm text-gray-500">Receba notificações importantes por email</p>
-                    </div>
-                    <Switch
-                      checked={notifications.email}
-                      onCheckedChange={(checked) => setNotifications({...notifications, email: checked})}
-                    />
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Notificações Push</Label>
-                      <p className="text-sm text-gray-500">Receba notificações push no navegador</p>
-                    </div>
-                    <Switch
-                      checked={notifications.push}
-                      onCheckedChange={(checked) => setNotifications({...notifications, push: checked})}
-                    />
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Novos Leads</Label>
-                      <p className="text-sm text-gray-500">Seja notificado quando novos leads chegarem</p>
-                    </div>
-                    <Switch
-                      checked={notifications.leads}
-                      onCheckedChange={(checked) => setNotifications({...notifications, leads: checked})}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Tarefas Vencendo</Label>
-                      <p className="text-sm text-gray-500">Lembrete de tarefas próximas do vencimento</p>
-                    </div>
-                    <Switch
-                      checked={notifications.tasks}
-                      onCheckedChange={(checked) => setNotifications({...notifications, tasks: checked})}
-                    />
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Atualizações de Processos</Label>
-                      <p className="text-sm text-gray-500">Notificações sobre mudanças em processos</p>
-                    </div>
-                    <Switch
-                      checked={notifications.processes}
-                      onCheckedChange={(checked) => setNotifications({...notifications, processes: checked})}
-                    />
-                  </div>
-                </div>
-                
-                <Button onClick={handleSaveNotifications} className="bg-lawblue-500 hover:bg-lawblue-600">
-                  Salvar Preferências
-                </Button>
-              </CardContent>
-            </Card>
+            <NotificationSettings />
           </TabsContent>
 
           <TabsContent value="security" className="space-y-6">
@@ -254,176 +75,15 @@ export default function Configuracoes() {
           </TabsContent>
 
           <TabsContent value="appearance" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Preferências de Aparência</CardTitle>
-                <CardDescription>
-                  Personalize a aparência do sistema
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Tema</Label>
-                    <Select defaultValue="light">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="light">Claro</SelectItem>
-                        <SelectItem value="dark">Escuro</SelectItem>
-                        <SelectItem value="system">Sistema</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Idioma</Label>
-                    <Select defaultValue="pt-BR">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pt-BR">Português (Brasil)</SelectItem>
-                        <SelectItem value="en-US">English (US)</SelectItem>
-                        <SelectItem value="es-ES">Español</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Fuso Horário</Label>
-                    <Select defaultValue="America/Sao_Paulo">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="America/Sao_Paulo">São Paulo (UTC-3)</SelectItem>
-                        <SelectItem value="America/New_York">New York (UTC-5)</SelectItem>
-                        <SelectItem value="Europe/London">London (UTC+0)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                
-                <Button className="bg-lawblue-500 hover:bg-lawblue-600">
-                  Salvar Preferências
-                </Button>
-              </CardContent>
-            </Card>
+            <AppearanceSettings />
           </TabsContent>
 
           <TabsContent value="integrations" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Integrações Disponíveis</CardTitle>
-                <CardDescription>
-                  Configure integrações com serviços externos
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-3 mb-3">
-                      <Calendar className="h-6 w-6 text-blue-600" />
-                      <div>
-                        <h4 className="font-medium">Google Calendar</h4>
-                        <p className="text-sm text-gray-500">Sincronize eventos e compromissos</p>
-                      </div>
-                    </div>
-                    <Button variant="outline" className="w-full">
-                      Configurar
-                    </Button>
-                  </div>
-                  
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-3 mb-3">
-                      <FileText className="h-6 w-6 text-green-600" />
-                      <div>
-                        <h4 className="font-medium">Google Sheets</h4>
-                        <p className="text-sm text-gray-500">Exporte dados para planilhas</p>
-                      </div>
-                    </div>
-                    <Button variant="outline" className="w-full">
-                      Configurar
-                    </Button>
-                  </div>
-                  
-                  <div className="p-4 border rounded-lg opacity-50">
-                    <div className="flex items-center gap-3 mb-3">
-                      <Mail className="h-6 w-6 text-yellow-600" />
-                      <div>
-                        <h4 className="font-medium">WhatsApp Business</h4>
-                        <p className="text-sm text-gray-500">Envio de notificações (Em breve)</p>
-                      </div>
-                    </div>
-                    <Button variant="outline" className="w-full" disabled>
-                      Em Desenvolvimento
-                    </Button>
-                  </div>
-                  
-                  <div className="p-4 border rounded-lg opacity-50">
-                    <div className="flex items-center gap-3 mb-3">
-                      <Settings className="h-6 w-6 text-purple-600" />
-                      <div>
-                        <h4 className="font-medium">API Externa</h4>
-                        <p className="text-sm text-gray-500">Integração personalizada (Em breve)</p>
-                      </div>
-                    </div>
-                    <Button variant="outline" className="w-full" disabled>
-                      Em Desenvolvimento
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <IntegrationsSettings />
           </TabsContent>
 
           <TabsContent value="data" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Gerenciamento de Dados</CardTitle>
-                <CardDescription>
-                  Exporte, importe ou limpe seus dados
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="space-y-0.5">
-                      <Label className="flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        Exportar Dados
-                      </Label>
-                      <p className="text-sm text-gray-500">Baixe todos os seus dados em formato JSON</p>
-                    </div>
-                    <Button variant="outline" onClick={handleExportData}>
-                      Exportar
-                    </Button>
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="space-y-0.5">
-                      <Label>Importar Dados</Label>
-                      <p className="text-sm text-gray-500">Importe dados de outro sistema</p>
-                    </div>
-                    <Button variant="outline">
-                      Importar
-                    </Button>
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-4 border rounded-lg border-red-200">
-                    <div className="space-y-0.5">
-                      <Label className="text-red-600">Limpar Todos os Dados</Label>
-                      <p className="text-sm text-gray-500">Esta ação não pode ser desfeita</p>
-                    </div>
-                    <Button variant="destructive">
-                      Limpar
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <DataSettings />
           </TabsContent>
         </Tabs>
       </div>
