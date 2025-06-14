@@ -35,6 +35,16 @@ export function useSecuritySessions() {
           last_activity: new Date().toISOString(),
           created_at: new Date().toISOString(),
           expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          id: '2',
+          session_token: 'old-session-1',
+          ip_address: '192.168.1.100',
+          user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          is_active: false,
+          last_activity: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+          expires_at: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000).toISOString()
         }
       ];
       setSessions(mockSessions);

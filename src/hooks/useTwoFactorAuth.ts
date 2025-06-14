@@ -21,8 +21,8 @@ export function useTwoFactorAuth() {
     if (!user) return;
 
     try {
-      // Simulação de dados 2FA
-      setTwoFA(null); // Inicialmente não configurado
+      // Simulação de dados 2FA - inicialmente não configurado
+      setTwoFA(null);
     } catch (error) {
       console.error('Erro ao buscar 2FA:', error);
       toast.error('Erro ao carregar configurações de 2FA');
@@ -56,7 +56,8 @@ export function useTwoFactorAuth() {
       const backupCodes = generateBackupCodes();
       
       const appName = 'MRL Advogados CRM';
-      const qrUrl = `otpauth://totp/${encodeURIComponent(appName)}:${encodeURIComponent(user.email || '')}?secret=${secret}&issuer=${encodeURIComponent(appName)}`;
+      const userEmail = user.email || 'usuario@exemplo.com';
+      const qrUrl = `otpauth://totp/${encodeURIComponent(appName)}:${encodeURIComponent(userEmail)}?secret=${secret}&issuer=${encodeURIComponent(appName)}`;
       setQrCode(qrUrl);
 
       const newTwoFA: TwoFactorAuth = {

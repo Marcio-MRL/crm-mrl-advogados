@@ -33,6 +33,18 @@ export function useLGPDConsents() {
           consent_type: 'marketing',
           consent_given: false,
           consent_date: new Date().toISOString()
+        },
+        {
+          id: '3',
+          consent_type: 'analytics',
+          consent_given: true,
+          consent_date: new Date().toISOString()
+        },
+        {
+          id: '4',
+          consent_type: 'cookies',
+          consent_given: true,
+          consent_date: new Date().toISOString()
         }
       ];
       setConsents(mockConsents);
