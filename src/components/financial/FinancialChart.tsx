@@ -1,22 +1,38 @@
 
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-
-const data = [
-  { month: 'Jan', receitas: 32000, despesas: 24000 },
-  { month: 'Fev', receitas: 38000, despesas: 28000 },
-  { month: 'Mar', receitas: 35000, despesas: 30000 },
-  { month: 'Abr', receitas: 43000, despesas: 31000 },
-  { month: 'Mai', receitas: 48350, despesas: 32768 },
-  { month: 'Jun', receitas: 0, despesas: 0 }, // Previsão
-];
+import { useFinancialData } from '@/hooks/useFinancialData';
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function FinancialChart() {
+  const { monthlyData, isLoading } = useFinancialData();
+
+  if (isLoading) {
+    return (
+      <div className="w-full h-72">
+        <Skeleton className="w-full h-full" />
+      </div>
+    );
+  }
+
+  if (!monthlyData || monthlyData.length === 0) {
+    return (
+      <div className="w-full h-72 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-500">Nenhum dado disponível para exibir</p>
+          <p className="text-sm text-gray-400 mt-2">
+            Sincronize suas transações bancárias para ver o gráfico
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-72">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
-          data={data}
+          data={monthlyData}
           margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
         >
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
