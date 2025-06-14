@@ -2,39 +2,89 @@
 import React, { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Header } from '@/components/layout/Header';
-import { DocumentGrid } from '@/components/documents/DocumentGrid';
-import { DocumentTable } from '@/components/documents/DocumentTable';
-import { DocumentUploadForm } from '@/components/documents/DocumentUploadForm';
+import { GoogleDriveDocumentTable } from '@/components/documents/GoogleDriveDocumentTable';
+import { GoogleDriveUploadForm } from '@/components/documents/GoogleDriveUploadForm';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { 
   Upload, 
   Search, 
-  Grid3X3, 
-  List, 
   FolderPlus,
-  Filter
+  Filter,
+  FileText,
+  HardDrive
 } from 'lucide-react';
+import { useDocuments } from '@/hooks/useDocuments';
+import { useGoogleDrive, type DocumentMetadata } from '@/hooks/useGoogleDrive';
 
 export default function Documentos() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [documentToDelete, setDocumentToDelete] = useState<DocumentMetadata | null>(null);
+  
+  const { documents, loading } = useDocuments();
+  const { deleteFile, isConnected } = useGoogleDrive();
+
+  const filteredDocuments = documents.filter(doc => 
+    doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    doc.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    doc.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleUploadSuccess = () => {
     setIsUploadModalOpen(false);
-    // Aqui seria onde atualizaríamos a lista de documentos
   };
+
+  const handleDeleteDocument = (document: DocumentMetadata) => {
+    setDocumentToDelete(document);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (documentToDelete) {
+      await deleteFile(documentToDelete.id, documentToDelete.drive_file_id);
+      setIsDeleteModalOpen(false);
+      setDocumentToDelete(null);
+    }
+  };
+
+  const getCategoryCounts = () => {
+    const counts = documents.reduce((acc, doc) => {
+      acc[doc.category] = (acc[doc.category] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return {
+      total: documents.length,
+      contratos: counts.contrato || 0,
+      peticoes: counts.peticao || 0,
+      procuracoes: counts.procuracao || 0,
+      outros: Object.values(counts).reduce((sum, count) => sum + count, 0) - (counts.contrato || 0) - (counts.peticao || 0) - (counts.procuracao || 0)
+    };
+  };
+
+  const stats = getCategoryCounts();
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
       <div className="w-full space-y-6">
         <Header 
-          title="Documentos" 
-          subtitle="Gestão de documentos do escritório" 
+          title="Documentos - Google Drive" 
+          subtitle="Gestão de documentos integrada com Google Drive" 
         />
         
         {/* Estatísticas de Documentos */}
@@ -44,10 +94,10 @@ export default function Documentos() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total de Documentos</p>
-                  <p className="text-2xl font-bold">156</p>
+                  <p className="text-2xl font-bold">{stats.total}</p>
                 </div>
                 <div className="p-2 bg-blue-100 rounded-lg">
-                  <Upload className="h-6 w-6 text-blue-600" />
+                  <FileText className="h-6 w-6 text-blue-600" />
                 </div>
               </div>
             </CardContent>
@@ -57,44 +107,59 @@ export default function Documentos() {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">PDFs</p>
-                  <p className="text-2xl font-bold">89</p>
-                </div>
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <Upload className="h-6 w-6 text-red-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Documentos Word</p>
-                  <p className="text-2xl font-bold">42</p>
-                </div>
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Upload className="h-6 w-6 text-blue-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Planilhas</p>
-                  <p className="text-2xl font-bold">25</p>
+                  <p className="text-sm font-medium text-gray-600">Contratos</p>
+                  <p className="text-2xl font-bold">{stats.contratos}</p>
                 </div>
                 <div className="p-2 bg-green-100 rounded-lg">
-                  <Upload className="h-6 w-6 text-green-600" />
+                  <FileText className="h-6 w-6 text-green-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Petições</p>
+                  <p className="text-2xl font-bold">{stats.peticoes}</p>
+                </div>
+                <div className="p-2 bg-yellow-100 rounded-lg">
+                  <FileText className="h-6 w-6 text-yellow-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Procurações</p>
+                  <p className="text-2xl font-bold">{stats.procuracoes}</p>
+                </div>
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <FileText className="h-6 w-6 text-purple-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Status da conexão com Google Drive */}
+        {!isConnected && (
+          <Card className="border-orange-200 bg-orange-50">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <HardDrive className="h-5 w-5 text-orange-600" />
+                <div>
+                  <p className="font-medium text-orange-800">Google Drive não conectado</p>
+                  <p className="text-sm text-orange-600">Vá para Configurações → Integrações para conectar sua conta do Google Drive.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
         
         {/* Barra de Ferramentas */}
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -114,34 +179,16 @@ export default function Documentos() {
           </div>
           
           <div className="flex items-center gap-2">
-            <div className="flex bg-gray-100 rounded-lg p-1">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-                className="px-3"
-              >
-                <Grid3X3 className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'table' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('table')}
-                className="px-3"
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
-            
             <Button 
               onClick={() => setIsUploadModalOpen(true)}
               className="bg-lawblue-500 hover:bg-lawblue-600"
+              disabled={!isConnected}
             >
               <Upload className="h-4 w-4 mr-2" />
-              Upload
+              Upload para Drive
             </Button>
             
-            <Button variant="outline">
+            <Button variant="outline" disabled>
               <FolderPlus className="h-4 w-4 mr-2" />
               Nova Pasta
             </Button>
@@ -151,26 +198,47 @@ export default function Documentos() {
         {/* Área de Documentos */}
         <Card>
           <CardHeader>
-            <CardTitle>Biblioteca de Documentos</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <HardDrive className="h-5 w-5" />
+              Biblioteca de Documentos (Google Drive)
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            {viewMode === 'grid' ? (
-              <DocumentGrid searchQuery={searchQuery} />
-            ) : (
-              <DocumentTable searchQuery={searchQuery} />
-            )}
+            <GoogleDriveDocumentTable 
+              documents={filteredDocuments}
+              onDelete={handleDeleteDocument}
+            />
           </CardContent>
         </Card>
         
         {/* Modal de Upload */}
         <Dialog open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
-          <DialogContent>
+          <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Upload de Documento</DialogTitle>
+              <DialogTitle>Upload de Documento para Google Drive</DialogTitle>
             </DialogHeader>
-            <DocumentUploadForm onSuccess={handleUploadSuccess} />
+            <GoogleDriveUploadForm onSuccess={handleUploadSuccess} />
           </DialogContent>
         </Dialog>
+
+        {/* Modal de Confirmação de Exclusão */}
+        <AlertDialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Excluir Documento</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir o documento "{documentToDelete?.name}"? 
+                Esta ação é irreversível e o arquivo será removido do Google Drive.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
+                Excluir
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </MainLayout>
   );

@@ -262,6 +262,66 @@ export type Database = {
           },
         ]
       }
+      documents: {
+        Row: {
+          category: string
+          client_id: string | null
+          created_at: string | null
+          description: string | null
+          drive_file_id: string
+          file_size: number
+          id: string
+          mime_type: string
+          name: string
+          process_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category: string
+          client_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          drive_file_id: string
+          file_size?: number
+          id?: string
+          mime_type: string
+          name: string
+          process_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          client_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          drive_file_id?: string
+          file_size?: number
+          id?: string
+          mime_type?: string
+          name?: string
+          process_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           created_at: string
