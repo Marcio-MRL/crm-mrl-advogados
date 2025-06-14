@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -179,12 +178,12 @@ export default function Auth() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <Card className="w-full max-w-sm">
-        <CardHeader className="text-center space-y-3 pb-4">
+        <CardHeader className="text-center space-y-4 pb-6">
           <div className="flex justify-center">
             <img 
               src="/lovable-uploads/27ce3e50-3cad-44f4-a295-b4890ec2ce52.png" 
               alt="MRL Advogados" 
-              className="h-12 w-auto"
+              className="h-18 w-auto"
             />
           </div>
           <CardDescription className="text-xs text-gray-600">
@@ -192,7 +191,7 @@ export default function Auth() {
           </CardDescription>
         </CardHeader>
         
-        <div className="px-6 pb-4">
+        <div className="px-6 pb-6">
           <Alert className="border-blue-200 bg-blue-50">
             <AlertCircle className="h-3 w-3 text-blue-600" />
             <AlertDescription className="text-xs leading-relaxed text-blue-800">
