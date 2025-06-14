@@ -116,7 +116,7 @@ export function useGoogleDrive() {
 
       // 2. Salvar metadados no Supabase
       const { data: documentData, error: supabaseError } = await supabase
-        .from('documents')
+        .from('documents' as any)
         .insert({
           drive_file_id: driveFile.id,
           name: metadata.name,
@@ -175,7 +175,7 @@ export function useGoogleDrive() {
 
       // 2. Remover metadados do Supabase
       const { error } = await supabase
-        .from('documents')
+        .from('documents' as any)
         .delete()
         .eq('id', documentId);
 

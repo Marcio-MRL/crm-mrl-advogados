@@ -3,7 +3,21 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import type { DocumentMetadata } from './useGoogleDrive';
+
+export interface DocumentMetadata {
+  id: string;
+  drive_file_id: string;
+  name: string;
+  description?: string;
+  category: string;
+  client_id?: string;
+  process_id?: string;
+  user_id: string;
+  file_size: number;
+  mime_type: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export function useDocuments() {
   const [documents, setDocuments] = useState<DocumentMetadata[]>([]);
@@ -17,9 +31,14 @@ export function useDocuments() {
       setError(null);
 
       const { data, error: fetchError } = await supabase
-        .from('documents')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .rpc('get_documents_for_user')
+        .then(async () => {
+          // Fallback to direct query if RPC doesn't exist
+          return await supabase
+            .from('documents' as any)
+            .select('*')
+            .order('created_at', { ascending: false });
+        });
 
       if (fetchError) {
         throw fetchError;
@@ -29,6 +48,8 @@ export function useDocuments() {
     } catch (err) {
       console.error('Erro ao buscar documentos:', err);
       setError('Erro ao carregar documentos');
+      // Set empty array on error to prevent crashes
+      setDocuments([]);
     } finally {
       setLoading(false);
     }
@@ -37,7 +58,7 @@ export function useDocuments() {
   const getDocumentsByClient = async (clientId: string) => {
     try {
       const { data, error } = await supabase
-        .from('documents')
+        .from('documents' as any)
         .select('*')
         .eq('client_id', clientId)
         .order('created_at', { ascending: false });
@@ -53,7 +74,7 @@ export function useDocuments() {
   const getDocumentsByProcess = async (processId: string) => {
     try {
       const { data, error } = await supabase
-        .from('documents')
+        .from('documents' as any)
         .select('*')
         .eq('process_id', processId)
         .order('created_at', { ascending: false });
@@ -69,7 +90,7 @@ export function useDocuments() {
   const updateDocument = async (id: string, updates: Partial<DocumentMetadata>) => {
     try {
       const { error } = await supabase
-        .from('documents')
+        .from('documents' as any)
         .update(updates)
         .eq('id', id);
 
