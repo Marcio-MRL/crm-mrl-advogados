@@ -179,16 +179,25 @@ export default function Auth() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-lawblue-800">MRL Advogados</CardTitle>
-          <CardDescription>
-            Sistema de gestão jurídica
-          </CardDescription>
+        <CardHeader className="text-center space-y-4">
+          <div className="flex justify-center">
+            <img 
+              src="/lovable-uploads/27ce3e50-3cad-44f4-a295-b4890ec2ce52.png" 
+              alt="MRL Advogados" 
+              className="h-16 w-auto"
+            />
+          </div>
+          <div>
+            <CardTitle className="text-xl font-bold text-lawblue-800">MRL Advogados</CardTitle>
+            <CardDescription className="text-sm">
+              Sistema de gestão jurídica
+            </CardDescription>
+          </div>
         </CardHeader>
         
         <Alert className="mx-6 mb-4">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
+          <AlertDescription className="text-xs leading-relaxed">
             Acesso restrito ao domínio @mrladvogados.com.br. Novos usuários precisam de aprovação do administrador.
           </AlertDescription>
         </Alert>
@@ -203,7 +212,7 @@ export default function Auth() {
             <form onSubmit={handleSignIn}>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email-login">Email</Label>
+                  <Label htmlFor="email-login" className="text-sm">Email</Label>
                   <Input 
                     id="email-login"
                     type="email" 
@@ -211,23 +220,25 @@ export default function Auth() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    className="text-sm"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password-login">Senha</Label>
+                  <Label htmlFor="password-login" className="text-sm">Senha</Label>
                   <Input 
                     id="password-login"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    className="text-sm"
                   />
                 </div>
               </CardContent>
               <CardFooter>
                 <Button 
                   type="submit" 
-                  className="w-full bg-lawblue-600 hover:bg-lawblue-700"
+                  className="w-full bg-lawblue-600 hover:bg-lawblue-700 text-sm"
                   disabled={loading}
                 >
                   {loading ? 'Processando...' : 'Entrar'}
@@ -241,26 +252,28 @@ export default function Auth() {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="first-name">Nome</Label>
+                    <Label htmlFor="first-name" className="text-sm">Nome</Label>
                     <Input 
                       id="first-name"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       required
+                      className="text-sm"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="last-name">Sobrenome</Label>
+                    <Label htmlFor="last-name" className="text-sm">Sobrenome</Label>
                     <Input 
                       id="last-name"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       required
+                      className="text-sm"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email-register">Email</Label>
+                  <Label htmlFor="email-register" className="text-sm">Email</Label>
                   <Input 
                     id="email-register"
                     type="email" 
@@ -268,10 +281,11 @@ export default function Auth() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    className="text-sm"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password-register">Senha</Label>
+                  <Label htmlFor="password-register" className="text-sm">Senha</Label>
                   <Input 
                     id="password-register"
                     type="password"
@@ -279,6 +293,7 @@ export default function Auth() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     minLength={6}
+                    className="text-sm"
                   />
                   <p className="text-xs text-gray-500">Mínimo de 6 caracteres</p>
                 </div>
@@ -286,7 +301,7 @@ export default function Auth() {
               <CardFooter>
                 <Button 
                   type="submit" 
-                  className="w-full bg-lawblue-600 hover:bg-lawblue-700"
+                  className="w-full bg-lawblue-600 hover:bg-lawblue-700 text-sm"
                   disabled={loading}
                 >
                   {loading ? 'Processando...' : 'Cadastrar'}
