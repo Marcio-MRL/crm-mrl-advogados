@@ -58,16 +58,25 @@ export function useAuthValidation() {
 
     console.log('useAuthValidation: Email domain valid, checking profile');
 
-    // Verificar se tem perfil
+    // MUDANÇA IMPORTANTE: Aguardar mais tempo para o perfil carregar
+    // Se o usuário existe mas ainda não temos perfil, aguardar um pouco mais
     if (!userProfile) {
-      console.log('useAuthValidation: No profile found');
-      setValidationState({
-        isValid: false,
-        reason: 'no_profile',
-        shouldRedirect: true,
-        redirectTo: '/auth'
-      });
-      return;
+      console.log('useAuthValidation: No profile found, but user exists - waiting longer');
+      
+      // Só considerar "no_profile" após um tempo maior
+      const timer = setTimeout(() => {
+        if (!userProfile && user) {
+          console.log('useAuthValidation: Profile still not found after timeout');
+          setValidationState({
+            isValid: false,
+            reason: 'no_profile',
+            shouldRedirect: true,
+            redirectTo: '/auth'
+          });
+        }
+      }, 2000); // Aguardar 2 segundos para o perfil carregar
+
+      return () => clearTimeout(timer);
     }
 
     console.log('useAuthValidation: Profile found, checking status:', userProfile.status);

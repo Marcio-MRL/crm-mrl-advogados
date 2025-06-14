@@ -91,6 +91,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (currentSession?.user) {
           console.log('AuthContext: User authenticated, fetching profile...');
+          // Manter loading true enquanto busca o perfil
+          setLoading(true);
           // Usar timeout maior e passar a sessão para garantir que está ativa
           setTimeout(async () => {
             try {
@@ -125,6 +127,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (currentSession?.user) {
         console.log('AuthContext: Existing session found, fetching profile...');
+        // Manter loading true enquanto busca o perfil
+        setLoading(true);
         setTimeout(async () => {
           try {
             const profile = await fetchUserProfile(currentSession.user.id, currentSession);
