@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FolderPlus } from 'lucide-react';
 import { useGoogleDrive } from '@/hooks/useGoogleDrive';
+import { GoogleDriveApiService } from '@/services/googleDriveApi';
 import { toast } from 'sonner';
+import { FolderSelector } from './FolderSelector';
 
 interface CreateFolderModalProps {
   isOpen: boolean;
@@ -15,6 +17,7 @@ interface CreateFolderModalProps {
 
 export function CreateFolderModal({ isOpen, onClose }: CreateFolderModalProps) {
   const [folderName, setFolderName] = useState('');
+  const [parentFolderId, setParentFolderId] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const { driveToken, isConnected } = useGoogleDrive();
 
@@ -34,28 +37,19 @@ export function CreateFolderModal({ isOpen, onClose }: CreateFolderModalProps) {
     setLoading(true);
 
     try {
-      // Usar a API do Google Drive diretamente aqui
-      const response = await fetch('https://www.googleapis.com/drive/v3/files', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${driveToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: folderName.trim(),
-          mimeType: 'application/vnd.google-apps.folder'
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao criar pasta');
-      }
-
-      const result = await response.json();
+      const driveService = new GoogleDriveApiService(driveToken);
+      const result = await driveService.createFolder(
+        folderName.trim(), 
+        parentFolderId || undefined
+      );
+      
       console.log('✅ Pasta criada com sucesso:', result);
       
-      toast.success(`Pasta "${folderName}" criada com sucesso!`);
+      const parentName = parentFolderId === 'root' ? 'raiz' : 'pasta selecionada';
+      toast.success(`Pasta "${folderName}" criada com sucesso na ${parentName}!`);
+      
       setFolderName('');
+      setParentFolderId('');
       onClose();
 
     } catch (error) {
@@ -68,6 +62,7 @@ export function CreateFolderModal({ isOpen, onClose }: CreateFolderModalProps) {
 
   const handleClose = () => {
     setFolderName('');
+    setParentFolderId('');
     onClose();
   };
 
@@ -82,6 +77,13 @@ export function CreateFolderModal({ isOpen, onClose }: CreateFolderModalProps) {
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
+          <FolderSelector
+            selectedFolderId={parentFolderId}
+            onFolderChange={setParentFolderId}
+            label="Pasta pai (onde criar)"
+            placeholder="Selecione onde criar a pasta (opcional)"
+          />
+          
           <div>
             <Label htmlFor="folderName">Nome da pasta *</Label>
             <Input

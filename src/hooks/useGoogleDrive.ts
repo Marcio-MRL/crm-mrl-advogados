@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -70,7 +69,7 @@ export function useGoogleDrive() {
 
   const uploadFile = async (
     file: File, 
-    metadata: UploadMetadata
+    metadata: UploadMetadata & { parent_folder_id?: string }
   ): Promise<DocumentMetadata | null> => {
     if (!driveToken || !isConnected) {
       toast.error('Conecte-se ao Google Drive primeiro nas configurações');
@@ -89,8 +88,8 @@ export function useGoogleDrive() {
       
       const driveService = new GoogleDriveApiService(driveToken);
       
-      // 1. Upload para Google Drive
-      const driveFile = await driveService.uploadFile(file);
+      // 1. Upload para Google Drive com pasta específica
+      const driveFile = await driveService.uploadFile(file, metadata.parent_folder_id);
       console.log('✅ Arquivo enviado para o Google Drive:', driveFile);
 
       // 2. Salvar metadados no Supabase

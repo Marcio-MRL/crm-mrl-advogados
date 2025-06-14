@@ -9,6 +9,7 @@ import { Upload, FileText, AlertCircle } from 'lucide-react';
 import { useGoogleDrive } from '@/hooks/useGoogleDrive';
 import { useDocuments } from '@/hooks/useDocuments';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { FolderSelector } from './FolderSelector';
 
 interface GoogleDriveUploadFormProps {
   onSuccess?: () => void;
@@ -29,6 +30,7 @@ export function GoogleDriveUploadForm({
   const [category, setCategory] = useState('');
   const [clientId, setClientId] = useState(preselectedClient || '');
   const [processId, setProcessId] = useState(preselectedProcess || '');
+  const [selectedFolderId, setSelectedFolderId] = useState<string>('');
 
   const { uploadFile, loading, isConnected } = useGoogleDrive();
   const { fetchDocuments } = useDocuments();
@@ -58,15 +60,7 @@ export function GoogleDriveUploadForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!file) {
-      return;
-    }
-
-    if (!name.trim()) {
-      return;
-    }
-
-    if (!category) {
+    if (!file || !name.trim() || !category) {
       return;
     }
 
@@ -76,6 +70,7 @@ export function GoogleDriveUploadForm({
       category,
       client_id: clientId || undefined,
       process_id: processId || undefined,
+      parent_folder_id: selectedFolderId || undefined,
     });
 
     if (result) {
@@ -86,6 +81,7 @@ export function GoogleDriveUploadForm({
       setCategory('');
       setClientId('');
       setProcessId('');
+      setSelectedFolderId('');
       
       // Refresh documents list
       await fetchDocuments();
@@ -132,6 +128,13 @@ export function GoogleDriveUploadForm({
           </div>
         )}
       </div>
+
+      <FolderSelector
+        selectedFolderId={selectedFolderId}
+        onFolderChange={setSelectedFolderId}
+        label="Pasta de destino"
+        placeholder="Selecione onde salvar o arquivo"
+      />
 
       <div>
         <Label htmlFor="name">Nome do documento *</Label>

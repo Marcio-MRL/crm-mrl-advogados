@@ -58,10 +58,10 @@ export class GoogleDriveApiService {
     }
   }
 
-  async uploadFile(file: File): Promise<any> {
+  async uploadFile(file: File, parentFolderId?: string): Promise<any> {
     try {
-      // Garantir que temos uma pasta válida
-      const folderId = await this.ensureDocumentsFolder();
+      // Se não especificou pasta, usar a pasta padrão MRL Documentos
+      const folderId = parentFolderId || await this.ensureDocumentsFolder();
       
       const formData = new FormData();
       const driveMetadata = {
@@ -138,11 +138,11 @@ export class GoogleDriveApiService {
     }
   }
 
-  // Método para listar pastas (para implementação futura do botão "Nova Pasta")
+  // Método para listar pastas
   async listFolders(): Promise<any[]> {
     try {
       const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.folder' and trashed=false&fields=files(id,name,modifiedTime)`,
+        `https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.folder' and trashed=false&fields=files(id,name,modifiedTime)&orderBy=name`,
         {
           headers: {
             'Authorization': `Bearer ${this.token}`,
@@ -170,7 +170,7 @@ export class GoogleDriveApiService {
         mimeType: 'application/vnd.google-apps.folder'
       };
 
-      if (parentId) {
+      if (parentId && parentId !== 'root') {
         metadata.parents = [parentId];
       }
 
