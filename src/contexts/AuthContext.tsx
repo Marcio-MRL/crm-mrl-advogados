@@ -27,17 +27,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUserProfile = async (userId: string) => {
+  const fetchUserProfile = async (userId: string, currentSession: Session) => {
     try {
       console.log('AuthContext: Fetching profile for user:', userId);
+      console.log('AuthContext: Session token available:', !!currentSession.access_token);
       
-      // Primeiro vamos verificar se o usuário está autenticado
-      const { data: sessionData } = await supabase.auth.getSession();
-      console.log('AuthContext: Current session check:', {
-        hasSession: !!sessionData.session,
-        sessionUserId: sessionData.session?.user?.id
-      });
-
+      // Aguardar um pouco mais para garantir que a sessão está ativa
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       // Fazer a consulta com mais detalhes de debug
       const { data, error, count } = await supabase
         .from('profiles')
@@ -71,9 +68,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const refreshProfile = async () => {
-    if (user) {
+    if (user && session) {
       console.log('AuthContext: Refreshing profile for user:', user.id);
-      const profile = await fetchUserProfile(user.id);
+      const profile = await fetchUserProfile(user.id, session);
       setUserProfile(profile);
     }
   };
@@ -94,10 +91,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (currentSession?.user) {
           console.log('AuthContext: User authenticated, fetching profile...');
-          // Usar timeout para evitar deadlock
+          // Usar timeout maior e passar a sessão para garantir que está ativa
           setTimeout(async () => {
             try {
-              const profile = await fetchUserProfile(currentSession.user.id);
+              const profile = await fetchUserProfile(currentSession.user.id, currentSession);
               console.log('AuthContext: Setting profile:', profile);
               setUserProfile(profile);
               setLoading(false);
@@ -105,7 +102,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               console.error('AuthContext: Error in profile fetch timeout:', error);
               setLoading(false);
             }
-          }, 100);
+          }, 500);
         } else {
           console.log('AuthContext: No user, clearing profile and setting loading false');
           setUserProfile(null);
@@ -130,7 +127,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.log('AuthContext: Existing session found, fetching profile...');
         setTimeout(async () => {
           try {
-            const profile = await fetchUserProfile(currentSession.user.id);
+            const profile = await fetchUserProfile(currentSession.user.id, currentSession);
             console.log('AuthContext: Setting profile from existing session:', profile);
             setUserProfile(profile);
             setLoading(false);
@@ -138,7 +135,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             console.error('AuthContext: Error in existing session profile fetch:', error);
             setLoading(false);
           }
-        }, 100);
+        }, 500);
       } else {
         console.log('AuthContext: No existing session, setting loading false');
         setLoading(false);
