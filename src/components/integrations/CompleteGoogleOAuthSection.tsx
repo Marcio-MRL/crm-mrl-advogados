@@ -3,80 +3,39 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, FileText, HardDrive, Check, ExternalLink, Unlink, AlertCircle } from 'lucide-react';
+import { Calendar, Sheet, HardDrive, Unlink } from 'lucide-react';
 import { useGoogleOAuthComplete } from '@/hooks/useGoogleOAuthComplete';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export function CompleteGoogleOAuthSection() {
   const { user } = useAuth();
   const { 
-    tokens,
-    loading,
+    tokens, 
+    loading, 
     clientId,
-    initiateOAuth,
-    revokeToken,
+    initiateOAuth, 
+    revokeToken, 
     isServiceConnected,
-    services
+    services 
   } = useGoogleOAuthComplete();
 
   const isAuthorizedDomain = user?.email?.endsWith('@mrladvogados.com.br');
 
-  const getServiceIcon = (service: string) => {
-    switch (service) {
-      case 'calendar': return Calendar;
-      case 'sheets': return FileText;
-      case 'drive': return HardDrive;
-      default: return FileText;
-    }
-  };
-
-  const getServiceColor = (service: string) => {
-    switch (service) {
-      case 'calendar': return 'text-blue-600';
-      case 'sheets': return 'text-green-600';
-      case 'drive': return 'text-yellow-600';
-      default: return 'text-gray-600';
-    }
-  };
-
-  const handleConnect = async (serviceType: 'calendar' | 'sheets' | 'drive') => {
-    if (!isAuthorizedDomain) {
-      toast.error('Integração disponível apenas para usuários do domínio @mrladvogados.com.br');
-      return;
-    }
-
-    if (!clientId) {
-      toast.error('Configure as credenciais OAuth do Google primeiro nas configurações do sistema.');
-      return;
-    }
-
-    try {
-      await initiateOAuth(serviceType);
-    } catch (error) {
-      console.error('Erro ao conectar:', error);
-      toast.error('Erro ao iniciar conexão com Google');
-    }
-  };
-
-  const handleDisconnect = async (serviceType: 'calendar' | 'sheets' | 'drive') => {
-    const serviceToken = tokens.find(token => 
-      token.scope?.includes(services.find(s => s.type === serviceType)?.scope || '')
-    );
-
-    if (serviceToken) {
-      await revokeToken(serviceToken.id);
-    } else {
-      toast.info(`${serviceType} não está conectado`);
-    }
-  };
+  console.log('CompleteGoogleOAuthSection Debug:', {
+    clientId,
+    isAuthorizedDomain,
+    tokens,
+    loading
+  });
 
   if (loading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Integrações Google</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Integrações Google OAuth
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="animate-pulse">Carregando integrações...</div>
@@ -85,139 +44,131 @@ export function CompleteGoogleOAuthSection() {
     );
   }
 
+  const getServiceIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'Calendar':
+        return <Calendar className="h-8 w-8 text-blue-600" />;
+      case 'Sheet':
+        return <Sheet className="h-8 w-8 text-green-600" />;
+      case 'HardDrive':
+        return <HardDrive className="h-8 w-8 text-yellow-600" />;
+      default:
+        return <Calendar className="h-8 w-8 text-gray-600" />;
+    }
+  };
+
+  const getServiceColor = (color: string) => {
+    const colors = {
+      blue: 'bg-blue-600 hover:bg-blue-700',
+      green: 'bg-green-600 hover:bg-green-700',
+      yellow: 'bg-yellow-600 hover:bg-yellow-700'
+    };
+    return colors[color as keyof typeof colors] || 'bg-gray-600 hover:bg-gray-700';
+  };
+
+  const handleConnect = async (serviceType: 'calendar' | 'sheets' | 'drive') => {
+    console.log('Tentando conectar serviço:', serviceType);
+    console.log('Client ID disponível:', !!clientId);
+    console.log('Usuário autorizado:', isAuthorizedDomain);
+    
+    try {
+      await initiateOAuth(serviceType);
+    } catch (error) {
+      console.error('Erro ao conectar:', error);
+    }
+  };
+
+  const handleDisconnect = async (serviceType: 'calendar' | 'sheets' | 'drive') => {
+    const serviceConfig = services.find(s => s.type === serviceType);
+    if (!serviceConfig) return;
+
+    const token = tokens.find(t => 
+      t.scope?.includes(serviceConfig.scope)
+    );
+    
+    if (token) {
+      await revokeToken(token.id);
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <HardDrive className="h-5 w-5" />
-            Integrações Google OAuth
-          </CardTitle>
-          <CardDescription>
-            Configure integrações com serviços do Google para expandir funcionalidades
-          </CardDescription>
-          
-          {!isAuthorizedDomain && (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                As integrações Google estão disponíveis apenas para usuários do domínio @mrladvogados.com.br
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {!clientId && isAuthorizedDomain && (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Configure as credenciais OAuth do Google nas configurações do sistema para ativar as integrações.
-              </AlertDescription>
-            </Alert>
-          )}
-        </CardHeader>
-        
-        <CardContent className="space-y-4">
-          {services.map((service) => {
-            const Icon = getServiceIcon(service.type);
-            const isConnected = isServiceConnected(service.type);
-            
-            return (
-              <div key={service.type} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Icon className={`h-8 w-8 ${getServiceColor(service.type)}`} />
-                  <div>
-                    <h3 className="font-medium">{service.name}</h3>
-                    <p className="text-sm text-gray-500">{service.description}</p>
-                    {isConnected && (
-                      <div className="flex items-center gap-2 mt-1">
-                        <Check className="h-4 w-4 text-green-600" />
-                        <span className="text-sm text-green-600">Conectado e ativo</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  {isConnected ? (
-                    <>
-                      <Badge variant="default" className="bg-green-100 text-green-800">
-                        Conectado
-                      </Badge>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDisconnect(service.type)}
-                        disabled={!isAuthorizedDomain}
-                      >
-                        <Unlink className="h-4 w-4 mr-1" />
-                        Desconectar
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      onClick={() => handleConnect(service.type)}
-                      disabled={!isAuthorizedDomain || !clientId}
-                      className={`${service.color === 'blue' ? 'bg-blue-600 hover:bg-blue-700' : 
-                                  service.color === 'green' ? 'bg-green-600 hover:bg-green-700' : 
-                                  'bg-yellow-600 hover:bg-yellow-700'}`}
-                    >
-                      <Icon className="h-4 w-4 mr-1" />
-                      Conectar
-                    </Button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </CardContent>
-      </Card>
-
-      {/* Seção de ajuda */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ExternalLink className="h-5 w-5" />
-            Como Configurar Integrações Google
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <HardDrive className="h-5 w-5 text-blue-600 mt-0.5" />
-              <div className="flex-1">
-                <h4 className="font-medium text-blue-900 mb-1">Configuração OAuth</h4>
-                <p className="text-sm text-blue-700 mb-3">
-                  Para utilizar as integrações Google, configure as credenciais OAuth no Google Cloud Console:
-                </p>
-                <div className="space-y-2 text-sm text-blue-700">
-                  <p>1. Acesse o Google Cloud Console</p>
-                  <p>2. Configure as credenciais OAuth 2.0</p>
-                  <p>3. Adicione os tokens nas configurações do sistema</p>
-                  <p>4. Ative as APIs necessárias (Drive, Calendar, Sheets)</p>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open('https://console.cloud.google.com/', '_blank')}
-                className="text-blue-600 border-blue-200"
-              >
-                <ExternalLink className="h-4 w-4 mr-1" />
-                Console
-              </Button>
-            </div>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Calendar className="h-5 w-5" />
+          Integrações Google OAuth
+        </CardTitle>
+        <CardDescription>
+          Conecte-se aos serviços Google para expandir funcionalidades
+        </CardDescription>
+        {!isAuthorizedDomain && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+            <p className="text-sm text-yellow-800">
+              As integrações Google estão disponíveis apenas para usuários do domínio @mrladvogados.com.br
+            </p>
           </div>
-
-          {isAuthorizedDomain && (
-            <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-              <strong>Status do Sistema:</strong> {clientId ? 
-                'Credenciais OAuth configuradas. Você pode conectar aos serviços Google.' : 
-                'Credenciais OAuth não configuradas. Configure no Google Cloud Console primeiro.'
-              }
+        )}
+        {!clientId && isAuthorizedDomain && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p className="text-sm text-blue-800">
+              Configure as credenciais OAuth na seção de configurações para habilitar as integrações.
+            </p>
+          </div>
+        )}
+      </CardHeader>
+      
+      <CardContent className="space-y-4">
+        {services.map((service) => {
+          const isConnected = isServiceConnected(service.type);
+          const canConnect = isAuthorizedDomain && clientId;
+          
+          return (
+            <div key={service.type} className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center gap-3">
+                {getServiceIcon(service.icon)}
+                <div>
+                  <h3 className="font-medium">{service.name}</h3>
+                  <p className="text-sm text-gray-500">
+                    {service.description}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {isConnected ? (
+                  <>
+                    <Badge variant="default" className="bg-green-100 text-green-800">
+                      Conectado
+                    </Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDisconnect(service.type)}
+                      disabled={!canConnect}
+                    >
+                      <Unlink className="h-4 w-4 mr-1" />
+                      Desconectar
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    onClick={() => handleConnect(service.type)}
+                    disabled={!canConnect}
+                    className={canConnect ? getServiceColor(service.color) : ''}
+                  >
+                    {getServiceIcon(service.icon)}
+                    Conectar
+                  </Button>
+                )}
+              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+          );
+        })}
+
+        <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+          <strong>Nota:</strong> As integrações OAuth estão restritas ao domínio @mrladvogados.com.br 
+          e precisam ser configuradas com credenciais válidas do Google Cloud Console.
+        </div>
+      </CardContent>
+    </Card>
   );
 }

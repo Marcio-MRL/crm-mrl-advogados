@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -59,22 +58,34 @@ export function useGoogleOAuthComplete() {
   const { user } = useAuth();
 
   const fetchClientId = async () => {
+    if (!user) return null;
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return null;
 
-      const response = await fetch('/functions/v1/google-oauth-config', {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-      });
+      // Buscar configuração OAuth diretamente da tabela
+      const response = await fetch(
+        `https://ncficjpokmmsugykmtdu.supabase.co/rest/v1/google_oauth_configs?user_id=eq.${user.id}&service_type=eq.calendar&select=client_id`,
+        {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jZmljanBva21tc3VneWttdGR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY1MzY3NjQsImV4cCI6MjA2MjExMjc2NH0.qibulCIaQ-eLTJH3L-Z5nsfBGVj-CGlQsYCY3--uWOs',
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
-        return data.client_id;
+        console.log('Configurações OAuth encontradas:', data);
+        
+        if (data && data.length > 0 && data[0].client_id) {
+          return data[0].client_id;
+        }
       }
     } catch (error) {
-      console.warn('Could not fetch client ID from server, OAuth may not be fully configured');
+      console.warn('Erro ao buscar Client ID:', error);
     }
     return null;
   };
@@ -95,6 +106,7 @@ export function useGoogleOAuthComplete() {
         return;
       }
 
+      console.log('Tokens OAuth encontrados:', data);
       setTokens(data || []);
     } catch (error) {
       console.error('Erro ao buscar tokens OAuth:', error);
@@ -141,7 +153,7 @@ export function useGoogleOAuthComplete() {
     }
 
     if (!clientId) {
-      toast.error('OAuth não configurado. Configure as credenciais primeiro.');
+      toast.error('OAuth não configurado. Configure as credenciais primeiro na seção de configurações.');
       return;
     }
 
@@ -278,6 +290,7 @@ export function useGoogleOAuthComplete() {
     const initialize = async () => {
       if (user) {
         const id = await fetchClientId();
+        console.log('Client ID carregado:', id);
         setClientId(id);
         await fetchTokens();
       }
