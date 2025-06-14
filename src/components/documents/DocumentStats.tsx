@@ -1,80 +1,88 @@
 
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, File, FileSpreadsheet, FileImage } from 'lucide-react';
+import { FileText } from 'lucide-react';
+import type { DocumentMetadata } from '@/hooks/useGoogleDrive';
 
 interface DocumentStatsProps {
-  totalDocuments: number;
-  pdfCount: number;
-  docCount: number;
-  xlsCount: number;
-  imgCount: number;
+  documents: DocumentMetadata[];
 }
 
-export function DocumentStats({ 
-  totalDocuments, 
-  pdfCount, 
-  docCount, 
-  xlsCount, 
-  imgCount 
-}: DocumentStatsProps) {
-  const stats = [
-    {
-      label: 'Total de Documentos',
-      value: totalDocuments,
-      icon: FileText,
-      color: 'blue'
-    },
-    {
-      label: 'PDFs',
-      value: pdfCount,
-      icon: File,
-      color: 'red'
-    },
-    {
-      label: 'Documentos Word',
-      value: docCount,
-      icon: FileText,
-      color: 'blue'
-    },
-    {
-      label: 'Planilhas',
-      value: xlsCount,
-      icon: FileSpreadsheet,
-      color: 'green'
-    }
-  ];
+export function DocumentStats({ documents }: DocumentStatsProps) {
+  const getCategoryCounts = () => {
+    const counts = documents.reduce((acc, doc) => {
+      acc[doc.category] = (acc[doc.category] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
 
-  const getColorClasses = (color: string) => {
-    switch(color) {
-      case 'red':
-        return 'bg-red-100 text-red-600';
-      case 'green':
-        return 'bg-green-100 text-green-600';
-      case 'blue':
-        return 'bg-blue-100 text-blue-600';
-      default:
-        return 'bg-gray-100 text-gray-600';
-    }
+    return {
+      total: documents.length,
+      contratos: counts.contrato || 0,
+      peticoes: counts.peticao || 0,
+      procuracoes: counts.procuracao || 0,
+      outros: Object.values(counts).reduce((sum, count) => sum + count, 0) - (counts.contrato || 0) - (counts.peticao || 0) - (counts.procuracao || 0)
+    };
   };
+
+  const stats = getCategoryCounts();
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-      {stats.map((stat) => (
-        <Card key={stat.label}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                <p className="text-2xl font-bold">{stat.value}</p>
-              </div>
-              <div className={`p-2 rounded-lg ${getColorClasses(stat.color)}`}>
-                <stat.icon className="h-6 w-6" />
-              </div>
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total de Documentos</p>
+              <p className="text-2xl font-bold">{stats.total}</p>
             </div>
-          </CardContent>
-        </Card>
-      ))}
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <FileText className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Contratos</p>
+              <p className="text-2xl font-bold">{stats.contratos}</p>
+            </div>
+            <div className="p-2 bg-green-100 rounded-lg">
+              <FileText className="h-6 w-6 text-green-600" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Petições</p>
+              <p className="text-2xl font-bold">{stats.peticoes}</p>
+            </div>
+            <div className="p-2 bg-yellow-100 rounded-lg">
+              <FileText className="h-6 w-6 text-yellow-600" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Procurações</p>
+              <p className="text-2xl font-bold">{stats.procuracoes}</p>
+            </div>
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <FileText className="h-6 w-6 text-purple-600" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
