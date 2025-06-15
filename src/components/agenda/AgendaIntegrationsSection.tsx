@@ -21,36 +21,33 @@ export function AgendaIntegrationsSection({ onSyncComplete }: AgendaIntegrations
   } = useGoogleCalendarSync(onSyncComplete);
 
   return (
-    <div className="space-y-4">
-      {/* Google Calendar Integration */}
-      <Card className="bg-white/90 backdrop-blur-sm">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <CardTitle className="text-lg flex items-center gap-2">
-                📅 Google Calendar
-              </CardTitle>
-              <CardDescription className="text-sm">
-                Sincronize sua agenda com o Google Calendar
-              </CardDescription>
-            </div>
-            <Badge variant={isConnected ? "default" : "secondary"} className="text-xs">
-              {isConnected ? "Conectado" : "Desconectado"}
-            </Badge>
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <CardTitle className="text-lg flex items-center gap-2">
+              📅 Sincronização Google Calendar
+            </CardTitle>
+            <CardDescription>
+              Sincronize seus eventos automaticamente com o Google Calendar
+            </CardDescription>
           </div>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <CalendarSync 
-            isConnected={isConnected}
-            isSyncing={isSyncing}
-            syncStats={syncStats}
-            onManualSync={handleManualSync}
-            onImport={importFromGoogle}
-            onExport={exportToGoogle}
-            onToggleAutoSync={toggleAutoSync}
-          />
-        </CardContent>
-      </Card>
-    </div>
+          <Badge variant={isConnected ? "default" : "secondary"}>
+            {isConnected ? "Conectado" : "Desconectado"}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <CalendarSync 
+          isConnected={isConnected}
+          isSyncing={isSyncing}
+          syncStats={syncStats}
+          onManualSync={handleManualSync}
+          onImport={importFromGoogle}
+          onExport={exportToGoogle}
+          onToggleAutoSync={toggleAutoSync}
+        />
+      </CardContent>
+    </Card>
   );
 }

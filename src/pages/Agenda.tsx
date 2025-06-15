@@ -4,10 +4,9 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Header } from '@/components/layout/Header';
 import { AgendaTabs } from '@/components/agenda/AgendaTabs';
 import { AgendaHeader } from '@/components/agenda/AgendaHeader';
-import { AgendaIntegrationsSection } from '@/components/agenda/AgendaIntegrationsSection';
-import { GoogleOAuthSection } from '@/components/integrations/GoogleOAuthSection';
 import { useAgendaEvents } from '@/hooks/useAgendaEvents';
 import { EventModal } from '@/components/calendar/EventModal';
+import { IntegrationsModal } from '@/components/agenda/IntegrationsModal';
 import { Event } from '@/types/event';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -18,6 +17,7 @@ export default function Agenda() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isIntegrationsModalOpen, setIsIntegrationsModalOpen] = useState(false);
 
   const handleNovoEvento = () => {
     setSelectedEvent(null);
@@ -48,34 +48,27 @@ export default function Agenda() {
           currentView={currentView}
           onNovoEvento={handleNovoEvento}
           onViewChange={setCurrentView}
+          onOpenIntegrations={() => setIsIntegrationsModalOpen(true)}
         />
         
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-          {/* Área principal do calendário - ocupa mais espaço */}
-          <div className="xl:col-span-3">
-            {loading ? (
-              <div className="bg-white/70 p-6 rounded-lg shadow-sm space-y-4">
-                <div className="flex justify-between items-center">
-                  <Skeleton className="h-8 w-1/4" />
-                  <Skeleton className="h-6 w-24" />
-                </div>
-                <Skeleton className="h-96 w-full" />
+        {/* Área principal do calendário - agora ocupa toda a largura */}
+        <div className="w-full">
+          {loading ? (
+            <div className="bg-white/70 p-6 rounded-lg shadow-sm space-y-4">
+              <div className="flex justify-between items-center">
+                <Skeleton className="h-8 w-1/4" />
+                <Skeleton className="h-6 w-24" />
               </div>
-            ) : (
-              <AgendaTabs 
-                currentView={currentView}
-                events={events}
-                onEventClick={handleEventClick}
-                onEventDelete={handleDeleteEvent}
-              />
-            )}
-          </div>
-          
-          {/* Sidebar das integrações - menor e mais organizada */}
-          <div className="xl:col-span-1 space-y-4">
-            <AgendaIntegrationsSection onSyncComplete={handleSyncComplete} />
-            <GoogleOAuthSection />
-          </div>
+              <Skeleton className="h-96 w-full" />
+            </div>
+          ) : (
+            <AgendaTabs 
+              currentView={currentView}
+              events={events}
+              onEventClick={handleEventClick}
+              onEventDelete={handleDeleteEvent}
+            />
+          )}
         </div>
       </div>
       
@@ -84,6 +77,12 @@ export default function Agenda() {
         onClose={() => setIsModalOpen(false)}
         event={selectedEvent}
         onSave={handleSave}
+      />
+
+      <IntegrationsModal
+        isOpen={isIntegrationsModalOpen}
+        onClose={() => setIsIntegrationsModalOpen(false)}
+        onSyncComplete={handleSyncComplete}
       />
     </MainLayout>
   );

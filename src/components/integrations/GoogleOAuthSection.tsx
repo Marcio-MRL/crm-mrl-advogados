@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Settings, ExternalLink } from 'lucide-react';
+import { Settings, ExternalLink, CheckCircle, XCircle } from 'lucide-react';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 
 export function GoogleOAuthSection() {
@@ -20,32 +20,48 @@ export function GoogleOAuthSection() {
   };
 
   return (
-    <Card className="bg-white/90 backdrop-blur-sm">
-      <CardHeader className="pb-3">
+    <Card>
+      <CardHeader>
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <CardTitle className="text-lg flex items-center gap-2">
-              🔐 Conexão Google
+              🔐 Autenticação Google
             </CardTitle>
-            <CardDescription className="text-sm">
-              Status da autenticação
+            <CardDescription>
+              Gerencie sua conexão com os serviços do Google
             </CardDescription>
           </div>
-          <Badge variant={isConnected ? "default" : "destructive"} className="text-xs">
-            {isConnected ? "Ativo" : "Inativo"}
+          <Badge variant={isConnected ? "default" : "destructive"} className="flex items-center gap-1">
+            {isConnected ? (
+              <>
+                <CheckCircle className="h-3 w-3" />
+                Conectado
+              </>
+            ) : (
+              <>
+                <XCircle className="h-3 w-3" />
+                Desconectado
+              </>
+            )}
           </Badge>
         </div>
       </CardHeader>
-      <CardContent className="pt-0 space-y-3">
+      <CardContent className="space-y-4">
         {isConnected ? (
-          <div className="space-y-3">
-            <div className="text-sm text-green-600 font-medium">
-              ✓ Conectado com sucesso
+          <div className="space-y-4">
+            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+              <div className="flex items-center gap-2 text-green-700">
+                <CheckCircle className="h-4 w-4" />
+                <span className="font-medium">Conexão ativa</span>
+              </div>
+              <p className="text-sm text-green-600 mt-1">
+                Sua conta Google está conectada e funcionando corretamente
+              </p>
             </div>
+            
             <div className="flex gap-2">
               <Button 
                 variant="outline" 
-                size="sm" 
                 onClick={handleDisconnect}
                 className="flex-1"
                 disabled={loading}
@@ -54,26 +70,32 @@ export function GoogleOAuthSection() {
               </Button>
               <Button 
                 variant="ghost" 
-                size="sm"
-                className="px-3"
+                size="icon"
+                disabled
               >
                 <Settings className="h-4 w-4" />
               </Button>
             </div>
           </div>
         ) : (
-          <div className="space-y-3">
-            <div className="text-sm text-gray-600">
-              Conecte sua conta Google para acessar todas as funcionalidades
+          <div className="space-y-4">
+            <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+              <div className="flex items-center gap-2 text-yellow-700">
+                <XCircle className="h-4 w-4" />
+                <span className="font-medium">Conexão necessária</span>
+              </div>
+              <p className="text-sm text-yellow-600 mt-1">
+                Conecte sua conta Google para acessar todas as funcionalidades da agenda
+              </p>
             </div>
+            
             <Button 
               onClick={handleConnect} 
               className="w-full flex items-center gap-2"
-              size="sm"
               disabled={loading}
             >
               <ExternalLink className="h-4 w-4" />
-              {loading ? 'Conectando...' : 'Conectar Google'}
+              {loading ? 'Conectando...' : 'Conectar com Google'}
             </Button>
           </div>
         )}
