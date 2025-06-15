@@ -111,6 +111,7 @@ export type Database = {
           created_at: string
           description: string | null
           end_time: string
+          google_event_id: string | null
           id: string
           location: string | null
           participants: string[] | null
@@ -126,6 +127,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           end_time: string
+          google_event_id?: string | null
           id?: string
           location?: string | null
           participants?: string[] | null
@@ -141,6 +143,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           end_time?: string
+          google_event_id?: string | null
           id?: string
           location?: string | null
           participants?: string[] | null

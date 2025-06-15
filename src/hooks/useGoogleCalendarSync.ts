@@ -3,14 +3,17 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { useGoogleIntegrationState } from './google-calendar/useGoogleIntegrationState';
 import { fetchGoogleEvents, createGoogleEvent } from '@/services/googleCalendarApi';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 export function useGoogleCalendarSync(onSyncComplete?: () => void) {
   const { isConnected, syncStats, updateIntegrationState } = useGoogleIntegrationState();
   const [isSyncing, setIsSyncing] = useState(false);
+  const { user } = useAuth();
 
   const performImport = async () => {
-    if (!isConnected) {
-      toast.error("Conecte-se ao Google Calendar primeiro");
+    if (!isConnected || !user) {
+      toast.error("Conecte-se ao Google Calendar e faça login primeiro");
       return;
     }
 
@@ -18,15 +21,64 @@ export function useGoogleCalendarSync(onSyncComplete?: () => void) {
     toast.info("Sincronizando com Google Calendar...");
     
     try {
-      const events = await fetchGoogleEvents();
-      console.log('Events from Google:', events);
+      const googleEvents = await fetchGoogleEvents();
+      if (!googleEvents || googleEvents.length === 0) {
+        toast.info("Nenhum evento novo encontrado no Google Calendar para importar.");
+        setIsSyncing(false);
+        return;
+      }
       
-      await updateIntegrationState({
-        lastSync: new Date().toISOString(),
-        eventsImported: syncStats.eventsImported + (events?.length || 0),
+      const { data: localEvents, error: localEventsError } = await supabase
+        .from('calendar_events')
+        .select('google_event_id')
+        .eq('user_id', user.id)
+        .not('google_event_id', 'is', null);
+
+      if (localEventsError) throw localEventsError;
+
+      const existingGoogleEventIds = new Set(localEvents.map(e => e.google_event_id));
+      
+      const newGoogleEvents = googleEvents.filter((ge: any) => !existingGoogleEventIds.has(ge.id));
+
+      if (newGoogleEvents.length === 0) {
+        toast.info("Sua agenda já está sincronizada.");
+        await updateIntegrationState({ lastSync: new Date().toISOString() });
+        setIsSyncing(false);
+        onSyncComplete?.();
+        return;
+      }
+
+      const eventsToInsert = newGoogleEvents.map((ge: any) => {
+        const startTime = ge.start.dateTime || ge.start.date;
+        const endTime = ge.end.dateTime || ge.end.date;
+
+        return {
+          user_id: user.id,
+          google_event_id: ge.id,
+          title: ge.summary || 'Evento sem título',
+          description: ge.description,
+          start_time: new Date(startTime).toISOString(),
+          end_time: new Date(endTime).toISOString(),
+          location: ge.location,
+          type: 'outro' as const,
+          sync_with_google: true,
+          participants: ge.attendees?.map((a: any) => a.email) || [],
+          client: null,
+        };
       });
       
-      toast.success(`${events?.length || 0} eventos verificados. Sincronização concluída!`);
+      const { error: insertError } = await supabase
+        .from('calendar_events')
+        .insert(eventsToInsert);
+
+      if (insertError) throw insertError;
+
+      await updateIntegrationState({
+        lastSync: new Date().toISOString(),
+        eventsImported: syncStats.eventsImported + newGoogleEvents.length,
+      });
+      
+      toast.success(`${newGoogleEvents.length} novos eventos importados do Google Calendar!`);
       onSyncComplete?.();
     } catch (error) {
       console.error('Sync error:', error);

@@ -1,6 +1,7 @@
 
 export interface Event {
   id: string;
+  googleEventId?: string | null;
   title: string;
   description: string | null;
   date: Date;

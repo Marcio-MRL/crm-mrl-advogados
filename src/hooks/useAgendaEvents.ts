@@ -32,6 +32,7 @@ export function useAgendaEvents() {
         const endDate = new Date(event.end_time);
         return {
           id: event.id,
+          googleEventId: event.google_event_id,
           title: event.title,
           description: event.description,
           date: startDate,
@@ -84,6 +85,7 @@ export function useAgendaEvents() {
         sync_with_google: eventData.syncWithGoogle,
         user_id: user.id,
         id: eventData.id, // for upsert
+        google_event_id: eventData.googleEventId,
       };
 
       const { error } = await supabase.from('calendar_events').upsert(dataToUpsert).select();
