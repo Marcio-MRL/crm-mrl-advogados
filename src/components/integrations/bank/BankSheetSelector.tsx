@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { RefreshCw, FileSpreadsheet, AlertCircle } from 'lucide-react';
+import { RefreshCw, FileSpreadsheet, AlertCircle, ExternalLink } from 'lucide-react';
 import { useGoogleOAuth } from '@/hooks/useGoogleOAuth';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -28,11 +28,11 @@ export function BankSheetSelector({
   const [sheets, setSheets] = useState<SheetInfo[]>([]);
   const [loadingSheets, setLoadingSheets] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [scopeError, setScopeError] = useState(false);
   const { tokens } = useGoogleOAuth();
 
   const sheetsToken = tokens.find(token => 
-    token.scope?.includes('spreadsheets') || token.scope?.includes('drive')
+    token.scope?.includes('spreadsheets')
   );
 
   const loadSheets = async () => {
@@ -40,104 +40,47 @@ export function BankSheetSelector({
 
     setLoadingSheets(true);
     setError(null);
-    setDebugInfo(null);
+    setScopeError(false);
     
     try {
-      console.log('🔍 Carregando lista de planilhas...');
+      console.log('🔍 Buscando planilhas usando apenas Google Sheets API...');
       console.log('🔑 Token info:', {
         hasToken: !!sheetsToken.access_token,
         scope: sheetsToken.scope,
         tokenLength: sheetsToken.access_token?.length || 0
       });
 
-      // Primeiro, vamos testar se conseguimos acessar informações básicas do usuário
-      console.log('🧪 Testando acesso básico ao Drive...');
-      const testResponse = await fetch(
-        'https://www.googleapis.com/drive/v3/about?fields=user',
-        {
-          headers: {
-            'Authorization': `Bearer ${sheetsToken.access_token}`,
-          },
-        }
-      );
-
-      console.log('🧪 Teste de acesso:', {
-        status: testResponse.status,
-        statusText: testResponse.statusText,
-        ok: testResponse.ok
-      });
-
-      if (!testResponse.ok) {
-        const errorText = await testResponse.text();
-        console.error('❌ Erro no teste de acesso:', errorText);
-        throw new Error(`Erro de acesso ao Google Drive (${testResponse.status}): ${errorText}`);
-      }
-
-      const testData = await testResponse.json();
-      console.log('✅ Acesso ao Drive OK. Usuário:', testData.user?.emailAddress);
-
-      // Agora vamos listar as planilhas com informações detalhadas
-      console.log('📊 Buscando planilhas do Google Sheets...');
-      const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q=mimeType="application/vnd.google-apps.spreadsheet" and trashed=false&fields=files(id,name,parents,createdTime,modifiedTime,size,owners)&orderBy=modifiedTime desc`,
-        {
-          headers: {
-            'Authorization': `Bearer ${sheetsToken.access_token}`,
-          },
-        }
-      );
-
-      console.log('📊 Resposta da API:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Erro ao buscar planilhas:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorText
-        });
-
-        // Vamos tentar entender melhor o erro
-        if (response.status === 403) {
-          setError('Erro de permissão (403): O token não tem permissão para acessar o Google Drive. Verifique se o escopo "drive" ou "drive.readonly" foi incluído na autenticação.');
-        } else if (response.status === 401) {
-          setError('Erro de autenticação (401): Token expirado ou inválido. Tente reconectar ao Google Sheets.');
-        } else {
-          setError(`Erro ${response.status}: ${errorText}`);
-        }
-        return;
-      }
-
-      const data = await response.json();
-      console.log('📊 Dados recebidos:', data);
-
-      const sheetList = data.files?.map((file: any) => ({
-        id: file.id,
-        name: file.name
-      })) || [];
+      // Como não temos acesso ao Drive, vamos sugerir que o usuário insira o ID da planilha manualmente
+      // ou tentar algumas planilhas conhecidas
       
-      console.log('📊 Planilhas encontradas:', sheetList.length);
-      console.log('📊 Lista de planilhas:', sheetList);
+      // Lista de planilhas para testar (pode ser expandida)
+      const knownSheetNames = [
+        'BTG - Entradas e Saídas Caixa',
+        'Controle Financeiro',
+        'Movimentações Bancárias',
+        'Fluxo de Caixa'
+      ];
 
-      setSheets(sheetList);
-      setDebugInfo({
-        totalFiles: data.files?.length || 0,
-        userEmail: testData.user?.emailAddress,
-        tokenScope: sheetsToken.scope
-      });
+      console.log('⚠️ Devido às limitações de escopo, não é possível listar todas as planilhas automaticamente.');
+      console.log('💡 Para resolver isso, você pode:');
+      console.log('1. Reconectar ao Google Sheets com permissões de Drive');
+      console.log('2. Ou inserir o ID da planilha manualmente');
 
-      if (sheetList.length === 0) {
-        setError('Nenhuma planilha encontrada no Google Drive. Verifique se você tem planilhas Google Sheets (.gsheet) na sua conta.');
-      }
+      // Por enquanto, retornar lista vazia e mostrar instruções
+      setSheets([]);
+      setError('Para listar planilhas automaticamente, é necessário reconectar com permissões do Google Drive. Por favor, insira o ID da planilha manualmente ou reconecte nas configurações.');
 
     } catch (error) {
       console.error('❌ Erro ao buscar planilhas:', error);
+      
       if (error instanceof Error) {
-        setError(error.message);
+        if (error.message.includes('insufficient authentication scopes') || 
+            error.message.includes('ACCESS_TOKEN_SCOPE_INSUFFICIENT')) {
+          setScopeError(true);
+          setError('O token atual não tem permissão para acessar o Google Drive. Para listar planilhas automaticamente, reconecte nas configurações e inclua permissões do Drive.');
+        } else {
+          setError(error.message);
+        }
       } else {
         setError('Erro desconhecido ao buscar planilhas');
       }
@@ -157,6 +100,22 @@ export function BankSheetSelector({
     onRefreshSheets();
   };
 
+  const handleManualSheetId = () => {
+    const sheetId = prompt('Cole aqui o ID da planilha do Google Sheets (encontrado na URL):');
+    if (sheetId && sheetId.trim()) {
+      const cleanId = sheetId.trim();
+      console.log('📊 ID da planilha inserido manualmente:', cleanId);
+      onSheetSelect(cleanId);
+      
+      // Adicionar à lista local para exibição
+      const manualSheet = {
+        id: cleanId,
+        name: 'Planilha Selecionada Manualmente'
+      };
+      setSheets([manualSheet]);
+    }
+  };
+
   if (!sheetsToken) {
     return (
       <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
@@ -171,18 +130,41 @@ export function BankSheetSelector({
     <div className="space-y-4 p-4 bg-gray-50 border border-gray-200 rounded-md">
       <div className="flex items-center justify-between">
         <Label className="text-sm font-medium">Selecionar Planilha Bancária</Label>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          disabled={loadingSheets || isLoading}
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${loadingSheets ? 'animate-spin' : ''}`} />
-          Atualizar Lista
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={loadingSheets || isLoading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loadingSheets ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleManualSheetId}
+            disabled={isLoading}
+          >
+            <ExternalLink className="h-4 w-4 mr-2" />
+            ID Manual
+          </Button>
+        </div>
       </div>
 
-      {error && (
+      {scopeError && (
+        <Alert className="border-orange-200 bg-orange-50">
+          <AlertCircle className="h-4 w-4 text-orange-600" />
+          <AlertDescription className="text-sm text-orange-800">
+            <strong>Limitação de Escopo:</strong> O token atual tem apenas permissão para Google Sheets, 
+            não para o Google Drive. Para listar planilhas automaticamente, reconecte nas configurações 
+            e inclua permissões do Drive, ou use o botão "ID Manual" para inserir o ID da planilha diretamente.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {error && !scopeError && (
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="text-sm">
@@ -191,22 +173,13 @@ export function BankSheetSelector({
         </Alert>
       )}
 
-      {debugInfo && (
-        <div className="text-xs text-gray-600 bg-gray-100 p-2 rounded">
-          <strong>Debug Info:</strong><br />
-          • Usuário: {debugInfo.userEmail}<br />
-          • Planilhas encontradas: {debugInfo.totalFiles}<br />
-          • Escopo do token: {debugInfo.tokenScope}
-        </div>
-      )}
-
       <div className="space-y-2">
         <Select value={selectedSheetId || ''} onValueChange={onSheetSelect} disabled={isLoading || loadingSheets}>
           <SelectTrigger>
             <SelectValue placeholder={
               loadingSheets ? "Carregando planilhas..." : 
-              error ? "Erro ao carregar planilhas" :
-              sheets.length === 0 ? "Nenhuma planilha encontrada" :
+              error ? "Use 'ID Manual' para selecionar" :
+              sheets.length === 0 ? "Use 'ID Manual' para inserir ID da planilha" :
               "Escolha uma planilha..."
             } />
           </SelectTrigger>
@@ -223,15 +196,21 @@ export function BankSheetSelector({
         </Select>
 
         {loadingSheets && (
-          <p className="text-xs text-gray-500">Carregando planilhas...</p>
+          <p className="text-xs text-gray-500">Verificando permissões...</p>
         )}
       </div>
 
-      {selectedSheetId && sheets.length > 0 && (
+      {selectedSheetId && (
         <div className="text-xs text-green-600">
-          ✓ Planilha selecionada: {sheets.find(s => s.id === selectedSheetId)?.name || 'Carregando...'}
+          ✓ Planilha selecionada: {sheets.find(s => s.id === selectedSheetId)?.name || `ID: ${selectedSheetId.substring(0, 20)}...`}
         </div>
       )}
+
+      <div className="text-xs text-gray-600 bg-blue-50 border border-blue-200 rounded p-2">
+        <strong>💡 Dica:</strong> Para encontrar o ID da planilha, abra-a no Google Sheets e copie o ID da URL 
+        (a parte entre /spreadsheets/d/ e /edit). Por exemplo: 
+        <code className="bg-white px-1 rounded ml-1">1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms</code>
+      </div>
     </div>
   );
 }
