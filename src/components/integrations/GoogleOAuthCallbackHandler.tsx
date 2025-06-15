@@ -17,129 +17,40 @@ export function GoogleOAuthCallbackHandler() {
         hasCode: !!code,
         hasState: !!state,
         hasError: !!error,
-        fullURL: window.location.href
       });
 
-      if (error) {
-        console.error('GoogleOAuthCallbackHandler: Erro do Google:', error);
-        
-        // Usar postMessage mais robusto para o popup pai
+      const notifyOpenerAndClose = (message: object) => {
         try {
           if (window.opener && !window.opener.closed) {
-            window.opener.postMessage({
-              type: 'GOOGLE_OAUTH_ERROR',
-              error: error
-            }, '*');
-            window.close();
+            window.opener.postMessage(message, window.location.origin);
+            setTimeout(() => window.close(), 300);
           } else {
-            // Se não é popup, mostrar erro na própria página
-            toast.error(`Erro na autenticação: ${error}`);
-            setTimeout(() => {
-              window.location.href = '/configuracoes';
-            }, 2000);
+             window.location.href = '/configuracoes';
           }
         } catch (e) {
-          console.error('Erro ao enviar mensagem para popup pai:', e);
-          toast.error(`Erro na autenticação: ${error}`);
-          setTimeout(() => {
-            window.location.href = '/configuracoes';
-          }, 2000);
+          console.error('Erro ao comunicar com a janela principal:', e);
+          window.location.href = '/configuracoes';
         }
+      };
+
+      if (error) {
+        toast.error(`Erro na autenticação: ${error}`);
+        notifyOpenerAndClose({ type: 'GOOGLE_OAUTH_ERROR', error });
         return;
       }
 
       if (code && state) {
         try {
-          console.log('GoogleOAuthCallbackHandler: Iniciando processamento do callback...');
-          
           const result = await handleOAuthCallback(code, state);
-          console.log('GoogleOAuthCallbackHandler: Callback processado com sucesso:', result);
-          
-          // Enviar sucesso para o popup pai com tratamento robusto
-          try {
-            if (window.opener && !window.opener.closed) {
-              const parsedState = JSON.parse(state);
-              window.opener.postMessage({
-                type: 'GOOGLE_OAUTH_SUCCESS',
-                service: parsedState.service
-              }, '*');
-              
-              // Aguardar um pouco antes de fechar para garantir que a mensagem foi enviada
-              setTimeout(() => {
-                window.close();
-              }, 500);
-            } else {
-              // Se não é popup, redirecionar para configurações
-              toast.success('Integração conectada com sucesso!');
-              setTimeout(() => {
-                window.location.href = '/configuracoes';
-              }, 1000);
-            }
-          } catch (e) {
-            console.error('Erro ao comunicar com popup pai:', e);
-            toast.success('Integração conectada com sucesso!');
-            setTimeout(() => {
-              window.location.href = '/configuracoes';
-            }, 1000);
-          }
-          
-        } catch (error) {
-          console.error('GoogleOAuthCallbackHandler: Erro no processamento:', error);
-          
-          const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido no processamento';
-          
-          // Enviar erro para o popup pai com tratamento robusto
-          try {
-            if (window.opener && !window.opener.closed) {
-              window.opener.postMessage({
-                type: 'GOOGLE_OAUTH_ERROR',
-                error: errorMessage
-              }, '*');
-              
-              setTimeout(() => {
-                window.close();
-              }, 500);
-            } else {
-              // Se não é popup, mostrar erro e redirecionar
-              toast.error(`Erro no processamento: ${errorMessage}`);
-              setTimeout(() => {
-                window.location.href = '/configuracoes';
-              }, 2000);
-            }
-          } catch (e) {
-            console.error('Erro ao comunicar erro para popup pai:', e);
-            toast.error(`Erro no processamento: ${errorMessage}`);
-            setTimeout(() => {
-              window.location.href = '/configuracoes';
-            }, 2000);
-          }
+          notifyOpenerAndClose({ type: 'GOOGLE_OAUTH_SUCCESS', service: result.service });
+        } catch (err) {
+          const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+          toast.error(`Erro no processamento: ${errorMessage}`);
+          notifyOpenerAndClose({ type: 'GOOGLE_OAUTH_ERROR', error: errorMessage });
         }
       } else {
-        console.warn('GoogleOAuthCallbackHandler: Parâmetros inválidos', { code, state });
-        
-        try {
-          if (window.opener && !window.opener.closed) {
-            window.opener.postMessage({
-              type: 'GOOGLE_OAUTH_ERROR',
-              error: 'Parâmetros de callback inválidos'
-            }, '*');
-            
-            setTimeout(() => {
-              window.close();
-            }, 500);
-          } else {
-            toast.error('Parâmetros de callback inválidos');
-            setTimeout(() => {
-              window.location.href = '/configuracoes';
-            }, 2000);
-          }
-        } catch (e) {
-          console.error('Erro ao comunicar parâmetros inválidos:', e);
-          toast.error('Parâmetros de callback inválidos');
-          setTimeout(() => {
-            window.location.href = '/configuracoes';
-          }, 2000);
-        }
+        toast.error('Parâmetros de callback inválidos.');
+        notifyOpenerAndClose({ type: 'GOOGLE_OAUTH_ERROR', error: 'Parâmetros inválidos' });
       }
     };
 
@@ -151,7 +62,7 @@ export function GoogleOAuthCallbackHandler() {
       <div className="text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
         <p className="text-gray-600">Processando autenticação...</p>
-        <p className="text-sm text-gray-500 mt-2">Esta janela deve fechar automaticamente</p>
+        <p className="text-sm text-gray-500 mt-2">Esta janela deve fechar automaticamente.</p>
       </div>
     </div>
   );
