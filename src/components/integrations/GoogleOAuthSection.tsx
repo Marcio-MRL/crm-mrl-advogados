@@ -1,140 +1,76 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, Sheet, Unlink } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Settings, ExternalLink } from 'lucide-react';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
-import { useAuth } from '@/contexts/AuthContext';
 
 export function GoogleOAuthSection() {
-  const { user } = useAuth();
-  const { 
-    integrations, 
-    loading, 
-    initiateGoogleAuth, 
-    disconnectService, 
-    isServiceConnected 
-  } = useGoogleAuth();
-
-  const isAuthorizedDomain = user?.email?.endsWith('@mrladvogados.com.br');
-
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Integrações Google
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="animate-pulse">Carregando integrações...</div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const { isConnected, connectionStatus, connect, disconnect } = useGoogleAuth();
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calendar className="h-5 w-5" />
-          Integrações Google OAuth
-        </CardTitle>
-        {!isAuthorizedDomain && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-            <p className="text-sm text-yellow-800">
-              As integrações Google estão disponíveis apenas para usuários do domínio @mrladvogados.com.br
-            </p>
+    <Card className="bg-white/90 backdrop-blur-sm">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <CardTitle className="text-lg flex items-center gap-2">
+              🔐 Conexão Google
+            </CardTitle>
+            <CardDescription className="text-sm">
+              Status da autenticação
+            </CardDescription>
+          </div>
+          <Badge variant={isConnected ? "default" : "destructive"} className="text-xs">
+            {isConnected ? "Ativo" : "Inativo"}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0 space-y-3">
+        {isConnected ? (
+          <div className="space-y-3">
+            <div className="text-sm text-green-600 font-medium">
+              ✓ Conectado com sucesso
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={disconnect}
+                className="flex-1"
+              >
+                Desconectar
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="px-3"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="text-sm text-gray-600">
+              Conecte sua conta Google para acessar todas as funcionalidades
+            </div>
+            <Button 
+              onClick={connect} 
+              className="w-full flex items-center gap-2"
+              size="sm"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Conectar Google
+            </Button>
           </div>
         )}
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Google Calendar Integration */}
-        <div className="flex items-center justify-between p-4 border rounded-lg">
-          <div className="flex items-center gap-3">
-            <Calendar className="h-8 w-8 text-blue-600" />
-            <div>
-              <h3 className="font-medium">Google Calendar</h3>
-              <p className="text-sm text-gray-500">
-                Sincronize suas audiências e compromissos
-              </p>
-            </div>
+        
+        {connectionStatus && (
+          <div className="text-xs text-gray-500 mt-2">
+            Status: {connectionStatus}
           </div>
-          <div className="flex items-center gap-2">
-            {isServiceConnected('calendar') ? (
-              <>
-                <Badge variant="default" className="bg-green-100 text-green-800">
-                  Conectado
-                </Badge>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => disconnectService('calendar')}
-                  disabled={!isAuthorizedDomain}
-                >
-                  <Unlink className="h-4 w-4 mr-1" />
-                  Desconectar
-                </Button>
-              </>
-            ) : (
-              <Button
-                onClick={() => initiateGoogleAuth('calendar')}
-                disabled={!isAuthorizedDomain}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <Calendar className="h-4 w-4 mr-1" />
-                Conectar
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Google Sheets Integration */}
-        <div className="flex items-center justify-between p-4 border rounded-lg">
-          <div className="flex items-center gap-3">
-            <Sheet className="h-8 w-8 text-green-600" />
-            <div>
-              <h3 className="font-medium">Google Sheets</h3>
-              <p className="text-sm text-gray-500">
-                Exporte relatórios e dados para planilhas
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {isServiceConnected('sheets') ? (
-              <>
-                <Badge variant="default" className="bg-green-100 text-green-800">
-                  Conectado
-                </Badge>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => disconnectService('sheets')}
-                  disabled={!isAuthorizedDomain}
-                >
-                  <Unlink className="h-4 w-4 mr-1" />
-                  Desconectar
-                </Button>
-              </>
-            ) : (
-              <Button
-                onClick={() => initiateGoogleAuth('sheets')}
-                disabled={!isAuthorizedDomain}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                <Sheet className="h-4 w-4 mr-1" />
-                Conectar
-              </Button>
-            )}
-          </div>
-        </div>
-
-        <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-          <strong>Nota:</strong> As integrações OAuth estão restritas ao domínio @mrladvogados.com.br 
-          e precisam ser liberadas pelo usuário master antes de serem ativadas.
-        </div>
+        )}
       </CardContent>
     </Card>
   );

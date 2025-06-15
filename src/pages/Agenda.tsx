@@ -41,7 +41,7 @@ export default function Agenda() {
 
   return (
     <MainLayout>
-      <div className="w-full space-y-6">
+      <div className="w-full max-w-7xl mx-auto space-y-6">
         <Header title="Agenda" subtitle="Gerencie seus compromissos e eventos" />
         
         <AgendaHeader 
@@ -50,8 +50,9 @@ export default function Agenda() {
           onViewChange={setCurrentView}
         />
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+          {/* Área principal do calendário - ocupa mais espaço */}
+          <div className="xl:col-span-3">
             {loading ? (
               <div className="bg-white/70 p-6 rounded-lg shadow-sm space-y-4">
                 <div className="flex justify-between items-center">
@@ -70,7 +71,8 @@ export default function Agenda() {
             )}
           </div>
           
-          <div className="space-y-6">
+          {/* Sidebar das integrações - menor e mais organizada */}
+          <div className="xl:col-span-1 space-y-4">
             <AgendaIntegrationsSection onSyncComplete={handleSyncComplete} />
             <GoogleOAuthSection />
           </div>
