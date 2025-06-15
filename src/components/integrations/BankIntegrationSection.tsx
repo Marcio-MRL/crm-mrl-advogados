@@ -1,62 +1,103 @@
 
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { useBankIntegration } from '@/hooks/useBankIntegration';
-import { useBankSheetSelection } from '@/hooks/useBankSheetSelection';
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { BankIntegrationHeader } from './bank/BankIntegrationHeader';
 import { BankIntegrationInfo } from './bank/BankIntegrationInfo';
-import { BankIntegrationStats } from './bank/BankIntegrationStats';
-import { BankSyncProgress } from './bank/BankSyncProgress';
-import { BankLastTransaction } from './bank/BankLastTransaction';
-import { BankIntegrationActions } from './bank/BankIntegrationActions';
 import { BankIntegrationInstructions } from './bank/BankIntegrationInstructions';
 import { BankSheetSelector } from './bank/BankSheetSelector';
+import { BankIntegrationActions } from './bank/BankIntegrationActions';
+import { BankIntegrationStats } from './bank/BankIntegrationStats';
+import { BankLastTransaction } from './bank/BankLastTransaction';
+import { BankSyncProgress } from './bank/BankSyncProgress';
+import { BankExportButton } from './bank/BankExportButton';
+import { useBankIntegration } from '@/hooks/useBankIntegration';
+import { useBankSheetSelection } from '@/hooks/useBankSheetSelection';
 
 export function BankIntegrationSection() {
   const {
-    status,
-    syncProgress,
-    sheetsToken,
-    handleSync
+    isConnected,
+    lastSync,
+    syncInProgress,
+    currentProgress,
+    totalSteps,
+    currentStep,
+    transactionCount,
+    lastTransaction,
+    handleConnect,
+    handleSync,
+    handleDisconnect
   } = useBankIntegration();
 
-  const { selectedSheetId, selectSheet } = useBankSheetSelection();
+  const {
+    availableSheets,
+    selectedSheetId,
+    setSelectedSheetId,
+    loading: sheetsLoading
+  } = useBankSheetSelection();
 
-  const handleRefreshSheets = () => {
-    console.log('🔄 Atualizando lista de planilhas...');
+  const renderContent = () => {
+    if (!isConnected) {
+      return (
+        <div className="space-y-4">
+          <BankIntegrationInfo />
+          <BankIntegrationInstructions />
+          <BankIntegrationActions 
+            onConnect={handleConnect}
+            onSync={handleSync}
+            onDisconnect={handleDisconnect}
+            syncInProgress={syncInProgress}
+            isConnected={isConnected}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        <BankIntegrationStats 
+          lastSync={lastSync}
+          transactionCount={transactionCount}
+        />
+        
+        {lastTransaction && (
+          <BankLastTransaction transaction={lastTransaction} />
+        )}
+
+        <BankSheetSelector 
+          availableSheets={availableSheets}
+          selectedSheetId={selectedSheetId}
+          onSheetSelect={setSelectedSheetId}
+          loading={sheetsLoading}
+        />
+
+        {syncInProgress && (
+          <BankSyncProgress 
+            currentProgress={currentProgress}
+            totalSteps={totalSteps}
+            currentStep={currentStep}
+          />
+        )}
+
+        <div className="flex justify-between items-center">
+          <BankExportButton />
+          <BankIntegrationActions 
+            onConnect={handleConnect}
+            onSync={handleSync}
+            onDisconnect={handleDisconnect}
+            syncInProgress={syncInProgress}
+            isConnected={isConnected}
+            selectedSheetId={selectedSheetId}
+          />
+        </div>
+      </div>
+    );
   };
 
   return (
     <Card>
-      <BankIntegrationHeader isConnected={status.connected} />
-      
-      <CardContent className="space-y-6">
-        <BankIntegrationInfo />
-        
-        <BankSheetSelector 
-          selectedSheetId={selectedSheetId}
-          onSheetSelect={selectSheet}
-          onRefreshSheets={handleRefreshSheets}
-          isLoading={status.syncInProgress}
-        />
-        
-        <BankIntegrationStats status={status} />
-        
-        <BankSyncProgress 
-          syncInProgress={status.syncInProgress} 
-          syncProgress={syncProgress} 
-        />
-        
-        <BankLastTransaction lastTransaction={status.lastTransaction} />
-        
-        <BankIntegrationActions 
-          onSync={handleSync}
-          hasToken={!!sheetsToken}
-          syncInProgress={status.syncInProgress}
-          hasSelectedSheet={!!selectedSheetId}
-        />
-        
-        <BankIntegrationInstructions />
+      <BankIntegrationHeader isConnected={isConnected} />
+      <CardContent>
+        {renderContent()}
       </CardContent>
     </Card>
   );
