@@ -109,20 +109,85 @@ export function useGoogleOAuth() {
   };
 
   const revokeOAuthToken = async (tokenId: string) => {
+    if (!user) {
+      toast.error('Usuário não autenticado');
+      return;
+    }
+
     try {
-      const { error } = await supabase
+      console.log('🗑️ Iniciando revogação do token:', tokenId);
+
+      // Buscar token antes de revogar para validação
+      const { data: tokenData, error: fetchError } = await supabase
+        .from('google_oauth_tokens')
+        .select('*')
+        .eq('id', tokenId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (fetchError) {
+        console.error('❌ Erro ao buscar token para revogação:', fetchError);
+        toast.error('Token não encontrado ou sem permissão para revogá-lo');
+        return;
+      }
+
+      if (!tokenData) {
+        toast.error('Token não encontrado');
+        return;
+      }
+
+      console.log('🔍 Token encontrado:', {
+        id: tokenData.id,
+        scope: tokenData.scope,
+        hasAccessToken: !!tokenData.access_token
+      });
+
+      // Tentar revogar token no Google se existir access_token
+      if (tokenData.access_token) {
+        try {
+          console.log('🔐 Tentando revogar token no Google...');
+          const revokeResponse = await fetch(`https://oauth2.googleapis.com/revoke?token=${tokenData.access_token}`, {
+            method: 'POST',
+          });
+          
+          if (revokeResponse.ok) {
+            console.log('✅ Token revogado no Google com sucesso');
+          } else {
+            console.warn('⚠️ Falha ao revogar token no Google, mas continuando com remoção local');
+          }
+        } catch (revokeError) {
+          console.warn('⚠️ Erro ao revogar token no Google:', revokeError);
+          // Continuar mesmo se a revogação no Google falhar
+        }
+      }
+
+      // Remover token do banco local
+      console.log('🗑️ Removendo token do banco de dados...');
+      const { error: deleteError } = await supabase
         .from('google_oauth_tokens')
         .delete()
         .eq('id', tokenId)
-        .eq('user_id', user?.id);
+        .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (deleteError) {
+        console.error('❌ Erro ao deletar token do banco:', deleteError);
+        throw new Error(`Erro ao remover token: ${deleteError.message}`);
+      }
 
+      console.log('✅ Token removido do banco com sucesso');
       toast.success('Token OAuth revogado com sucesso');
+      
+      // Atualizar lista de tokens
       await fetchTokens();
+      
     } catch (error) {
-      console.error('Erro ao revogar token:', error);
-      toast.error('Erro ao revogar token OAuth');
+      console.error('❌ Erro completo na revogação:', error);
+      
+      if (error instanceof Error) {
+        toast.error(`Erro ao revogar token: ${error.message}`);
+      } else {
+        toast.error('Erro desconhecido ao revogar token');
+      }
     }
   };
 
