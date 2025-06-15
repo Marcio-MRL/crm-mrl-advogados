@@ -2,15 +2,27 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Settings, CheckCircle, XCircle } from 'lucide-react';
+import { RefreshCw, Settings, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import { SheetMapping } from '@/types/googleSheets';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface GoogleSheetsListProps {
   sheets: SheetMapping[];
   onSync: (sheetId: string) => void;
+  onDelete: (sheetId: string) => void;
 }
 
-export function GoogleSheetsList({ sheets, onSync }: GoogleSheetsListProps) {
+export function GoogleSheetsList({ sheets, onSync, onDelete }: GoogleSheetsListProps) {
   const getStatusIcon = (status: SheetMapping['status']) => {
     switch (status) {
       case 'connected':
@@ -38,7 +50,13 @@ export function GoogleSheetsList({ sheets, onSync }: GoogleSheetsListProps) {
     }
   };
 
-  if (sheets.length === 0) return null;
+  if (sheets.length === 0) {
+    return (
+      <p className="text-sm text-center text-gray-500 py-8">
+        Nenhuma planilha adicional foi configurada.
+      </p>
+    );
+  }
 
   return (
     <div className="space-y-3">
@@ -62,15 +80,38 @@ export function GoogleSheetsList({ sheets, onSync }: GoogleSheetsListProps) {
                 <RefreshCw className={`h-4 w-4 mr-2 ${sheet.status === 'syncing' ? 'animate-spin' : ''}`} />
                 {sheet.status === 'syncing' ? 'Sincronizando...' : 'Sincronizar'}
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" disabled>
                 <Settings className="h-4 w-4 mr-2" />
                 Configurar
               </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Remover
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta ação não pode ser desfeita. Isso removerá permanentemente a planilha
+                      da sua lista de integrações.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => onDelete(sheet.id)}>
+                      Continuar
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
           <div className="text-sm text-gray-600">
-            <p>Última sincronização: {new Date(sheet.lastSync).toLocaleString('pt-BR')}</p>
-            <p className="truncate">URL: {sheet.url}</p>
+            <p>Última sincronização: {sheet.lastSync ? new Date(sheet.lastSync).toLocaleString('pt-BR') : 'Nunca'}</p>
+            <p className="truncate">URL: <a href={sheet.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{sheet.url}</a></p>
           </div>
         </div>
       ))}

@@ -9,6 +9,7 @@ import { GoogleSheetsList } from './googleSheets/GoogleSheetsList';
 import { AddSheetModal } from './googleSheets/AddSheetModal';
 import { useGoogleSheetsIntegration } from '@/hooks/useGoogleSheetsIntegration';
 import { useGoogleOAuth } from '@/hooks/useGoogleOAuth';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export function GoogleSheetsIntegration() {
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
@@ -16,10 +17,11 @@ export function GoogleSheetsIntegration() {
   const {
     isConnected,
     sheets,
-    handleConnect,
+    loading,
     handleDisconnect,
     handleSync,
-    handleAddSheet
+    handleAddSheet,
+    handleDeleteSheet
   } = useGoogleSheetsIntegration();
 
   // Verificar se há tokens válidos do Google Sheets
@@ -28,6 +30,37 @@ export function GoogleSheetsIntegration() {
   );
 
   const effectivelyConnected = isConnected || hasValidToken;
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="space-y-4 p-4">
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+        </div>
+      );
+    }
+
+    if (!effectivelyConnected) {
+      return <GoogleSheetsConnectionPrompt onConnect={() => setIsConfigModalOpen(true)} />;
+    }
+
+    return (
+      <div className="space-y-4">
+        <GoogleSheetsToolbar 
+          sheetsCount={sheets.length}
+          onAddSheet={() => setIsConfigModalOpen(true)}
+          onDisconnect={handleDisconnect}
+        />
+        <GoogleSheetsList 
+          sheets={sheets} 
+          onSync={handleSync} 
+          onDelete={handleDeleteSheet} 
+        />
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -39,19 +72,7 @@ export function GoogleSheetsIntegration() {
         <GoogleSheetsHeader isConnected={effectivelyConnected} />
         
         <CardContent>
-          {!effectivelyConnected ? (
-            <GoogleSheetsConnectionPrompt onConnect={handleConnect} />
-          ) : (
-            <div className="space-y-4">
-              <GoogleSheetsToolbar 
-                sheetsCount={sheets.length}
-                onAddSheet={() => setIsConfigModalOpen(true)}
-                onDisconnect={handleDisconnect}
-              />
-
-              <GoogleSheetsList sheets={sheets} onSync={handleSync} />
-            </div>
-          )}
+          {renderContent()}
         </CardContent>
       </Card>
 

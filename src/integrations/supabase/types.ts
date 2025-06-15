@@ -592,6 +592,42 @@ export type Database = {
         }
         Relationships: []
       }
+      google_sheet_mappings: {
+        Row: {
+          created_at: string
+          id: string
+          last_synced_at: string | null
+          name: string
+          status: string
+          type: string
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_synced_at?: string | null
+          name: string
+          status?: string
+          type: string
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_synced_at?: string | null
+          name?: string
+          status?: string
+          type?: string
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       integrations: {
         Row: {
           auth_token: string | null
