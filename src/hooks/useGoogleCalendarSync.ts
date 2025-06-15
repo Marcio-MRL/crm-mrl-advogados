@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useGoogleIntegrationState } from './google-calendar/useGoogleIntegrationState';
-import { fetchGoogleEvents, createGoogleEvent } from '@/services/googleCalendarApi';
+import { fetchGoogleEvents, createGoogleEvent, updateGoogleEvent, deleteGoogleEvent } from '@/services/googleCalendarApi';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -89,34 +89,74 @@ export function useGoogleCalendarSync(onSyncComplete?: () => void) {
   };
 
   const performExport = async () => {
-    if (!isConnected) {
+    if (!isConnected || !user) {
       toast.error("Conecte-se ao Google Calendar primeiro");
       return;
     }
 
     setIsSyncing(true);
-    toast.info("Exportando evento para o Google Calendar...");
+    toast.info("Exportando eventos para o Google Calendar...");
     
     try {
-      const now = new Date();
-      const startDateTime = now.toISOString();
-      const endDateTime = new Date(now.getTime() + 60 * 60 * 1000).toISOString();
+      // Buscar eventos locais que devem ser sincronizados mas ainda não têm google_event_id
+      const { data: localEvents, error: localEventsError } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('sync_with_google', true)
+        .is('google_event_id', null);
 
-      const event = {
-        'summary': 'Evento de Teste (via App)',
-        'description': 'Este evento foi criado automaticamente pela aplicação.',
-        'start': { 'dateTime': startDateTime, 'timeZone': 'America/Sao_Paulo' },
-        'end': { 'dateTime': endDateTime, 'timeZone': 'America/Sao_Paulo' },
-      };
-      
-      await createGoogleEvent(event);
+      if (localEventsError) throw localEventsError;
+
+      if (!localEvents || localEvents.length === 0) {
+        toast.info("Nenhum evento local pendente para exportar.");
+        setIsSyncing(false);
+        return;
+      }
+
+      let exportedCount = 0;
+
+      for (const localEvent of localEvents) {
+        try {
+          const googleEvent = {
+            summary: localEvent.title,
+            description: localEvent.description || '',
+            start: {
+              dateTime: localEvent.start_time,
+              timeZone: 'America/Sao_Paulo'
+            },
+            end: {
+              dateTime: localEvent.end_time,
+              timeZone: 'America/Sao_Paulo'
+            },
+            location: localEvent.location || '',
+            attendees: localEvent.participants?.map((email: string) => ({ email })) || []
+          };
+
+          const createdGoogleEvent = await createGoogleEvent(googleEvent);
+          
+          // Atualizar o evento local com o ID do Google
+          const { error: updateError } = await supabase
+            .from('calendar_events')
+            .update({ google_event_id: createdGoogleEvent.id })
+            .eq('id', localEvent.id);
+
+          if (updateError) {
+            console.error('Error updating local event with Google ID:', updateError);
+          } else {
+            exportedCount++;
+          }
+        } catch (eventError) {
+          console.error('Error exporting individual event:', eventError);
+        }
+      }
 
       await updateIntegrationState({
-        eventsExported: syncStats.eventsExported + 1,
+        eventsExported: syncStats.eventsExported + exportedCount,
         lastSync: new Date().toISOString()
       });
       
-      toast.success(`1 evento exportado para o Google Calendar`);
+      toast.success(`${exportedCount} eventos exportados para o Google Calendar`);
       onSyncComplete?.();
     } catch (error) {
       console.error('Export error:', error);

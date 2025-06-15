@@ -26,18 +26,51 @@ export async function fetchGoogleEvents() {
 }
 
 export async function createGoogleEvent(event: any) {
-    const headers = await getHeaders();
-    const response = await fetch(`${API_BASE_URL}/calendars/primary/events`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(event),
-    });
+  const headers = await getHeaders();
+  const response = await fetch(`${API_BASE_URL}/calendars/primary/events`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(event),
+  });
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Google Calendar API error on export:', errorData);
-        throw new Error('Erro ao exportar evento para o Google Calendar.');
-    }
-    
-    return await response.json();
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error('Google Calendar API error on create:', errorData);
+    throw new Error('Erro ao criar evento no Google Calendar.');
+  }
+  
+  return await response.json();
+}
+
+export async function updateGoogleEvent(eventId: string, event: any) {
+  const headers = await getHeaders();
+  const response = await fetch(`${API_BASE_URL}/calendars/primary/events/${eventId}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(event),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error('Google Calendar API error on update:', errorData);
+    throw new Error('Erro ao atualizar evento no Google Calendar.');
+  }
+  
+  return await response.json();
+}
+
+export async function deleteGoogleEvent(eventId: string) {
+  const headers = await getHeaders();
+  const response = await fetch(`${API_BASE_URL}/calendars/primary/events/${eventId}`, {
+    method: 'DELETE',
+    headers,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error('Google Calendar API error on delete:', errorData);
+    throw new Error('Erro ao deletar evento no Google Calendar.');
+  }
+  
+  return true;
 }
