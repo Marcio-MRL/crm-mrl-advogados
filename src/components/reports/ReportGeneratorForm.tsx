@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -58,13 +59,13 @@ export function ReportGeneratorForm({ onSuccess, onCancel }: ReportGeneratorForm
   });
 
   const onSubmit = async (data: ReportFormValues) => {
-    const { dateRange, includeCharts, includeDetails, ...rest } = data;
-    
     addReport({
-      ...rest,
-      date_range: dateRange,
-      include_charts: includeCharts,
-      include_details: includeDetails,
+      name: data.name,
+      type: data.type,
+      format: data.format,
+      date_range: data.dateRange,
+      include_charts: data.includeCharts,
+      include_details: data.includeDetails,
       description: data.description || null,
     }, {
       onSuccess: () => {
