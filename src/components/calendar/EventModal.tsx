@@ -8,13 +8,12 @@ interface EventModalProps {
   event?: Event | null;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (event: Event) => void;
+  onSave: (event: Omit<Event, 'id'> & { id?: string }) => void;
 }
 
 export function EventModal({ event, isOpen, onClose, onSave }: EventModalProps) {
-  const handleSave = (eventData: Event) => {
+  const handleSave = (eventData: Omit<Event, 'id'> & { id?: string }) => {
     onSave(eventData);
-    onClose();
   };
 
   return (

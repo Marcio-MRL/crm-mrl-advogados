@@ -105,6 +105,54 @@ export type Database = {
         }
         Relationships: []
       }
+      calendar_events: {
+        Row: {
+          client: string | null
+          created_at: string
+          description: string | null
+          end_time: string
+          id: string
+          location: string | null
+          participants: string[] | null
+          start_time: string
+          sync_with_google: boolean
+          title: string
+          type: Database["public"]["Enums"]["event_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client?: string | null
+          created_at?: string
+          description?: string | null
+          end_time: string
+          id?: string
+          location?: string | null
+          participants?: string[] | null
+          start_time: string
+          sync_with_google?: boolean
+          title: string
+          type: Database["public"]["Enums"]["event_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client?: string | null
+          created_at?: string
+          description?: string | null
+          end_time?: string
+          id?: string
+          location?: string | null
+          participants?: string[] | null
+          start_time?: string
+          sync_with_google?: boolean
+          title?: string
+          type?: Database["public"]["Enums"]["event_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       checklist_items: {
         Row: {
           checked: boolean | null
@@ -934,6 +982,7 @@ export type Database = {
       }
     }
     Enums: {
+      event_type: "audiencia" | "reuniao" | "prazo" | "outro"
       user_role: "admin" | "editor" | "leitor"
       user_status: "pending_approval" | "active" | "inactive"
     }
@@ -1051,6 +1100,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      event_type: ["audiencia", "reuniao", "prazo", "outro"],
       user_role: ["admin", "editor", "leitor"],
       user_status: ["pending_approval", "active", "inactive"],
     },

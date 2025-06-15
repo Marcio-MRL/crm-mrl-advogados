@@ -6,26 +6,37 @@ import { AgendaTabs } from '@/components/agenda/AgendaTabs';
 import { AgendaHeader } from '@/components/agenda/AgendaHeader';
 import { AgendaIntegrationsSection } from '@/components/agenda/AgendaIntegrationsSection';
 import { GoogleOAuthSection } from '@/components/integrations/GoogleOAuthSection';
+import { useAgendaEvents } from '@/hooks/useAgendaEvents';
+import { EventModal } from '@/components/calendar/EventModal';
+import { Event } from '@/types/event';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Agenda() {
-  const [currentDate, setCurrentDate] = useState(new Date());
   const [currentView, setCurrentView] = useState<'day' | 'week' | 'month'>('month');
-  const [events] = useState([]); // Por enquanto vazio, será implementado posteriormente
+  
+  const { events, loading, handleSaveEvent, handleDeleteEvent } = useAgendaEvents();
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
   const handleNovoEvento = () => {
-    console.log('Criar novo evento');
+    setSelectedEvent(null);
+    setIsModalOpen(true);
   };
 
-  const handleEventClick = (event: any) => {
-    console.log('Evento clicado:', event);
-  };
-
-  const handleEventDelete = (eventId: string) => {
-    console.log('Excluir evento:', eventId);
+  const handleEventClick = (event: Event) => {
+    setSelectedEvent(event);
+    setIsModalOpen(true);
   };
 
   const handleSyncComplete = () => {
     console.log('Sincronização concluída');
+  };
+  
+  const handleSave = async (eventData: Omit<Event, 'id'> & { id?: string }) => {
+    await handleSaveEvent(eventData);
+    setIsModalOpen(false);
+    setSelectedEvent(null);
   };
 
   return (
@@ -41,12 +52,22 @@ export default function Agenda() {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <AgendaTabs 
-              currentView={currentView}
-              events={events}
-              onEventClick={handleEventClick}
-              onEventDelete={handleEventDelete}
-            />
+            {loading ? (
+              <div className="bg-white/70 p-6 rounded-lg shadow-sm space-y-4">
+                <div className="flex justify-between items-center">
+                  <Skeleton className="h-8 w-1/4" />
+                  <Skeleton className="h-6 w-24" />
+                </div>
+                <Skeleton className="h-96 w-full" />
+              </div>
+            ) : (
+              <AgendaTabs 
+                currentView={currentView}
+                events={events}
+                onEventClick={handleEventClick}
+                onEventDelete={handleDeleteEvent}
+              />
+            )}
           </div>
           
           <div className="space-y-6">
@@ -55,6 +76,13 @@ export default function Agenda() {
           </div>
         </div>
       </div>
+      
+      <EventModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        event={selectedEvent}
+        onSave={handleSave}
+      />
     </MainLayout>
   );
 }

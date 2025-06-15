@@ -9,14 +9,21 @@ import { ParticipantsField } from './fields/ParticipantsField';
 
 interface EventFormProps {
   event?: Event | null;
-  onSave: (event: Event) => void;
+  onSave: (event: Omit<Event, 'id'> & { id?: string }) => void;
   onCancel: () => void;
 }
 
-type EventFormData = Omit<Event, 'id'> & { id?: string };
+type EventFormData = Omit<Event, 'id' | 'date' | 'description' | 'location' | 'client' | 'participants'> & { 
+  id?: string; 
+  date: Date;
+  description: string;
+  location: string;
+  client: string;
+  participants: string[];
+};
 
 export function EventForm({ event, onSave, onCancel }: EventFormProps) {
-  const [formData, setFormData] = useState<EventFormData>({
+  const getInitialFormData = (): EventFormData => ({
     title: '',
     description: '',
     date: new Date(),
@@ -28,6 +35,8 @@ export function EventForm({ event, onSave, onCancel }: EventFormProps) {
     participants: [],
     syncWithGoogle: true
   });
+
+  const [formData, setFormData] = useState<EventFormData>(getInitialFormData());
   
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
@@ -35,22 +44,14 @@ export function EventForm({ event, onSave, onCancel }: EventFormProps) {
     if (event) {
       setFormData({
         ...event,
-        date: event.date || new Date(),
-        participants: event.participants || []
+        date: new Date(event.date),
+        description: event.description || '',
+        location: event.location || '',
+        client: event.client || '',
+        participants: event.participants || [],
       });
     } else {
-      setFormData({
-        title: '',
-        description: '',
-        date: new Date(),
-        startTime: '09:00',
-        endTime: '10:00',
-        location: '',
-        client: '',
-        type: 'reuniao',
-        participants: [],
-        syncWithGoogle: true
-      });
+      setFormData(getInitialFormData());
     }
   }, [event]);
 
@@ -65,18 +66,12 @@ export function EventForm({ event, onSave, onCancel }: EventFormProps) {
       return;
     }
 
-    const eventToSave: Event = {
+    const eventToSave = {
       ...formData,
-      id: event?.id || Date.now().toString(),
+      id: event?.id,
     };
 
     onSave(eventToSave);
-    
-    if (formData.syncWithGoogle) {
-      toast.success("Evento salvo e sincronizado com Google Calendar!");
-    } else {
-      toast.success("Evento salvo com sucesso!");
-    }
   };
 
   return (
@@ -93,7 +88,7 @@ export function EventForm({ event, onSave, onCancel }: EventFormProps) {
           isDatePickerOpen={isDatePickerOpen}
           onTitleChange={(title) => setFormData({ ...formData, title })}
           onDescriptionChange={(description) => setFormData({ ...formData, description })}
-          onDateChange={(date) => setFormData({ ...formData, date })}
+          onDateChange={(date) => date && setFormData({ ...formData, date })}
           onLocationChange={(location) => setFormData({ ...formData, location })}
           onClientChange={(client) => setFormData({ ...formData, client })}
           onTypeChange={(type) => setFormData({ ...formData, type })}
