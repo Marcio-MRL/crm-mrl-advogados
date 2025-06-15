@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Sheet, HardDrive, Unlink } from 'lucide-react';
+import { Calendar, Sheet, HardDrive, Unlink, RefreshCw, Trash2 } from 'lucide-react';
 import { useGoogleOAuthComplete } from '@/hooks/useGoogleOAuthComplete';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -13,10 +13,12 @@ export function CompleteGoogleOAuthSection() {
     tokens, 
     loading, 
     clientId,
+    services,
     initiateOAuth, 
     revokeToken, 
+    revokeAllUserTokens,
     isServiceConnected,
-    services 
+    refetch 
   } = useGoogleOAuthComplete();
 
   const isAuthorizedDomain = user?.email?.endsWith('@mrladvogados.com.br');
@@ -24,8 +26,11 @@ export function CompleteGoogleOAuthSection() {
   console.log('CompleteGoogleOAuthSection Debug:', {
     clientId,
     isAuthorizedDomain,
-    tokens,
-    loading
+    tokensCount: tokens.length,
+    services: services.map(s => ({
+      type: s.type,
+      connected: isServiceConnected(s.type)
+    }))
   });
 
   if (loading) {
@@ -68,26 +73,38 @@ export function CompleteGoogleOAuthSection() {
 
   const handleConnect = async (serviceType: 'calendar' | 'sheets' | 'drive') => {
     console.log('Tentando conectar serviço:', serviceType);
-    console.log('Client ID disponível:', !!clientId);
-    console.log('Usuário autorizado:', isAuthorizedDomain);
-    
-    try {
-      await initiateOAuth(serviceType);
-    } catch (error) {
-      console.error('Erro ao conectar:', error);
-    }
+    await initiateOAuth(serviceType);
   };
 
   const handleDisconnect = async (serviceType: 'calendar' | 'sheets' | 'drive') => {
-    const serviceConfig = services.find(s => s.type === serviceType);
-    if (!serviceConfig) return;
+    const service = services.find(s => s.type === serviceType);
+    if (!service) return;
 
-    const token = tokens.find(t => 
-      t.scope?.includes(serviceConfig.scope)
+    // Encontrar todos os tokens que correspondem ao escopo do serviço
+    const serviceTokens = tokens.filter(t => 
+      t.scope?.includes(service.scope)
     );
     
-    if (token) {
+    console.log(`🗑️ Desconectando ${serviceType}:`, {
+      scope: service.scope,
+      tokensFound: serviceTokens.length,
+      tokenIds: serviceTokens.map(t => t.id.substring(0, 8))
+    });
+    
+    // Revogar todos os tokens relacionados ao serviço
+    for (const token of serviceTokens) {
       await revokeToken(token.id);
+    }
+  };
+
+  const handleRefresh = () => {
+    console.log('🔄 Atualizando tokens...');
+    refetch();
+  };
+
+  const handleRevokeAll = async () => {
+    if (confirm('Tem certeza que deseja desconectar TODOS os serviços Google?')) {
+      await revokeAllUserTokens();
     }
   };
 
@@ -101,6 +118,31 @@ export function CompleteGoogleOAuthSection() {
         <CardDescription>
           Conecte-se aos serviços Google para expandir funcionalidades
         </CardDescription>
+        
+        <div className="flex gap-2 mt-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Atualizar Status
+          </Button>
+          
+          {tokens.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRevokeAll}
+              className="text-red-600 hover:text-red-700"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Desconectar Todos
+            </Button>
+          )}
+        </div>
+        
         {!isAuthorizedDomain && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
             <p className="text-sm text-yellow-800">
@@ -130,6 +172,9 @@ export function CompleteGoogleOAuthSection() {
                   <h3 className="font-medium">{service.name}</h3>
                   <p className="text-sm text-gray-500">
                     {service.description}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    Escopo: {service.scope}
                   </p>
                 </div>
               </div>
@@ -168,6 +213,13 @@ export function CompleteGoogleOAuthSection() {
           <strong>Nota:</strong> As integrações OAuth estão restritas ao domínio @mrladvogados.com.br 
           e precisam ser configuradas com credenciais válidas do Google Cloud Console.
         </div>
+
+        {tokens.length > 0 && (
+          <div className="text-xs text-gray-500 bg-blue-50 border border-blue-200 rounded p-2">
+            <strong>Debug:</strong> {tokens.length} token(s) encontrado(s). 
+            Clique em "Atualizar Status" se a exibição não estiver correta.
+          </div>
+        )}
       </CardContent>
     </Card>
   );
