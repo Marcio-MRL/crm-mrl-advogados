@@ -34,7 +34,7 @@ export class BankSheetFetcher {
 
       console.log('📊 Usando planilha ID:', targetSpreadsheetId);
 
-      // Buscar informações da planilha
+      // Buscar informações da planilha para obter o nome da primeira aba
       const sheetInfoResponse = await fetch(
         `https://sheets.googleapis.com/v4/spreadsheets/${targetSpreadsheetId}`,
         {
@@ -44,18 +44,30 @@ export class BankSheetFetcher {
         }
       );
 
-      if (sheetInfoResponse.ok) {
-        const sheetInfo = await sheetInfoResponse.json();
-        console.log('📋 Planilha:', sheetInfo.properties?.title);
-        console.log('📋 Abas disponíveis:');
-        sheetInfo.sheets?.forEach((sheet: any, index: number) => {
-          console.log(`${index + 1}. "${sheet.properties.title}" (${sheet.properties.gridProperties.rowCount} linhas, ${sheet.properties.gridProperties.columnCount} colunas)`);
-        });
+      if (!sheetInfoResponse.ok) {
+        const errorText = await sheetInfoResponse.text();
+        console.error('❌ Erro ao buscar informações da planilha:', sheetInfoResponse.status, errorText);
+        throw new Error(`Erro ao acessar informações da planilha (${sheetInfoResponse.status}): ${errorText}`);
       }
+      
+      const sheetInfo = await sheetInfoResponse.json();
+      
+      if (!sheetInfo.sheets || sheetInfo.sheets.length === 0) {
+        throw new Error('A planilha não contém nenhuma aba.');
+      }
+      
+      const firstSheetName = sheetInfo.sheets[0].properties.title;
+      console.log('📋 Planilha:', sheetInfo.properties?.title);
+      console.log('👉 Usando a primeira aba:', `"${firstSheetName}"`);
+      sheetInfo.sheets?.forEach((sheet: any, index: number) => {
+        console.log(`${index + 1}. "${sheet.properties.title}" (${sheet.properties.gridProperties.rowCount} linhas, ${sheet.properties.gridProperties.columnCount} colunas)`);
+      });
 
-      // Buscar dados da primeira aba
+      const encodedSheetName = encodeURIComponent(firstSheetName);
+
+      // Buscar dados da primeira aba usando seu nome
       const dataResponse = await fetch(
-        `https://sheets.googleapis.com/v4/spreadsheets/${targetSpreadsheetId}/values/Sheet1?majorDimension=ROWS`,
+        `https://sheets.googleapis.com/v4/spreadsheets/${targetSpreadsheetId}/values/${encodedSheetName}?majorDimension=ROWS`,
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -65,11 +77,13 @@ export class BankSheetFetcher {
 
       if (!dataResponse.ok) {
         const errorText = await dataResponse.text();
-        console.error('❌ Erro ao ler dados da planilha:', dataResponse.status, errorText);
+        console.error('❌ Erro ao ler dados da planilha (método principal):', dataResponse.status, errorText);
         
         // Tentar com método alternativo
+        const range = `'${firstSheetName}'!A1:Z1000`;
+        console.log('🛠️ Tentando método alternativo com range:', range);
         const dataResponse2 = await fetch(
-          `https://sheets.googleapis.com/v4/spreadsheets/${targetSpreadsheetId}/values/A1:Z1000?majorDimension=ROWS`,
+          `https://sheets.googleapis.com/v4/spreadsheets/${targetSpreadsheetId}/values/${encodeURIComponent(range)}?majorDimension=ROWS`,
           {
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -78,7 +92,9 @@ export class BankSheetFetcher {
         );
         
         if (!dataResponse2.ok) {
-          throw new Error(`Erro ao ler planilha (${dataResponse.status}): ${errorText}`);
+          const errorText2 = await dataResponse2.text();
+          console.error('❌ Erro ao ler dados da planilha (método alternativo):', dataResponse2.status, errorText2);
+          throw new Error(`Erro ao ler planilha. O servidor respondeu com status ${dataResponse.status} e ${dataResponse2.status}.`);
         }
         
         const data2 = await dataResponse2.json();
