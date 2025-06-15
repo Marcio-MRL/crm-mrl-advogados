@@ -7,7 +7,17 @@ import { Settings, ExternalLink } from 'lucide-react';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 
 export function GoogleOAuthSection() {
-  const { isConnected, connectionStatus, connect, disconnect } = useGoogleAuth();
+  const { isServiceConnected, initiateGoogleAuth, disconnectService, loading } = useGoogleAuth();
+
+  const isConnected = isServiceConnected('calendar');
+
+  const handleConnect = () => {
+    initiateGoogleAuth('calendar');
+  };
+
+  const handleDisconnect = () => {
+    disconnectService('calendar');
+  };
 
   return (
     <Card className="bg-white/90 backdrop-blur-sm">
@@ -36,8 +46,9 @@ export function GoogleOAuthSection() {
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={disconnect}
+                onClick={handleDisconnect}
                 className="flex-1"
+                disabled={loading}
               >
                 Desconectar
               </Button>
@@ -56,19 +67,14 @@ export function GoogleOAuthSection() {
               Conecte sua conta Google para acessar todas as funcionalidades
             </div>
             <Button 
-              onClick={connect} 
+              onClick={handleConnect} 
               className="w-full flex items-center gap-2"
               size="sm"
+              disabled={loading}
             >
               <ExternalLink className="h-4 w-4" />
-              Conectar Google
+              {loading ? 'Conectando...' : 'Conectar Google'}
             </Button>
-          </div>
-        )}
-        
-        {connectionStatus && (
-          <div className="text-xs text-gray-500 mt-2">
-            Status: {connectionStatus}
           </div>
         )}
       </CardContent>
