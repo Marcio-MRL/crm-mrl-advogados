@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { SheetMapping } from '@/types/googleSheets';
@@ -28,13 +27,13 @@ export function useGoogleSheetsIntegration() {
         throw error;
       }
 
-      const mappedSheets = data.map((sheet: any) => ({
+      const mappedSheets: SheetMapping[] = data.map((sheet: any) => ({
         id: sheet.id,
         name: sheet.name,
         url: sheet.url,
         lastSync: sheet.last_synced_at,
-        status: sheet.status,
-        type: sheet.type,
+        status: sheet.status as SheetMapping['status'],
+        type: sheet.type as SheetMapping['type'],
       }));
 
       setSheets(mappedSheets);
@@ -106,7 +105,7 @@ export function useGoogleSheetsIntegration() {
     }, 2000);
   };
 
-  const handleAddSheet = async (newSheet: Omit<SheetMapping, 'id' | 'lastSync' | 'status'>) => {
+  const handleAddSheet = async (newSheet: Omit<SheetMapping, 'id' | 'lastSync' | 'status'>): Promise<boolean> => {
     if (!user) {
         toast.error('Você precisa estar logado para adicionar planilhas.');
         return false;
@@ -146,8 +145,8 @@ export function useGoogleSheetsIntegration() {
             name: data.name,
             url: data.url,
             lastSync: data.last_synced_at,
-            status: data.status,
-            type: data.type,
+            status: data.status as SheetMapping['status'],
+            type: data.type as SheetMapping['type'],
         }
         setSheets(prev => [...prev, addedSheet]);
         toast.success('Planilha adicionada com sucesso!');

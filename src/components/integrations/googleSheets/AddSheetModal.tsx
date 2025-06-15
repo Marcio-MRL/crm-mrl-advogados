@@ -9,7 +9,7 @@ import { SheetMapping } from '@/types/googleSheets';
 interface AddSheetModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddSheet: (sheet: Omit<SheetMapping, 'id' | 'lastSync' | 'status'>) => boolean;
+  onAddSheet: (sheet: Omit<SheetMapping, 'id' | 'lastSync' | 'status'>) => Promise<boolean>;
 }
 
 export function AddSheetModal({ open, onOpenChange, onAddSheet }: AddSheetModalProps) {
@@ -19,8 +19,8 @@ export function AddSheetModal({ open, onOpenChange, onAddSheet }: AddSheetModalP
     type: 'financial' as 'financial' | 'clients' | 'processes'
   });
 
-  const handleAddSheet = () => {
-    const success = onAddSheet(newSheet);
+  const handleAddSheet = async () => {
+    const success = await onAddSheet(newSheet);
     if (success) {
       setNewSheet({ name: '', url: '', type: 'financial' });
       onOpenChange(false);
