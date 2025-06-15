@@ -1,9 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, MapPin, Users } from 'lucide-react';
-import { useMediaQuery } from '@/hooks/use-mobile';
+import { Edit, Trash2, MapPin, Users, ChevronLeft, ChevronRight } from 'lucide-react';
+import { format, addDays, subDays } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { CalendarWeekView } from './CalendarWeekView';
+import { CalendarMonthView } from './CalendarMonthView';
 
 interface Event {
   id: string;
@@ -57,35 +60,52 @@ const getTypeIcon = (type: string) => {
 };
 
 export function CalendarDaysView({ date, view, events = [], onEventClick, onEventDelete }: CalendarDaysViewProps) {
-  const isMobile = useMediaQuery('(max-width: 768px)');
-  const today = date || new Date();
-  const day = today.getDate();
-  const month = today.getMonth();
-  const year = today.getFullYear();
-  
-  // Filter events for the current day
-  const todayEvents = events.filter(event => {
-    const eventDate = new Date(event.date);
-    return eventDate.getDate() === day && 
-           eventDate.getMonth() === month && 
-           eventDate.getFullYear() === year;
-  });
+  const [currentDate, setCurrentDate] = useState(date || new Date());
 
+  // Day view implementation (existing code)
   if (view === 'day') {
+    const today = currentDate;
+    const day = today.getDate();
+    const month = today.getMonth();
+    const year = today.getFullYear();
+    
+    const todayEvents = events.filter(event => {
+      const eventDate = new Date(event.date);
+      return eventDate.getDate() === day && 
+             eventDate.getMonth() === month && 
+             eventDate.getFullYear() === year;
+    });
+
+    const handlePrevDay = () => {
+      setCurrentDate(subDays(currentDate, 1));
+    };
+
+    const handleNextDay = () => {
+      setCurrentDate(addDays(currentDate, 1));
+    };
+
     return (
       <div className="w-full">
-        <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-          <h4 className="font-medium text-gray-700">
-            {today.toLocaleDateString('pt-BR', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </h4>
-          <p className="text-sm text-gray-500 mt-1">
-            {todayEvents.length} evento(s) agendado(s)
-          </p>
+        <div className="mb-4 p-4 bg-gray-50 rounded-lg flex items-center justify-between">
+          <Button variant="outline" size="sm" onClick={handlePrevDay}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <div className="text-center">
+            <h4 className="font-medium text-gray-700">
+              {today.toLocaleDateString('pt-BR', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </h4>
+            <p className="text-sm text-gray-500 mt-1">
+              {todayEvents.length} evento(s) agendado(s)
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleNextDay}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 gap-1">
@@ -176,17 +196,32 @@ export function CalendarDaysView({ date, view, events = [], onEventClick, onEven
       </div>
     );
   }
-  
-  return (
-    <div className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed rounded-lg bg-gray-50">
-      <div className="text-6xl mb-4">📅</div>
-      <h3 className="text-xl font-medium mb-2">
-        Visualização {view === 'week' ? 'Semanal' : 'Mensal'}
-      </h3>
-      <p className="text-gray-500 mb-4 max-w-md">
-        Esta visualização será implementada em breve. Por enquanto, use a visualização diária ou a lista de eventos.
-      </p>
-      <Badge variant="secondary">Em desenvolvimento</Badge>
-    </div>
-  );
+
+  // Week view
+  if (view === 'week') {
+    return (
+      <CalendarWeekView
+        currentDate={currentDate}
+        events={events}
+        onEventClick={onEventClick}
+        onEventDelete={onEventDelete}
+        onDateChange={setCurrentDate}
+      />
+    );
+  }
+
+  // Month view
+  if (view === 'month') {
+    return (
+      <CalendarMonthView
+        currentDate={currentDate}
+        events={events}
+        onEventClick={onEventClick}
+        onEventDelete={onEventDelete}
+        onDateChange={setCurrentDate}
+      />
+    );
+  }
+
+  return null;
 }
