@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
@@ -106,17 +105,23 @@ serve(async (req) => {
       // Calcular data de expiração
       const expiresAt = new Date(Date.now() + tokens.expires_in * 1000);
 
+      // Criar payload para o upsert, garantindo que o refresh_token não seja sobrescrito com null
+      const tokenPayload: { [key: string]: any } = {
+        user_id: user.id,
+        access_token: tokens.access_token,
+        token_type: tokens.token_type,
+        expires_at: expiresAt.toISOString(),
+        scope: tokens.scope,
+      };
+
+      if (tokens.refresh_token) {
+        tokenPayload.refresh_token = tokens.refresh_token;
+      }
+
       // Armazenar tokens no banco usando service role key
       const { data: insertData, error: insertError } = await supabaseClient
         .from('google_oauth_tokens')
-        .upsert({
-          user_id: user.id,
-          access_token: tokens.access_token,
-          refresh_token: tokens.refresh_token,
-          token_type: tokens.token_type,
-          expires_at: expiresAt.toISOString(),
-          scope: tokens.scope,
-        })
+        .upsert(tokenPayload, { onConflict: 'user_id,scope' }) // Assumindo que a constraint é em user_id e scope
         .select()
         .single();
 

@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { getValidAccessToken } from '@/utils/googleAuthManager';
 
 interface SyncStats {
   lastSync: string | null;
@@ -108,23 +108,36 @@ export function useGoogleCalendarSync(onSyncComplete?: () => void) {
     }
 
     setIsSyncing(true);
+    toast.info("Sincronizando com Google Calendar...");
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const accessToken = await getValidAccessToken('calendar');
+
+      const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events?maxResults=50', {
+          headers: { 'Authorization': `Bearer ${accessToken}` },
+      });
+
+      if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Google Calendar API error:', errorData);
+          throw new Error('Erro ao buscar eventos do Google Calendar.');
+      }
+
+      const eventData = await response.json();
+      console.log('Events from Google:', eventData.items);
       
       const newStats = {
         ...syncStats,
         lastSync: new Date().toISOString(),
-        eventsImported: syncStats.eventsImported + Math.floor(Math.random() * 5),
-        eventsExported: syncStats.eventsExported + Math.floor(Math.random() * 3)
+        eventsImported: syncStats.eventsImported + (eventData.items?.length || 0),
       };
       
       await updateSyncStats(newStats);
-      toast.success("Sincronização concluída com sucesso!");
+      toast.success(`${eventData.items?.length || 0} eventos verificados. Sincronização concluída!`);
       onSyncComplete?.();
     } catch (error) {
       console.error('Sync error:', error);
-      toast.error("Erro durante a sincronização");
+      toast.error(error instanceof Error ? error.message : "Erro durante a sincronização");
     } finally {
       setIsSyncing(false);
     }
@@ -143,32 +156,7 @@ export function useGoogleCalendarSync(onSyncComplete?: () => void) {
   };
 
   const importFromGoogle = async () => {
-    if (!isConnected) {
-      toast.error("Conecte-se ao Google Calendar primeiro");
-      return;
-    }
-
-    setIsSyncing(true);
-    
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const imported = Math.floor(Math.random() * 10) + 1;
-      const newStats = {
-        ...syncStats,
-        eventsImported: syncStats.eventsImported + imported,
-        lastSync: new Date().toISOString()
-      };
-      
-      await updateSyncStats(newStats);
-      toast.success(`${imported} eventos importados do Google Calendar`);
-      onSyncComplete?.();
-    } catch (error) {
-      console.error('Import error:', error);
-      toast.error("Erro ao importar eventos");
-    } finally {
-      setIsSyncing(false);
-    }
+    await handleManualSync();
   };
 
   const exportToGoogle = async () => {
@@ -178,23 +166,49 @@ export function useGoogleCalendarSync(onSyncComplete?: () => void) {
     }
 
     setIsSyncing(true);
+    toast.info("Exportando evento para o Google Calendar...");
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const accessToken = await getValidAccessToken('calendar');
       
-      const exported = Math.floor(Math.random() * 5) + 1;
+      const now = new Date();
+      const startDateTime = now.toISOString();
+      const endDateTime = new Date(now.getTime() + 60 * 60 * 1000).toISOString();
+
+      const event = {
+        'summary': 'Evento de Teste (via App)',
+        'description': 'Este evento foi criado automaticamente pela aplicação.',
+        'start': { 'dateTime': startDateTime, 'timeZone': 'America/Sao_Paulo' },
+        'end': { 'dateTime': endDateTime, 'timeZone': 'America/Sao_Paulo' },
+      };
+
+      const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(event),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Google Calendar API error on export:', errorData);
+        throw new Error('Erro ao exportar evento para o Google Calendar.');
+      }
+
       const newStats = {
         ...syncStats,
-        eventsExported: syncStats.eventsExported + exported,
+        eventsExported: syncStats.eventsExported + 1,
         lastSync: new Date().toISOString()
       };
       
       await updateSyncStats(newStats);
-      toast.success(`${exported} eventos exportados para o Google Calendar`);
+      toast.success(`1 evento exportado para o Google Calendar`);
       onSyncComplete?.();
     } catch (error) {
       console.error('Export error:', error);
-      toast.error("Erro ao exportar eventos");
+      toast.error(error instanceof Error ? error.message : "Erro ao exportar eventos");
     } finally {
       setIsSyncing(false);
     }
