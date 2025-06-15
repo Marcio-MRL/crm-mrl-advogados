@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Table, 
@@ -9,26 +8,13 @@ import {
   TableCell 
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Download, Eye, FileText } from 'lucide-react';
-
-interface Report {
-  id: string;
-  name: string;
-  type: string;
-  date: string;
-  createdBy: string;
-  format: 'pdf' | 'xlsx' | 'docx';
-}
-
-const mockReports: Report[] = [
-  { id: '1', name: 'Relatório Financeiro - Q1 2025', type: 'Financeiro', date: '2025-04-05', createdBy: 'Dra. Ana Silva', format: 'pdf' },
-  { id: '2', name: 'Processos em Andamento', type: 'Processual', date: '2025-04-15', createdBy: 'Dr. Carlos Mendes', format: 'xlsx' },
-  { id: '3', name: 'Distribuição de Clientes', type: 'Clientes', date: '2025-04-22', createdBy: 'Dra. Maria Oliveira', format: 'pdf' },
-  { id: '4', name: 'Horas Trabalhadas - Abril 2025', type: 'Recursos Humanos', date: '2025-05-01', createdBy: 'Dr. Paulo Santos', format: 'xlsx' },
-  { id: '5', name: 'Análise de Contratos Q1 2025', type: 'Contratos', date: '2025-04-10', createdBy: 'Dr. Fernando Costa', format: 'docx' },
-];
+import { Download, Eye, FileText, Loader2 } from 'lucide-react';
+import { useReports } from '@/hooks/useReports';
+import { Report } from '@/types/report';
 
 export function ReportsList() {
+  const { reports, isLoading, error } = useReports();
+
   const getFormatLabel = (format: string) => {
     switch(format) {
       case 'pdf': return 'PDF';
@@ -47,6 +33,28 @@ export function ReportsList() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="text-center py-10 text-red-500">Erro ao carregar relatórios: {error.message}</div>;
+  }
+  
+  if (reports.length === 0) {
+      return (
+        <div className="text-center py-10 text-gray-500">
+            <FileText className="h-12 w-12 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold">Nenhum relatório encontrado</h3>
+            <p className="text-sm">Gere um novo relatório para começar.</p>
+        </div>
+      )
+  }
+
   return (
     <div className="rounded-lg border shadow-sm overflow-hidden">
       <Table>
@@ -61,7 +69,7 @@ export function ReportsList() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {mockReports.map(report => (
+          {reports.map((report: Report) => (
             <TableRow key={report.id}>
               <TableCell>
                 <div className="flex items-center gap-2">
@@ -73,10 +81,10 @@ export function ReportsList() {
                 {report.type}
               </TableCell>
               <TableCell className="hidden md:table-cell">
-                {new Date(report.date).toLocaleDateString('pt-BR')}
+                {new Date(report.created_at).toLocaleDateString('pt-BR')}
               </TableCell>
               <TableCell className="hidden md:table-cell">
-                {report.createdBy}
+                {report.created_by}
               </TableCell>
               <TableCell>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${getFormatClass(report.format)}`}>

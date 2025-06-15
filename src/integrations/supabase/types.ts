@@ -932,6 +932,54 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date_range: string
+          description: string | null
+          format: Database["public"]["Enums"]["report_format"]
+          id: string
+          include_charts: boolean
+          include_details: boolean
+          name: string
+          status: Database["public"]["Enums"]["report_status"]
+          type: Database["public"]["Enums"]["report_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date_range: string
+          description?: string | null
+          format: Database["public"]["Enums"]["report_format"]
+          id?: string
+          include_charts?: boolean
+          include_details?: boolean
+          name: string
+          status?: Database["public"]["Enums"]["report_status"]
+          type: Database["public"]["Enums"]["report_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date_range?: string
+          description?: string | null
+          format?: Database["public"]["Enums"]["report_format"]
+          id?: string
+          include_charts?: boolean
+          include_details?: boolean
+          name?: string
+          status?: Database["public"]["Enums"]["report_status"]
+          type?: Database["public"]["Enums"]["report_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           category: string
@@ -983,6 +1031,15 @@ export type Database = {
     }
     Enums: {
       event_type: "audiencia" | "reuniao" | "prazo" | "outro"
+      report_format: "pdf" | "xlsx" | "docx" | "csv"
+      report_status: "gerando" | "concluido" | "falhou"
+      report_type:
+        | "financeiro"
+        | "processual"
+        | "clientes"
+        | "contratos"
+        | "desempenho"
+        | "personalizado"
       user_role: "admin" | "editor" | "leitor"
       user_status: "pending_approval" | "active" | "inactive"
     }
@@ -1101,6 +1158,16 @@ export const Constants = {
   public: {
     Enums: {
       event_type: ["audiencia", "reuniao", "prazo", "outro"],
+      report_format: ["pdf", "xlsx", "docx", "csv"],
+      report_status: ["gerando", "concluido", "falhou"],
+      report_type: [
+        "financeiro",
+        "processual",
+        "clientes",
+        "contratos",
+        "desempenho",
+        "personalizado",
+      ],
       user_role: ["admin", "editor", "leitor"],
       user_status: ["pending_approval", "active", "inactive"],
     },

@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -22,12 +21,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useReports } from '@/hooks/useReports';
 import { toast } from 'sonner';
 
 const reportFormSchema = z.object({
   name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
-  type: z.string().min(1, 'Selecione um tipo de relatório'),
-  format: z.string().min(1, 'Selecione um formato'),
+  type: z.enum(['financeiro', 'processual', 'clientes', 'contratos', 'desempenho', 'personalizado']),
+  format: z.enum(['pdf', 'xlsx', 'docx', 'csv']),
   dateRange: z.string().min(1, 'Selecione um período'),
   includeCharts: z.boolean().default(false),
   includeDetails: z.boolean().default(true),
@@ -42,15 +42,15 @@ interface ReportGeneratorFormProps {
 }
 
 export function ReportGeneratorForm({ onSuccess, onCancel }: ReportGeneratorFormProps) {
-  const [isGenerating, setIsGenerating] = useState(false);
+  const { addReport, isCreating } = useReports();
 
   const form = useForm<ReportFormValues>({
     resolver: zodResolver(reportFormSchema),
     defaultValues: {
       name: '',
-      type: '',
+      type: 'financeiro',
       format: 'pdf',
-      dateRange: '',
+      dateRange: 'last_30_days',
       includeCharts: true,
       includeDetails: true,
       description: '',
@@ -58,21 +58,20 @@ export function ReportGeneratorForm({ onSuccess, onCancel }: ReportGeneratorForm
   });
 
   const onSubmit = async (data: ReportFormValues) => {
-    setIsGenerating(true);
+    const { dateRange, includeCharts, includeDetails, ...rest } = data;
     
-    try {
-      // Simular geração de relatório
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast.success('Relatório gerado com sucesso!');
-      form.reset();
-      onSuccess?.();
-    } catch (error) {
-      console.error('Error generating report:', error);
-      toast.error('Erro ao gerar relatório');
-    } finally {
-      setIsGenerating(false);
-    }
+    addReport({
+      ...rest,
+      date_range: dateRange,
+      include_charts: includeCharts,
+      include_details: includeDetails,
+      description: data.description || null,
+    }, {
+      onSuccess: () => {
+        form.reset();
+        onSuccess?.();
+      }
+    });
   };
 
   return (
@@ -236,9 +235,9 @@ export function ReportGeneratorForm({ onSuccess, onCancel }: ReportGeneratorForm
           <Button 
             type="submit" 
             className="bg-lawblue-500 hover:bg-lawblue-600"
-            disabled={isGenerating}
+            disabled={isCreating}
           >
-            {isGenerating ? 'Gerando...' : 'Gerar Relatório'}
+            {isCreating ? 'Gerando...' : 'Gerar Relatório'}
           </Button>
         </div>
       </form>
