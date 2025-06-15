@@ -33,10 +33,15 @@ export function useGoogleOAuth() {
 
       if (error) {
         console.error('Erro ao buscar tokens:', error);
-        // Fallback para dados vazios se a tabela ainda não está disponível
         setTokens([]);
         return;
       }
+
+      console.log('📋 Tokens encontrados:', data?.map(t => ({
+        id: t.id.substring(0, 8),
+        scope: t.scope,
+        hasAccess: !!t.access_token
+      })));
 
       setTokens(data || []);
     } catch (error) {
@@ -53,17 +58,14 @@ export function useGoogleOAuth() {
       return;
     }
 
-    // Verificar se o usuário tem domínio autorizado
     if (!user.email?.endsWith('@mrladvogados.com.br')) {
       toast.error('Integração disponível apenas para emails @mrladvogados.com.br');
       return;
     }
 
     try {
-      // URLs de redirecionamento para produção
       const redirectUrl = `${window.location.origin}/auth/callback`;
       
-      // Definir escopos baseados no serviço
       let scopes = '';
       switch (service) {
         case 'calendar':
@@ -77,8 +79,6 @@ export function useGoogleOAuth() {
           break;
       }
 
-      // ⚠️ INTERVENÇÃO MANUAL NECESSÁRIA:
-      // Será implementado quando você configurar as credenciais OAuth no Google Cloud Console
       toast.info(`Integração Google OAuth para ${service} será ativada após configuração das credenciais no Google Cloud Console.`);
       
     } catch (error) {
@@ -127,6 +127,29 @@ export function useGoogleOAuth() {
 
       if (fetchError) {
         console.error('❌ Erro ao buscar token para revogação:', fetchError);
+        
+        // Se for erro de "not found" ou similar, tentar deletar mesmo assim
+        if (fetchError.code === 'PGRST116' || fetchError.message.includes('No rows found')) {
+          console.log('🔄 Token não encontrado, tentando deletar diretamente...');
+          
+          const { error: directDeleteError } = await supabase
+            .from('google_oauth_tokens')
+            .delete()
+            .eq('id', tokenId)
+            .eq('user_id', user.id);
+
+          if (directDeleteError) {
+            console.error('❌ Erro na deleção direta:', directDeleteError);
+            toast.error('Erro ao revogar token');
+            return;
+          }
+
+          console.log('✅ Token removido diretamente');
+          toast.success('Token OAuth revogado com sucesso');
+          await fetchTokens();
+          return;
+        }
+        
         toast.error('Token não encontrado ou sem permissão para revogá-lo');
         return;
       }
@@ -153,7 +176,9 @@ export function useGoogleOAuth() {
           if (revokeResponse.ok) {
             console.log('✅ Token revogado no Google com sucesso');
           } else {
-            console.warn('⚠️ Falha ao revogar token no Google, mas continuando com remoção local');
+            const responseText = await revokeResponse.text();
+            console.warn('⚠️ Resposta da revogação:', revokeResponse.status, responseText);
+            // Continuar mesmo se a revogação no Google falhar
           }
         } catch (revokeError) {
           console.warn('⚠️ Erro ao revogar token no Google:', revokeError);
@@ -171,7 +196,8 @@ export function useGoogleOAuth() {
 
       if (deleteError) {
         console.error('❌ Erro ao deletar token do banco:', deleteError);
-        throw new Error(`Erro ao remover token: ${deleteError.message}`);
+        toast.error(`Erro ao remover token: ${deleteError.message}`);
+        return;
       }
 
       console.log('✅ Token removido do banco com sucesso');
@@ -191,6 +217,69 @@ export function useGoogleOAuth() {
     }
   };
 
+  // Função para revogar TODOS os tokens de uma vez (útil para reset completo)
+  const revokeAllTokens = async () => {
+    if (!user) {
+      toast.error('Usuário não autenticado');
+      return;
+    }
+
+    try {
+      console.log('🗑️ Revogando todos os tokens...');
+
+      // Buscar todos os tokens do usuário
+      const { data: allTokens, error: fetchError } = await supabase
+        .from('google_oauth_tokens')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (fetchError) {
+        console.error('❌ Erro ao buscar tokens:', fetchError);
+        toast.error('Erro ao buscar tokens para revogação');
+        return;
+      }
+
+      if (!allTokens || allTokens.length === 0) {
+        toast.info('Nenhum token encontrado para revogar');
+        return;
+      }
+
+      // Revogar cada token no Google
+      for (const token of allTokens) {
+        if (token.access_token) {
+          try {
+            await fetch(`https://oauth2.googleapis.com/revoke?token=${token.access_token}`, {
+              method: 'POST',
+            });
+            console.log(`✅ Token ${token.id.substring(0, 8)} revogado no Google`);
+          } catch (error) {
+            console.warn(`⚠️ Erro ao revogar token ${token.id.substring(0, 8)} no Google:`, error);
+          }
+        }
+      }
+
+      // Remover todos os tokens do banco
+      const { error: deleteError } = await supabase
+        .from('google_oauth_tokens')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (deleteError) {
+        console.error('❌ Erro ao deletar tokens do banco:', deleteError);
+        toast.error('Erro ao remover tokens do banco');
+        return;
+      }
+
+      console.log('✅ Todos os tokens removidos com sucesso');
+      toast.success('Todos os tokens OAuth foram revogados com sucesso');
+      await fetchTokens();
+
+    } catch (error) {
+      console.error('❌ Erro ao revogar todos os tokens:', error);
+      toast.error('Erro ao revogar tokens OAuth');
+    }
+  };
+
   useEffect(() => {
     fetchTokens();
   }, [user]);
@@ -201,6 +290,7 @@ export function useGoogleOAuth() {
     initiateGoogleAuth,
     storeOAuthToken,
     revokeOAuthToken,
+    revokeAllTokens,
     refetch: fetchTokens
   };
 }
